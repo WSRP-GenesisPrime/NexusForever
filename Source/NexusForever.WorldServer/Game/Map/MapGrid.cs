@@ -26,6 +26,8 @@ namespace NexusForever.WorldServer.Game.Map
         private uint unloadCellX;
         private uint unloadCellZ;
 
+        private bool IsStatic = false;
+
         /// <summary>
         /// Return <see cref="MapGrid"/> at supplied <see cref="Vector3"/>.
         /// </summary>
@@ -45,9 +47,10 @@ namespace NexusForever.WorldServer.Game.Map
         /// <summary>
         /// Initialise new <see cref="MapGrid"/> at the supplied position.
         /// </summary>
-        public MapGrid(uint gridX, uint gridZ)
+        public MapGrid(uint gridX, uint gridZ, bool isStatic)
         {
             Coord = (gridX, gridZ);
+            IsStatic = isStatic;
 
             for (uint z = 0u; z < MapDefines.GridCellCount; z++)
                 for (uint x = 0u; x < MapDefines.GridCellCount; x++)
@@ -58,6 +61,9 @@ namespace NexusForever.WorldServer.Game.Map
         {
             foreach (MapCell cell in cells)
                 cell.Update(lastTick);
+
+            if (IsStatic)
+                return;
 
             if (ConfigurationManager<WorldServerConfiguration>.Instance.Config.Map.GridUnloadTimer.HasValue)
             {

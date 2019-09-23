@@ -5,6 +5,8 @@ using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 
@@ -192,6 +194,43 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             player.TitleManager.AddTitle((ushort)info.Entry.DataBits00);
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingTeleport)]
+        private void HandleEffectHousingTeleport(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            // TODO: Confirm player actually has a house?
+
+            player.HousePreviousWorld = player.Map?.Entry.Id ?? 0u;
+            player.HousePreviousLocation = target.Position;
+
+            Residence residence = ResidenceManager.Instance.GetResidence(player.Name).GetAwaiter().GetResult();
+            if (residence == null)
+            {
+                residence = ResidenceManager.Instance.CreateResidence(player);
+                if (residence == null)
+                {
+                    player.SendSystemMessage("Error occurred when trying to send you to your housing plot! Please try again.");
+                    return;
+                }
+            }
+
+            player.TeleportTo(ResidenceManager.Instance.GetResidenceEntranceLocation(residence), residenceId: residence.Id);
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingEscape)]
+        private void HandleEffectHousingEscape(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            if (player.Map == null || !(player.Map is ResidenceMap residenceMap))
+                return;
+
+            player.TeleportTo(ResidenceManager.Instance.GetResidenceEntranceLocation(residenceMap.residence), residenceId: residenceMap.residence.Id);
         }
     }
 }

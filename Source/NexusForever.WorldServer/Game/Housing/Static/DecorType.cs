@@ -3,6 +3,7 @@
     // TODO: research this more
     public enum DecorType
     {
-        Crate = 0
+        Crate = 0,
+        InteriorDecoration = 3,
     }
 }

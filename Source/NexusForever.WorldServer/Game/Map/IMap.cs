@@ -8,5 +8,6 @@ namespace NexusForever.WorldServer.Game.Map
     {
         void Initialise(MapInfo info, Player player);
         void EnqueueAdd(GridEntity entity, Vector3 position);
+        bool IsReadyToUnload();
     }
 }

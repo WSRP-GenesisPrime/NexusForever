@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +14,7 @@ using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map.Search;
+using NexusForever.WorldServer.Network;
 using NLog;
 
 namespace NexusForever.WorldServer.Game.Map
@@ -37,9 +39,13 @@ namespace NexusForever.WorldServer.Game.Map
 
         private readonly ConcurrentQueue<IGridAction> pendingActions = new ConcurrentQueue<IGridAction>();
 
-        private readonly QueuedCounter entityCounter = new QueuedCounter();
-        private readonly Dictionary<uint /*guid*/, GridEntity> entities = new Dictionary<uint /*guid*/, GridEntity>();
+        protected readonly QueuedCounter entityCounter = new QueuedCounter();
+        protected readonly Dictionary<uint /*guid*/, GridEntity> entities = new Dictionary<uint /*guid*/, GridEntity>();
         private EntityCache entityCache;
+
+        protected bool IsStatic = false;
+        public bool IsReadyToUnload() => isReadyToUnload;
+        protected bool isReadyToUnload = false;
 
         public virtual void Initialise(MapInfo info, Player player)
         {
@@ -86,7 +92,7 @@ namespace NexusForever.WorldServer.Game.Map
 
                 grid.Update(lastTick);
                 // make sure the grid has fully unloaded before removing from active grids
-                if (grid.PendingUnload && DeactivateGrid(grid))
+                if (!IsStatic && grid.PendingUnload && DeactivateGrid(grid))
                     gridsToRemove.Add((gridX, gridZ));
             }
 
@@ -95,6 +101,10 @@ namespace NexusForever.WorldServer.Game.Map
         }
 
         public virtual void OnAddToMap(Player player)
+        {
+        }
+
+        public virtual void OnRemoveFromMap(Player player)
         {
         }
 
@@ -138,7 +148,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// <summary>
         /// Return all <see cref="GridEntity"/>'s in map that satisfy <see cref="ISearchCheck"/>.
         /// </summary>
-        public void Search(Vector3 vector, float radius, ISearchCheck check, out List<GridEntity> intersectedEntities)
+        public virtual void Search(Vector3 vector, float radius, ISearchCheck check, out List<GridEntity> intersectedEntities, GridEntity searcher = null)
         {
             // negative radius is unlimited distance
             if (radius < 0)
@@ -233,7 +243,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// </summary>
         private void ActivateGrid(uint gridX, uint gridZ)
         {
-            var grid = new MapGrid(gridX, gridZ);
+            var grid = new MapGrid(gridX, gridZ, IsStatic);
             grids[gridZ * MapDefines.WorldGridCount + gridX] = grid;
             activeGrids.Add(grid.Coord);
 

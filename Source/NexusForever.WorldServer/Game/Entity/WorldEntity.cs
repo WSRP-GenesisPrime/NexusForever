@@ -27,8 +27,9 @@ namespace NexusForever.WorldServer.Game.Entity
         public Faction Faction1 { get; set; }
         public Faction Faction2 { get; set; }
 
-        public ulong ActivePropId { get; private set; }
-        public ushort WorldSocketId { get; private set; }
+        public bool IsDecorEntity { get; set; }
+        public long ActivePropId { get; protected set; }
+        public ushort WorldSocketId { get; protected set; }
 
         public Vector3 LeashPosition { get; protected set; }
         public float LeashRange { get; protected set; } = 15f;
@@ -54,6 +55,20 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             get => Convert.ToBoolean(GetStatInteger(Stat.Sheathed) ?? 0u);
             set => SetStat(Stat.Sheathed, Convert.ToUInt32(value));
+        }
+
+        public StandState StandState
+        {
+            get => (StandState)(GetStatInteger(Stat.StandState) ?? 0u);
+            set
+            {
+                SetStat(Stat.StandState, (uint)value);
+                EnqueueToVisible(new ServerEmote
+                {
+                    Guid = Guid,
+                    StandState = value
+                });
+            }
         }
 
         /// <summary>
@@ -90,7 +105,7 @@ namespace NexusForever.WorldServer.Game.Entity
             OutfitInfo   = model.OutfitInfo;
             Faction1     = (Faction)model.Faction1;
             Faction2     = (Faction)model.Faction2;
-            ActivePropId = model.ActivePropId;
+            ActivePropId = (long)model.ActivePropId;
             WorldSocketId = model.WorldSocketId;
 
             foreach (EntityStatModel statModel in model.EntityStat)
@@ -129,7 +144,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 EntityModel  = BuildEntityModel(),
                 CreateFlags  = (byte)CreateFlags,
                 Stats        = stats.Values.ToList(),
-                Commands     = MovementManager.ToList(),
+                Commands     = MovementManager?.ToList() ?? new List<(EntityCommand, IEntityCommandModel)>(),
                 VisibleItems = itemVisuals.Values.ToList(),
                 Properties   = Properties.Values.ToList(),
                 Faction1     = Faction1,
@@ -142,7 +157,7 @@ namespace NexusForever.WorldServer.Game.Entity
             // This is in large part due to the way Plugs are tied either to a DecorId OR Guid. Other entities do not have the same issue.
             if (!(this is Plug))
             {
-                if (ActivePropId > 0 || WorldSocketId > 0)
+                if (ActivePropId != 0u || WorldSocketId > 0)
                 {
                     entityCreatePacket.WorldPlacementData = new ServerEntityCreate.WorldPlacement
                     {
@@ -351,6 +366,11 @@ namespace NexusForever.WorldServer.Game.Entity
 
                 player.Session.EnqueueMessageEncrypted(message);
             }
+        }
+
+        public void InitialiseTemporaryEntity()
+        {
+            MovementManager = new MovementManager(this, Position, Rotation);
         }
     }
 }

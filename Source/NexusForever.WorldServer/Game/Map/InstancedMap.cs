@@ -1,21 +1,34 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Map
 {
     public sealed class InstancedMap<T> : IInstancedMap where T : IMap, new()
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
         private WorldEntry entry;
         private readonly Dictionary</*instanceId*/ uint, T> instances = new Dictionary<uint, T>();
         private readonly Queue<T> pendingInstances = new Queue<T>();
+        private readonly Queue<uint> closingInstances = new Queue<uint>();
         private readonly QueuedCounter instanceCounter = new QueuedCounter();
+        private string type;
+
+        /// <summary>
+        /// Unused. Only here to satisfy interface requirements.
+        /// </summary>
+        public bool IsReadyToUnload() => false;
         
         public void Initialise(MapInfo info, Player player)
         {
             entry = info.Entry;
+            type = Regex.Replace(typeof(T).ToString(), @"[.\w]+\.(\w+)", "$1");
         }
 
         public void EnqueueAdd(GridEntity entity, Vector3 position)
@@ -26,11 +39,27 @@ namespace NexusForever.WorldServer.Game.Map
 
         public void Update(double lastTick)
         {
+            var sw = Stopwatch.StartNew();
+
             while (pendingInstances.TryDequeue(out T instance))
                 instances.Add(instanceCounter.Dequeue(), instance);
 
-            foreach (T map in instances.Values)
+            foreach ((uint instanceId, T map) in instances)
+            {
                 map.Update(lastTick);
+                if (map.IsReadyToUnload())
+                    closingInstances.Enqueue(instanceId);
+            }
+
+            while (closingInstances.TryDequeue(out uint instanceId))
+            {
+                instances.Remove(instanceId);
+                instanceCounter.Enqueue(instanceId);
+            }
+
+            sw.Stop();
+            if (sw.ElapsedMilliseconds > 1)
+                log.Trace($"{instances.Count} Instanced {type}(s) took {sw.ElapsedMilliseconds}ms to update!");
         }
 
         /// <summary>
