@@ -5,6 +5,9 @@ using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Shared;
 using NexusForever.Shared.Game;
+using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable.Model;
+using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -19,6 +22,12 @@ namespace NexusForever.WorldServer.Game.Spell
         public SpellInfo SpellInfo { get; private set; }
         public ItemEntity Item { get; }
         public uint GlobalCooldownEnum => SpellInfo.Entry.GlobalCooldownEnum;
+
+        public SpellBaseInfo PetAbilityBaseInfo { get; private set; }
+        public bool HasPetAbility => SpellInfo.Entry.Spell4IdPetSwitch > 0;
+        public bool IsPetActive => HasPetAbility && petUnitId > 0;
+        
+        private uint petUnitId;
 
         public byte Tier
         {
@@ -57,6 +66,7 @@ namespace NexusForever.WorldServer.Game.Spell
             castMethod = (CastMethod)baseInfo.Entry.CastMethod;
 
             InitialiseAbilityCharges();
+            InitialisePetAbility();
         }
 
         /// <summary>
@@ -72,6 +82,7 @@ namespace NexusForever.WorldServer.Game.Spell
             castMethod = (CastMethod)baseInfo.Entry.CastMethod;
 
             InitialiseAbilityCharges();
+            InitialisePetAbility();
 
             saveMask = UnlockedSpellSaveMask.Create;
         }
@@ -183,6 +194,16 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private void CastSpell()
         {
+            if (HasPetAbility && IsPetActive)
+            {
+                CharacterSpell characterSpell = Owner.SpellManager.GetSpell(PetAbilityBaseInfo.Entry.Id);
+                if (characterSpell == null)
+                    throw new InvalidPacketValueException();
+
+                characterSpell.Cast();
+                return;
+            }
+
             // For Threshold Spells
             if (Owner.HasSpell(BaseInfo.GetSpellInfo(Tier).Entry.Id, out Spell spell, isCasting: castMethod == CastMethod.ChargeRelease))
             {
@@ -223,6 +244,30 @@ namespace NexusForever.WorldServer.Game.Spell
                 SpellId            = Item.Id,
                 AbilityChargeCount = AbilityCharges
             });
+        }
+
+        private void InitialisePetAbility()
+        {
+            if (SpellInfo.Entry.Spell4IdPetSwitch == 0)
+                return;
+
+            Spell4Entry spell4Entry = GameTableManager.Instance.Spell4.GetEntry(SpellInfo.Entry.Spell4IdPetSwitch);
+            if (spell4Entry == null)
+                throw new ArgumentOutOfRangeException();
+
+            SpellBaseInfo baseInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(spell4Entry.Spell4BaseIdBaseSpell);
+            if (baseInfo == null)
+                throw new ArgumentOutOfRangeException();
+
+            PetAbilityBaseInfo = baseInfo;
+        }
+
+        public void SetPetUnitId(uint unitId)
+        {
+            if (!HasPetAbility)
+                throw new InvalidOperationException();
+
+            petUnitId = unitId;
         }
     }
 }

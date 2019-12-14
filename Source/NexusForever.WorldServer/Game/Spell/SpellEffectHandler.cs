@@ -56,7 +56,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 if (info.Damage.CombatResult == CombatResult.Critical)
                     caster.FireProc(ProcType.CriticalDamage);
 
-                target.TakeDamage(caster, info.Damage);
+                target.TakeDamage(caster, info.Damage, info.Entry.ThreatMultiplier);
             }
 
             if (info.Entry.TickTime > 0)
@@ -348,23 +348,7 @@ namespace NexusForever.WorldServer.Game.Spell
             if (!(target is Player player))
                 return;
 
-            // enqueue removal of existing vanity pet if summoned
-            if (player.VanityPetGuid != null)
-            {
-                VanityPet oldVanityPet = player.GetVisible<VanityPet>(player.VanityPetGuid.Value);
-                oldVanityPet?.RemoveFromMap();
-                player.VanityPetGuid = 0u;
-            }
-
-            var vanityPet = new VanityPet(player, info.Entry.DataBits00);
-
-            var position = new MapPosition
-            {
-                Position = player.Position
-            };
-
-            if (player.Map.CanEnter(vanityPet, position))
-                player.Map.EnqueueAdd(vanityPet, position);
+            player.PetManager.SummonPet(PetType.VanityPet, info.Entry.DataBits00, CastingId, parameters.SpellInfo.Entry, info.Entry);
         }
 
         [SpellEffectHandler(SpellEffectType.TitleGrant)]
@@ -516,6 +500,17 @@ namespace NexusForever.WorldServer.Game.Spell
                 log.Trace($"Applied Proc {info.Entry.Id} for {procInfo.Type} to Entity {target.Guid}.");
             else
                 log.Trace($"Failed to apply Proc {info.Entry.Id} for {(ProcType)info.Entry.DataBits00} to Entity {target.Guid}.");
+        }
+
+        [SpellEffectHandler(SpellEffectType.SummonPet)]
+        private void HandleEffectSummonPet(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            player.PetManager.SummonPet(PetType.CombatPet, info.Entry.DataBits00, CastingId, parameters.SpellInfo.Entry, info.Entry);
+
+            //parameters.IsUnlimitedDuration = true;
         }
     }
 }

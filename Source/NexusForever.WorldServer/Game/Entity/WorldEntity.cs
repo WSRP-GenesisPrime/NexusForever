@@ -881,6 +881,8 @@ namespace NexusForever.WorldServer.Game.Entity
                 return dispositionFromFactionInvoker.Value;
 
             // TODO: client does a few more checks, might not be 100% accurate
+            if (primary && Faction1 == factionId || !primary && Faction2 == factionId)
+                return Disposition.Friendly;
 
             // default to neutral if we have no disposition from other sources
             return Disposition.Neutral;
@@ -1047,7 +1049,7 @@ namespace NexusForever.WorldServer.Game.Entity
         protected virtual void OnDeathStateChange(DeathState newState)
         {
             // This will only run through method if this is not a Player and  is a Database Entity
-            if (EntityId == 0u)
+            if (this is Player || EntityId == 0u)
                 return;
 
             switch (newState)

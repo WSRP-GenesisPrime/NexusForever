@@ -62,19 +62,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
             base.OnAddToMap(map, guid, vector);
 
-            // resummon vanity pet if it existed before teleport
-            if (pendingTeleport?.VanityPetId != null)
-            {
-                var vanityPet = new VanityPet(this, pendingTeleport.VanityPetId.Value);
-
-                var position = new MapPosition
-                {
-                    Position = Position
-                };
-
-                if (map.CanEnter(vanityPet, position))
-                    map.EnqueueAdd(vanityPet, position);
-            }
+            PetManager.OnAddToMap(pendingTeleport);
 
             pendingTeleport = null;
             

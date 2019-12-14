@@ -23,6 +23,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public uint CastingId { get; }
         public bool IsCasting => _IsCasting();
         public bool IsFinished => status == SpellStatus.Finished || status == SpellStatus.Failed;
+        public bool IsFinishing => status == SpellStatus.Finishing;
         public bool IsFailed => status == SpellStatus.Failed;
         public bool IsWaiting => status == SpellStatus.Waiting;
         public uint Spell4Id => parameters.SpellInfo.Entry.Id;

@@ -151,6 +151,9 @@ namespace NexusForever.WorldServer.Game.Loot
         /// <remarks>This should mainly be used when a creature is killed by the Player.</remarks>
         public LootInstance DropLoot(WorldSession looter, WorldEntity lootedEntity)
         {
+            if (lootedEntity is Pet)
+                return null;
+
             Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(lootedEntity.CreatureId);
             if (entry == null)
                 throw new InvalidOperationException($"Creature2 Entry {lootedEntity.CreatureId} not found.");

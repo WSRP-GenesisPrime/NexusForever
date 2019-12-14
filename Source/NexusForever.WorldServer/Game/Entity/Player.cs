@@ -140,10 +140,12 @@ namespace NexusForever.WorldServer.Game.Entity
             set => MovementManager.SetPlatform(value);
         }
 
-        /// <summary>
-        /// Guid of the <see cref="VanityPet"/> currently summoned by the <see cref="Player"/>.
-        /// </summary>
-        public uint? VanityPetGuid { get; set; }
+        ///// <summary>
+        ///// Guid of the <see cref="VanityPet"/> currently summoned by the <see cref="Player"/>.
+        ///// </summary>
+        //public uint? VanityPetGuid { get; set; }
+
+        //public List<uint> CombatPetGuids { get; private set; } = new List<uint>();
 
         public bool IsSitting => currentChairGuid != null;
         private uint? currentChairGuid;
@@ -215,6 +217,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public ContactManager ContactManager { get; }
         public CinematicManager CinematicManager { get; }
         public ResidenceManager ResidenceManager { get; }
+        public PetManager PetManager { get; }
 
         public VendorInfo SelectedVendorInfo { get; set; } // TODO unset this when too far away from vendor
 
@@ -241,7 +244,6 @@ namespace NexusForever.WorldServer.Game.Entity
         private HashSet<Bone> deletedCharacterBones = new HashSet<Bone>();
 
         private MovementSpeed movementSpeed;
-
         private bool firstTimeLoggingIn;
 
         /// <summary>
@@ -303,6 +305,7 @@ namespace NexusForever.WorldServer.Game.Entity
             ContactManager          = new ContactManager(this, model);
             CinematicManager        = new CinematicManager(this);
             ResidenceManager        = new ResidenceManager(this);
+            PetManager              = new PetManager(this);
 
             Costume costume = null;
             if (CostumeIndex >= 0)
@@ -665,6 +668,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 foreach (Currency currency in CurrencyManager)
                     playerCreate.Money[(byte)currency.Id - 1] = currency.Amount;
 
+                foreach (Pet pet in PetManager.GetCombatPets())
+                    playerCreate.Pets.Add(pet.GetPetPacket());
+
                 foreach (Item item in Inventory
                     .Where(b => b.Location != InventoryLocation.Ability)
                     .SelectMany(i => i))
@@ -926,20 +932,13 @@ namespace NexusForever.WorldServer.Game.Entity
                 return;
             }
 
-            // store vanity pet summoned before teleport so it can be summoned again after being added to the new map
-            uint? vanityPetId = null;
-            if (VanityPetGuid != null)
-            {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
-                vanityPetId = pet?.Creature.Id;
-            }
-
             pendingTeleport = new PendingTeleport
             {
                 Reason      = reason,
-                MapPosition = mapPosition,
-                VanityPetId = vanityPetId
+                MapPosition = mapPosition
             };
+
+            PetManager.OnTeleport(pendingTeleport);
 
             MapManager.Instance.AddToMap(this, mapPosition);
             log.Trace($"Teleporting {Name}({CharacterId}) to map: {mapPosition.Info.Entry.Id}, instance: {mapPosition.Info.InstanceId ?? 0ul}.");
@@ -1264,12 +1263,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (VehicleGuid != 0u)
                 Dismount();
 
-            if (VanityPetGuid != null)
-            {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
-                pet?.RemoveFromMap();
-                VanityPetGuid = null;
-            }
+            PetManager.OnRemoveFromMap();
 
             if (GhostGuid != null)
             {

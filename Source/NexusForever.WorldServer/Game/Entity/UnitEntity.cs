@@ -77,7 +77,7 @@ namespace NexusForever.WorldServer.Game.Entity
             InitialiseHitRadius();
         }
 
-        private void InitialiseAI()
+        protected virtual void InitialiseAI()
         {
             // TODO: Allow for AI Types to be set from Database
             if (this is NonPlayer)
@@ -370,7 +370,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public bool IsValidAttackTarget()
         {
             // TODO: Expand on this. There's bound to be flags or states that should prevent an entity from being attacked.
-            return (this is Player || this is NonPlayer) && this is not Ghost;
+            return (this is Player or NonPlayer or Pet) && this is not Ghost;
         }
 
         private void CheckCombatStateChange(IEnumerable<HostileEntity> hostiles = null)
@@ -460,13 +460,15 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Deal damage to this <see cref="UnitEntity"/>
         /// </summary>
-        public void TakeDamage(UnitEntity attacker, SpellTargetInfo.SpellTargetEffectInfo.DamageDescription damageDescription)
+        public void TakeDamage(UnitEntity attacker, SpellTargetInfo.SpellTargetEffectInfo.DamageDescription damageDescription, float threatMultiplier)
         {
             if (!IsAlive || !attacker.IsAlive)
                 return;
 
             // TODO: Calculate Threat properly
-            ThreatManager.AddThreat(attacker, (int)damageDescription.RawDamage);
+            ThreatManager.AddThreat(attacker, (int)(damageDescription.RawDamage * threatMultiplier));
+            if (attacker is Player player)
+                player.PetManager.ApplyThreat(this);
 
             Shield -= damageDescription.ShieldAbsorbAmount;
             ModifyHealth(-damageDescription.AdjustedDamage);

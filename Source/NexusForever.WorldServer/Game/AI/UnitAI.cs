@@ -16,22 +16,24 @@ namespace NexusForever.WorldServer.Game.AI
 {
     public class UnitAI : IUpdate
     {
-        protected UnitEntity me;
+        protected UnitEntity me { get; set; }
 
         private bool resettingFromCombat = false;
 
         public bool IsLeashing() => resettingFromCombat;
 
-        private float MAX_ATTACK_RANGE = 5f;
-        private uint[] autoAttacks = new uint[]
+        protected float MAX_ATTACK_RANGE = 5f;
+        protected List<uint> autoAttacks { get; set; } = new()
         {
             28704,
             28705
         };
-        private bool attackIndex;
-        private UpdateTimer autoTimer = new UpdateTimer(1.5d);
-        private UpdateTimer combatTimer = new UpdateTimer(6d, false);
-        private Spell4Entry specialAbility = GameTableManager.Instance.Spell4.GetEntry(55311);
+        private int attackIndex;
+
+        protected UpdateTimer autoTimer { get; set; } = new UpdateTimer(1.5d);
+        protected UpdateTimer combatTimer { get; set; } = new UpdateTimer(6d, false);
+        protected Spell4Entry specialAbility { get; set; } = GameTableManager.Instance.Spell4.GetEntry(55311);
+        protected bool useSpecialAbility { get; set; } = true;
 
         private double executionTimer = 0d;
 
@@ -79,10 +81,11 @@ namespace NexusForever.WorldServer.Game.AI
                                 me.MovementManager?.StopSpline();
                                 me.MovementManager?.BroadcastCommands();
                                 me.MovementManager?.SetRotation(me.Position.GetRotationTo(victim.Position));
-                                me.CastSpell(specialAbility.Id, new SpellParameters
-                                {
-                                    PrimaryTargetId = victim.Guid
-                                });
+                                if (useSpecialAbility)
+                                    me.CastSpell(specialAbility.Id, new SpellParameters
+                                    {
+                                        PrimaryTargetId = victim.Guid
+                                    });
                                 combatTimer.Reset();
                                 return;
                             }
@@ -180,7 +183,7 @@ namespace NexusForever.WorldServer.Game.AI
             if (!me.GetCurrentVictim(out UnitEntity victim))
                 return;
 
-            uint spell4Id = autoAttacks[Convert.ToInt32(attackIndex)];
+            uint spell4Id = autoAttacks[attackIndex];
             Spell4Entry spell4Entry = GameTableManager.Instance.Spell4.GetEntry(spell4Id);
             if (spell4Entry == null)
                 throw new ArgumentOutOfRangeException("spell4Id", $"{spell4Id} not found in Spell4 Entries.");
@@ -195,7 +198,10 @@ namespace NexusForever.WorldServer.Game.AI
             {
                 PrimaryTargetId = victim.Guid
             });
-            attackIndex = !attackIndex;
+            if (attackIndex == autoAttacks.Count - 1)
+                attackIndex = 0;
+            else
+                attackIndex++;
             autoTimer.Reset(true);
         }
 

@@ -7,8 +7,10 @@ namespace NexusForever.Shared.Network.Message
         ServerHello                     = 0x0003,
         ServerMaxCharacterLevelAchieved = 0x0036,
         ServerPlayerEnteredWorld        = 0x0061,
+        ServerPlayerPet                 = 0x0068,
         ServerAuthEncrypted             = 0x0076,
         ServerLogoutUpdate              = 0x0092,
+        ClientCastActionBarSpell        = 0x0096,
         ClientActivateUnitCast          = 0x0097, // not sure about the name - almost the same as 0x00B3, but also initiates 0x07FD
         ClientActivateUnitInteraction   = 0x0098,
         ClientCastSpell                 = 0x009A,
@@ -287,6 +289,7 @@ namespace NexusForever.Shared.Network.Message
         ServerOwnedItemAuctions         = 0x064D,
         ServerPendingWorldRemovalCancel = 0x0688,
         ServerPendingWorldRemoval       = 0x0689,
+        ClientPetDismiss                = 0x068A,
         ClientRequestPlayed             = 0x0693,
         ServerPlayerPlayed              = 0x0694,
         ClientPathActivate              = 0x06B2,
@@ -320,6 +323,7 @@ namespace NexusForever.Shared.Network.Message
         ServerRealmFirstAchievement     = 0x075F,
         ServerRealmList                 = 0x0761, // bidirectional? packet has both read and write handlers
         ServerRealmMessages             = 0x0763,
+        ServerPlayerPetDespawn          = 0x077F,
         ClientHousingCommunityRename    = 0x0788,
         ClientTitleSet                  = 0x078E,
         ServerNewRealm                  = 0x07A1,
