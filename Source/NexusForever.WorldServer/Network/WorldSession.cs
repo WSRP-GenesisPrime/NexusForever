@@ -16,6 +16,7 @@ using NexusForever.WorldServer.Game.RewardTrack;
 using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Game;
+using NexusForever.WorldServer.Game.Storefront;
 
 namespace NexusForever.WorldServer.Network
 {
@@ -32,6 +33,7 @@ namespace NexusForever.WorldServer.Network
         public EntitlementManager EntitlementManager { get; private set; }
         public RewardTrackManager RewardTrackManager { get; set; }
         public AccountInventory AccountInventory { get; set; }
+        public PurchaseManager PurchaseManager { get; set; }
 
         public AccountTier AccountTier => AccountRbacManager.HasPermission(Permission.Signature) ? AccountTier.Signature : AccountTier.Basic;
 
@@ -93,6 +95,7 @@ namespace NexusForever.WorldServer.Network
             EntitlementManager     = new EntitlementManager(this, account);
             AccountInventory       = new AccountInventory(this, account); // Must be initialised before RewardTrackManager
             RewardTrackManager     = new RewardTrackManager(this, account);
+            PurchaseManager        = new PurchaseManager(this, account);
         }
 
         public void SetEncryptionKey(byte[] sessionKey)

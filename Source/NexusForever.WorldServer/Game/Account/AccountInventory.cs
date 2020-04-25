@@ -62,7 +62,7 @@ namespace NexusForever.WorldServer.Game.Account
         /// <summary>
         /// Create a new <see cref="AccountItem"/> from an <see cref="AccountItemEntry"/>.
         /// </summary>
-        public void ItemCreate(AccountItemEntry entry)
+        public ulong ItemCreate(AccountItemEntry entry)
         {
             if (entry == null)
                 throw new ArgumentNullException(nameof(entry));
@@ -71,6 +71,8 @@ namespace NexusForever.WorldServer.Game.Account
             items.TryAdd(item.Id, item);
 
             SendAccountItemList();
+
+            return item.Id;
         }
 
         /// <summary>
@@ -122,7 +124,7 @@ namespace NexusForever.WorldServer.Game.Account
                     }
             }
 
-            if (item.Entry.PrerequisiteId != 0u &&
+            if (item.Entry.PrerequisiteId != 0u && session.Player != null &&
                 !PrerequisiteManager.Instance.Meets(session.Player, item.Entry.PrerequisiteId))
             {
                 SendAccountOperationResult(AccountOperation.TakeItem, AccountOperationResult.Prereq);
