@@ -20,6 +20,10 @@ namespace NexusForever.WorldServer.Command.Handler
         /// </summary>
         public override CommandResult Invoke(ICommandContext context, ParameterQueue queue)
         {
+            CommandResult result = CanInvoke(context); // check permissions.
+            if (result != CommandResult.Ok)
+                return result;
+
             ChronCommandParameterConverter con = new ChronCommandParameterConverter();
             con.Convert(context, queue);
 
