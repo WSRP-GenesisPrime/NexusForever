@@ -59,10 +59,33 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             session.Player.EnqueueToVisible(new ServerEmote
             {
-                Guid       = session.Player.Guid,
+                Guid = session.Player.Guid,
                 StandState = standState,
-                EmoteId    = emote.EmoteId
+                EmoteId = emote.EmoteId
             });
+        }
+
+        public static void SetEmote(WorldSession session, ClientEmote emote)
+        {
+            StandState standState = StandState.Stand;
+            if (emote.EmoteId != 0)
+            {
+                EmotesEntry entry = GameTableManager.Instance.Emotes.GetEntry(emote.EmoteId);
+                if (entry == null)
+                    throw (new InvalidPacketValueException("HandleEmote: Invalid EmoteId"));
+
+                standState = (StandState)entry.StandState;
+            }
+
+            if (emote.EmoteId == 0 && session.Player.IsSitting)
+                session.Player.Unsit();
+
+            session.Player.EnqueueToVisible(new ServerEmote
+            {
+                Guid = session.Player.Guid,
+                StandState = standState,
+                EmoteId = emote.EmoteId
+            }, true);
         }
 
         [MessageHandler(GameMessageOpcode.ClientWhoRequest)]

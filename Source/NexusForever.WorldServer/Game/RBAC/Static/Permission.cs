@@ -167,6 +167,9 @@
         Morph                       = 50000,
         MorphStoryteller            = 50001,
 
+        // Genesis Prime: emote command
+        Emote                       = 50100,
+
         // non command permissions
         InstantLogout               = 10000,
         Signature                   = 10001

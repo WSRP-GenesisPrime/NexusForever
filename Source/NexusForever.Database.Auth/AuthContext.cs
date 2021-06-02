@@ -857,6 +857,11 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
+                        Id = 50100,
+                        Name = "Category: Emote"
+                    },
+                    new PermissionModel
+                    {
                         Id   = 10000,
                         Name = "Other: InstantLogout"
                     },
