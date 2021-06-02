@@ -170,6 +170,9 @@
         // Genesis Prime: emote command
         Emote                       = 50100,
 
+        // Genesis Prime: chron command
+        Chron                       = 50200,
+
         // non command permissions
         InstantLogout               = 10000,
         Signature                   = 10001
