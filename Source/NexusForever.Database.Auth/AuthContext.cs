@@ -837,13 +837,23 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
-                        Id   = 98,
+                        Id = 98,
                         Name = "Category: Reputation"
                     },
                     new PermissionModel
                     {
-                        Id   = 99,
+                        Id = 99,
                         Name = "Command: ReputationUpdate"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50000,
+                        Name = "Category: Morph"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50001,
+                        Name = "Command: MorphStoryTeller"
                     },
                     new PermissionModel
                     {
