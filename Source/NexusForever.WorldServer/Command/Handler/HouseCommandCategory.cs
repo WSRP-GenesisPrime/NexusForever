@@ -66,7 +66,9 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]
         public void HandleHouseTeleport(ICommandContext context,
             [Parameter("", ParameterFlags.Optional)]
-            string name)
+            string firstName,
+            [Parameter("", ParameterFlags.Optional)]
+            string lastName)
         {
             Player target = context.GetTargetOrInvoker<Player>();
             if (!target.CanTeleport())
@@ -74,6 +76,8 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
                 return;
             }
+
+            string name = $"{firstName} {lastName}";
 
             Residence residence = ResidenceManager.Instance.GetResidence(name ?? target.Name).GetAwaiter().GetResult();
             if (residence == null)
