@@ -9,6 +9,7 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         public HousingPlotInfoEntry PlotEntry { get; }
         public HousingPlugItemEntry PlugEntry { get; }
+        private Plug ReplacementPlug { get; set; }
 
         public Plug(HousingPlotInfoEntry plotEntry, HousingPlugItemEntry plugEntry)
             : base(EntityType.Plug)
@@ -25,6 +26,26 @@ namespace NexusForever.WorldServer.Game.Entity
                 PlugId    = (ushort)PlugEntry.WorldIdPlug00,
                 PlugFlags = 63
             };
+        }
+        
+        /// <summary>
+         /// Queue a replacement <see cref="Plug"/> to assume this entity's WorldSocket and WorldPlug location
+         /// </summary>
+        public void EnqueueReplace(Plug newPlug)
+        {
+            ReplacementPlug = newPlug;
+            RemoveFromMap();
+        }
+
+        public override void OnRemoveFromMap()
+        {
+            if (ReplacementPlug != null)
+            {
+                Map.EnqueueAdd(ReplacementPlug, Position);
+                ReplacementPlug = null;
+            }
+
+            base.OnRemoveFromMap();
         }
     }
 }

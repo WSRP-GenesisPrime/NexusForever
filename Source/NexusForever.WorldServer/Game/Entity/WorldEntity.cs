@@ -29,8 +29,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public Faction Faction1 { get; set; }
         public Faction Faction2 { get; set; }
 
-        public ulong ActivePropId { get; private set; }
-        public ushort WorldSocketId { get; private set; }
+        public ulong ActivePropId { get; protected set; }
+        public ushort WorldSocketId { get; protected set; }
 
         public Vector3 LeashPosition { get; protected set; }
         public float LeashRange { get; protected set; } = 15f;
