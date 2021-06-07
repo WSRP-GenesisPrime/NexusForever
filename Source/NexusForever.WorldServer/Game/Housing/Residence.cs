@@ -227,9 +227,6 @@ namespace NexusForever.WorldServer.Game.Housing
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
 
-            if (model.ResidenceInfoId > 0)
-                ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
-
             foreach (ResidenceDecor decorModel in model.Decor)
             {
                 var decor = new Decor(decorModel);
