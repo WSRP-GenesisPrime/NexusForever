@@ -96,6 +96,7 @@ namespace NexusForever.WorldServer.Game.Map
                         CharacterIdOwner  = residence.OwnerId,
                         Name              = residence.Name,
                         PropertyInfoId    = residence.PropertyInfoId,
+                        ResidenceInfoId   = residence.ResidenceInfoEntry?.Id ?? 0u,
                         WallpaperExterior = residence.Wallpaper,
                         Entryway          = residence.Entryway,
                         Roof              = residence.Roof,
@@ -447,7 +448,7 @@ namespace NexusForever.WorldServer.Game.Map
 
             log.Debug($"IsValidPlotForPosition - PlotIndex: {update.PlotIndex}, Range: {minBound}-{maxBound}, Coords: {globalCellX}, {globalCellZ}");
 
-            return !(globalCellX >= minBound && globalCellX <= maxBound && globalCellZ >= minBound && globalCellZ <= maxBound);
+            return (globalCellX >= minBound && globalCellX <= maxBound && globalCellZ >= minBound && globalCellZ <= maxBound);
         }
 
         /// <summary>
@@ -605,11 +606,11 @@ namespace NexusForever.WorldServer.Game.Map
                 Guid = player.Guid
             });
 
-            ResidenceEntity residenceEntity = new ResidenceEntity(6241, plot.PlotEntry);
-            EnqueueAdd(residenceEntity, houseLocation);
+            // Send plots again after Property was updated
+            SendHousingPlots();
 
             // Send residence decor after house change
-            //SendResidenceDecor();
+            SendResidenceDecor();
 
             // TODO: Run script(s) associated with PlugItem
 
@@ -681,7 +682,7 @@ namespace NexusForever.WorldServer.Game.Map
         {
             // Set this Plot to use the correct Plug
             if (housingPlugUpdate != null)
-                plot.SetPlug(housingPlugUpdate.PlugItem); // TODO: Allow for rotation
+                plot.SetPlug(housingPlugUpdate.PlugItem, (HousingPlugFacing)housingPlugUpdate.PlugFacing == HousingPlugFacing.Default ? HousingPlugFacing.East : (HousingPlugFacing)housingPlugUpdate.PlugFacing);
 
             SendHousingPlots();
 

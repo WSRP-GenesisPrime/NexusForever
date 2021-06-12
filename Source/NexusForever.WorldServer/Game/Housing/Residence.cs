@@ -16,6 +16,7 @@ namespace NexusForever.WorldServer.Game.Housing
         public ulong Id { get; }
         public ulong OwnerId { get; }
         public string OwnerName { get; }
+        public string OwnerOriginalName { get; }
         public byte PropertyInfoId { get; }
 
         public string Name
@@ -213,6 +214,7 @@ namespace NexusForever.WorldServer.Game.Housing
             Id                  = model.Id;
             OwnerId             = model.OwnerId;
             OwnerName           = model.Character.Name;
+            OwnerOriginalName   = model.Character.OriginalName;
             PropertyInfoId      = model.PropertyInfoId;
             name                = model.Name;
             privacyLevel        = (ResidencePrivacyLevel)model.PrivacyLevel;
@@ -226,6 +228,9 @@ namespace NexusForever.WorldServer.Game.Housing
             flags               = (ResidenceFlags)model.Flags;
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
+
+            if (model.ResidenceInfoId > 0)
+                ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
 
             foreach (ResidenceDecor decorModel in model.Decor)
             {
@@ -262,7 +267,7 @@ namespace NexusForever.WorldServer.Game.Housing
             }
 
             // TODO: find a better way to do this, this adds the starter tent plug
-            plots[0].SetPlug(10);
+            plots[0].SetPlug(18);
             plots[0].BuildState = 4;
 
             saveMask = ResidenceSaveMask.Create;
@@ -360,6 +365,11 @@ namespace NexusForever.WorldServer.Game.Housing
                     {
                         model.ResourceSharing = ResourceSharing;
                         entity.Property(p => p.ResourceSharing).IsModified = true;
+                    }
+                    if ((saveMask & ResidenceSaveMask.ResidenceInfo) != 0)
+                    {
+                        model.ResidenceInfoId = (ushort)(ResidenceInfoEntry?.Id ?? 0u);
+                        entity.Property(p => p.ResidenceInfoId).IsModified = true;
                     }
                     if ((saveMask & ResidenceSaveMask.GardenSharing) != 0)
                     {
