@@ -16,6 +16,7 @@ namespace NexusForever.WorldServer.Game.Housing
         public ulong Id { get; }
         public ulong OwnerId { get; }
         public string OwnerName { get; }
+        public string OwnerOriginalName { get; }
         public byte PropertyInfoId { get; }
 
         public string Name
@@ -50,7 +51,7 @@ namespace NexusForever.WorldServer.Game.Housing
             get => wallpaperId;
             set
             {
-                if (GameTableManager.Instance.HousingWallpaperInfo.GetEntry(value) == null)
+                if (GameTableManager.Instance.HousingWallpaperInfo.GetEntry(value) == null && value > 0)
                     throw new ArgumentOutOfRangeException();
 
                 wallpaperId = value;
@@ -65,7 +66,7 @@ namespace NexusForever.WorldServer.Game.Housing
             get => roofDecorInfoId;
             set
             {
-                if (GameTableManager.Instance.HousingDecorInfo.GetEntry(value) == null)
+                if (GameTableManager.Instance.HousingDecorInfo.GetEntry(value) == null && value > 0)
                     throw new ArgumentOutOfRangeException();
 
                 roofDecorInfoId = value;
@@ -80,7 +81,7 @@ namespace NexusForever.WorldServer.Game.Housing
             get => entrywayDecorInfoId;
             set
             {
-                if (GameTableManager.Instance.HousingDecorInfo.GetEntry(value) == null)
+                if (GameTableManager.Instance.HousingDecorInfo.GetEntry(value) == null && value > 0)
                     throw new ArgumentOutOfRangeException();
 
                 entrywayDecorInfoId = value;
@@ -95,7 +96,7 @@ namespace NexusForever.WorldServer.Game.Housing
             get => doorDecorInfoId;
             set
             {
-                if (GameTableManager.Instance.HousingDecorInfo.GetEntry(value) == null)
+                if (GameTableManager.Instance.HousingDecorInfo.GetEntry(value) == null && value > 0)
                     throw new ArgumentOutOfRangeException();
 
                 doorDecorInfoId = value;
@@ -197,6 +198,7 @@ namespace NexusForever.WorldServer.Game.Housing
         }
 
         private byte gardenSharing;
+        public HousingResidenceInfoEntry ResidenceInfoEntry { get; private set; }
 
         private ResidenceSaveMask saveMask;
 
@@ -212,6 +214,7 @@ namespace NexusForever.WorldServer.Game.Housing
             Id                  = model.Id;
             OwnerId             = model.OwnerId;
             OwnerName           = model.Character.Name;
+            OwnerOriginalName   = model.Character.OriginalName;
             PropertyInfoId      = model.PropertyInfoId;
             name                = model.Name;
             privacyLevel        = (ResidencePrivacyLevel)model.PrivacyLevel;
@@ -225,6 +228,9 @@ namespace NexusForever.WorldServer.Game.Housing
             flags               = (ResidenceFlags)model.Flags;
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
+
+            if (model.ResidenceInfoId > 0)
+                ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
 
             foreach (ResidenceDecor decorModel in model.Decor)
             {
@@ -260,8 +266,9 @@ namespace NexusForever.WorldServer.Game.Housing
                 plots[plot.Index] = plot;
             }
 
-            // TODO: find a better way to do this, this adds the construction yard plug
-            plots[0].SetPlug(531);
+            // TODO: find a better way to do this, this adds the starter tent plug
+            plots[0].SetPlug(18);
+            plots[0].BuildState = 4;
 
             saveMask = ResidenceSaveMask.Create;
         }
@@ -359,6 +366,11 @@ namespace NexusForever.WorldServer.Game.Housing
                         model.ResourceSharing = ResourceSharing;
                         entity.Property(p => p.ResourceSharing).IsModified = true;
                     }
+                    if ((saveMask & ResidenceSaveMask.ResidenceInfo) != 0)
+                    {
+                        model.ResidenceInfoId = (ushort)(ResidenceInfoEntry?.Id ?? 0u);
+                        entity.Property(p => p.ResidenceInfoId).IsModified = true;
+                    }
                     if ((saveMask & ResidenceSaveMask.GardenSharing) != 0)
                     {
                         model.GardenSharing = GardenSharing;
@@ -433,6 +445,71 @@ namespace NexusForever.WorldServer.Game.Housing
 
             decors.Remove(decor.DecorId);
             deletedDecors.Add(decor);
+        }
+
+
+        /// <summary>
+        /// Set this <see cref="Residence"/> house plug to the supplied <see cref="HousingPlugItemEntry"/>. Returns <see cref="true"/> if successful
+        /// </summary>
+        public bool SetHouse(HousingPlugItemEntry plugItemEntry)
+        {
+            if (plugItemEntry == null)
+                throw new ArgumentNullException();
+
+            uint residenceId = GetResidenceEntryForPlug(plugItemEntry.Id);
+            if (residenceId > 0)
+            {
+                HousingResidenceInfoEntry residenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(residenceId);
+                if (residenceInfoEntry != null)
+                {
+                    ResidenceInfoEntry = residenceInfoEntry;
+                    Wallpaper = (ushort)residenceInfoEntry.HousingWallpaperInfoIdDefault;
+                    Roof = (ushort)residenceInfoEntry.HousingDecorInfoIdDefaultRoof;
+                    Door = (ushort)residenceInfoEntry.HousingDecorInfoIdDefaultDoor;
+                    Entryway = (ushort)residenceInfoEntry.HousingDecorInfoIdDefaultEntryway;
+                }
+
+                saveMask |= ResidenceSaveMask.ResidenceInfo;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="HousingResidenceInfoEntry"/> ID if the plug ID is known.
+        /// </summary>
+        private uint GetResidenceEntryForPlug(uint plugItemId)
+        {
+            Dictionary<uint, uint> residenceLookup = new Dictionary<uint, uint>
+            {
+                { 83, 14 },     // Cozy Aurin House
+                { 295, 19 },    // Cozy Chua House
+                { 293, 22 },    // Cozy Cassian House
+                { 294, 18 },    // Cozy Draken House
+                { 292, 28 },    // Cozy Exile Human House
+                { 80, 11 },     // Cozy Granok House
+                { 297, 26 },    // Spacious Aurin House
+                { 298, 20 },    // Spacious Cassian House
+                { 296, 23 },    // Spacious Chua House
+                { 299, 21 },    // Spacious Draken House
+                { 86, 17 },     // Spacious Exile Human House
+                { 291, 27 },    // Spacious Granok House
+                { 530, 32 }     // Underground Bunker
+            };
+
+            return residenceLookup.TryGetValue(plugItemId, out uint residenceId) ? residenceId : 0u;
+        }
+
+        public void RemoveHouse()
+        {
+            ResidenceInfoEntry = null;
+            Wallpaper = 0;
+            Roof = 0;
+            Door = 0;
+            Entryway = 0;
+
+            saveMask |= ResidenceSaveMask.ResidenceInfo;
         }
 
         /// <summary>

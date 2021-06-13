@@ -1665,7 +1665,8 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.Index)
                     .HasColumnName("index")
                     .HasColumnType("tinyint(3) unsigned")
-                    .HasDefaultValue(0);
+                    .HasDefaultValue(0)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.BuildState)
                     .HasColumnName("buildState")

@@ -254,6 +254,7 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<HousingPropertyInfoEntry> HousingPropertyInfo { get; private set; }
 
+        [GameData]
         public GameTable<HousingResidenceInfoEntry> HousingResidenceInfo { get; private set; }
         public GameTable<HousingResourceEntry> HousingResource { get; private set; }
 
@@ -645,7 +646,9 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<WorldSkyEntry> WorldSky { get; private set; }
 
+        [GameData]
         public GameTable<WorldSocketEntry> WorldSocket { get; private set; }
+
         public GameTable<WorldWaterEnvironmentEntry> WorldWaterEnvironment { get; private set; }
         public GameTable<WorldWaterFogEntry> WorldWaterFog { get; private set; }
         public GameTable<WorldWaterLayerEntry> WorldWaterLayer { get; private set; }

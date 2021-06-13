@@ -82,7 +82,7 @@ namespace NexusForever.WorldServer.Command.Handler
             Residence residence = ResidenceManager.Instance.GetResidence(name ?? target.Name).GetAwaiter().GetResult();
             if (residence == null)
             {
-                if (name == null)
+                if (firstName == null && lastName == null)
                     residence = ResidenceManager.Instance.CreateResidence(target);
                 else
                 {

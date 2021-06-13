@@ -1,8 +1,11 @@
-﻿using NexusForever.Database.Character;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
+using System;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
@@ -10,7 +13,9 @@ namespace NexusForever.WorldServer.Game.Housing
     {
         public ulong Id { get; }
         public byte Index { get; }
+        public Plug PlugEntity { get; private set; }
         public HousingPlotInfoEntry PlotEntry { get; }
+        public DateTime BuildStartTime { get; private set; } = new DateTime(2018, 12, 1);
 
         public HousingPlugItemEntry PlugEntry
         {
@@ -103,17 +108,56 @@ namespace NexusForever.WorldServer.Game.Housing
             else
             {
                 // plot already exists in database, save only data that has been modified
-                // TODO
+                var model = new ResidencePlotModel
+                {
+                    Id = Id,
+                    Index = Index
+                };
+
+                // could probably clean this up with reflection, works for the time being
+                EntityEntry<ResidencePlotModel> entity = context.Attach(model);
+                if ((saveMask & PlotSaveMask.PlugItemId) != 0)
+                {
+                    model.PlugItemId = (ushort)(PlugEntry?.Id ?? 0u);
+                    entity.Property(p => p.PlugItemId).IsModified = true;
+                }
+                if ((saveMask & PlotSaveMask.PlugFacing) != 0)
+                {
+                    model.PlugFacing = (byte)PlugFacing;
+                    entity.Property(p => p.PlugFacing).IsModified = true;
+                }
+                if ((saveMask & PlotSaveMask.BuildState) != 0)
+                {
+                    model.BuildState = BuildState;
+                    entity.Property(p => p.BuildState).IsModified = true;
+                }
             }
 
             saveMask = PlotSaveMask.None;
         }
 
-        public void SetPlug(ushort plugItemId)
+        public void SetPlug(uint plugItemId, HousingPlugFacing plugFacing = HousingPlugFacing.East)
         {
             // TODO
             PlugEntry  = GameTableManager.Instance.HousingPlugItem.GetEntry(plugItemId);
-            BuildState = 4;
+            PlugFacing = plugFacing;
+
+            // BuildState needs to be cleared to get rid of the plug entity properly
+            BuildState = 0;
+            BuildStartTime = DateTime.UtcNow;
+        }
+
+        public void RemovePlug()
+        {
+            PlugEntry = null;
+            PlugEntity = null;
+            PlugFacing = HousingPlugFacing.East;
+            BuildState = 0;
+        }
+
+        public void SetPlugEntity(Plug plugEntity)
+        {
+            PlugEntity = plugEntity;
         }
     }
 }

@@ -43,6 +43,7 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 var plug = new Plug(plot.PlotEntry, plot.PlugEntry);
                 EnqueueAdd(plug, Vector3.Zero);
+                plot.SetPlugEntity(plug);
             }
         }
 
@@ -53,33 +54,14 @@ namespace NexusForever.WorldServer.Game.Map
 
             SendHousingPrivacy(player);
             SendHousingProperties(player);
-
-            var housingPlots = new ServerHousingPlots
-            {
-                RealmId     = WorldServer.RealmId,
-                ResidenceId = residence.Id,
-            };
-
-            foreach (Plot plot in residence.GetPlots())
-            {
-                housingPlots.Plots.Add(new ServerHousingPlots.Plot
-                {
-                    PlotPropertyIndex = plot.Index,
-                    PlotInfoId        = plot.PlotEntry.Id,
-                    PlugFacing        = plot.PlugFacing,
-                    PlugItemId        = plot.PlugEntry?.Id ?? 0u,
-                    BuildState        = plot.BuildState
-                });
-            } 
-
-            player.Session.EnqueueMessageEncrypted(housingPlots);
+            SendHousingPlots(player);
 
             // this shows the housing toolbar, might need to move this to a more generic place in the future
             player.Session.EnqueueMessageEncrypted(new ServerShowActionBar
             {
-                ShortcutSet            = ShortcutSet.FloatingSpellBar,
+                ShortcutSet = ShortcutSet.FloatingSpellBar,
                 ActionBarShortcutSetId = 1553,
-                Guid                   = player.Guid
+                Guid = player.Guid
             });
 
             SendResidenceDecor(player);
@@ -89,9 +71,9 @@ namespace NexusForever.WorldServer.Game.Map
         {
             var housingPrivacy = new ServerHousingPrivacy
             {
-                ResidenceId     = residence.Id,
+                ResidenceId = residence.Id,
                 NeighbourhoodId = 0x190000000000000A, // magic numbers are bad
-                PrivacyLevel    = ResidencePrivacyLevel.Public
+                PrivacyLevel = ResidencePrivacyLevel.Public
             };
 
             if (player != null)
@@ -114,6 +96,7 @@ namespace NexusForever.WorldServer.Game.Map
                         CharacterIdOwner  = residence.OwnerId,
                         Name              = residence.Name,
                         PropertyInfoId    = residence.PropertyInfoId,
+                        ResidenceInfoId   = residence.ResidenceInfoEntry?.Id ?? 0u,
                         WallpaperExterior = residence.Wallpaper,
                         Entryway          = residence.Entryway,
                         Roof              = residence.Roof,
@@ -134,7 +117,7 @@ namespace NexusForever.WorldServer.Game.Map
                 EnqueueToAll(housingProperties);
         }
 
-        private void SendResidenceDecor(Player player)
+        private void SendResidenceDecor(Player player = null)
         {
             var residenceDecor = new ServerHousingResidenceDecor();
 
@@ -144,28 +127,36 @@ namespace NexusForever.WorldServer.Game.Map
                 // client freaks out if too much decor is sent in a single message, limit to 100
                 if (i != 0u && i % 100u == 0u)
                 {
-                    player.Session.EnqueueMessageEncrypted(residenceDecor);
+                    if (player != null)
+                        player.Session.EnqueueMessageEncrypted(residenceDecor);
+                    else
+                        EnqueueToAll(residenceDecor);
                     residenceDecor = new ServerHousingResidenceDecor();
                 }
 
                 Decor decor = decors[i];
                 residenceDecor.DecorData.Add(new ServerHousingResidenceDecor.Decor
                 {
-                    RealmId       = WorldServer.RealmId,
-                    DecorId       = decor.DecorId,
-                    ResidenceId   = residence.Id,
-                    DecorType     = decor.Type,
-                    PlotIndex     = decor.PlotIndex,
-                    Scale         = decor.Scale,
-                    Position      = decor.Position,
-                    Rotation      = decor.Rotation,
-                    DecorInfoId   = decor.Entry.Id,
+                    RealmId = WorldServer.RealmId,
+                    DecorId = decor.DecorId,
+                    ResidenceId = residence.Id,
+                    DecorType = decor.Type,
+                    PlotIndex = decor.PlotIndex,
+                    Scale = decor.Scale,
+                    Position = decor.Position,
+                    Rotation = decor.Rotation,
+                    DecorInfoId = decor.Entry.Id,
                     ParentDecorId = decor.DecorParentId,
-                    ColourShift   = decor.ColourShiftId
+                    ColourShift = decor.ColourShiftId
                 });
 
                 if (i == decors.Length - 1)
-                    player.Session.EnqueueMessageEncrypted(residenceDecor);
+                {
+                    if (player != null)
+                        player.Session.EnqueueMessageEncrypted(residenceDecor);
+                    else
+                        EnqueueToAll(residenceDecor);
+                }
             }
         }
 
@@ -184,14 +175,14 @@ namespace NexusForever.WorldServer.Game.Map
 
                 housingResidenceDecor.DecorData.Add(new ServerHousingResidenceDecor.Decor
                 {
-                    RealmId     = WorldServer.RealmId,
-                    DecorId     = decor.DecorId,
+                    RealmId = WorldServer.RealmId,
+                    DecorId = decor.DecorId,
                     ResidenceId = residence.Id,
-                    DecorType   = decor.Type,
-                    PlotIndex   = decor.PlotIndex,
-                    Scale       = decor.Scale,
-                    Position    = decor.Position,
-                    Rotation    = decor.Rotation,
+                    DecorType = decor.Type,
+                    PlotIndex = decor.PlotIndex,
+                    Scale = decor.Scale,
+                    Position = decor.Position,
+                    Rotation = decor.Rotation,
                     DecorInfoId = decor.Entry.Id
                 });
             }
@@ -239,14 +230,14 @@ namespace NexusForever.WorldServer.Game.Map
 
                 residenceDecor.DecorData.Add(new ServerHousingResidenceDecor.Decor
                 {
-                    RealmId     = WorldServer.RealmId,
-                    DecorId     = decor.DecorId,
+                    RealmId = WorldServer.RealmId,
+                    DecorId = decor.DecorId,
                     ResidenceId = residence.Id,
-                    DecorType   = decor.Type,
-                    PlotIndex   = decor.PlotIndex,
-                    Scale       = decor.Scale,
-                    Position    = decor.Position,
-                    Rotation    = decor.Rotation,
+                    DecorType = decor.Type,
+                    PlotIndex = decor.PlotIndex,
+                    Scale = decor.Scale,
+                    Position = decor.Position,
+                    Rotation = decor.Rotation,
                     DecorInfoId = decor.Entry.Id
                 });
             }
@@ -294,7 +285,7 @@ namespace NexusForever.WorldServer.Game.Map
                 // new decor is being placed directly in the world
                 decor.Position = update.Position;
                 decor.Rotation = update.Rotation;
-                decor.Scale    = update.Scale;
+                decor.Scale = update.Scale;
             }
 
             EnqueueToAll(new ServerHousingResidenceDecor
@@ -379,10 +370,10 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 player.Session.EnqueueMessageEncrypted(new ServerHousingResult
                 {
-                    RealmId     = WorldServer.RealmId,
+                    RealmId = WorldServer.RealmId,
                     ResidenceId = residence.Id,
-                    PlayerName  = player.Name,
-                    Result      = result
+                    PlayerName = player.Name,
+                    Result = result
                 });
             }
 
@@ -457,7 +448,7 @@ namespace NexusForever.WorldServer.Game.Map
 
             log.Debug($"IsValidPlotForPosition - PlotIndex: {update.PlotIndex}, Range: {minBound}-{maxBound}, Coords: {globalCellX}, {globalCellZ}");
 
-            return !(globalCellX >= minBound && globalCellX <= maxBound && globalCellZ >= minBound && globalCellZ <= maxBound);
+            return (globalCellX >= minBound && globalCellX <= maxBound && globalCellZ >= minBound && globalCellZ <= maxBound);
         }
 
         /// <summary>
@@ -523,11 +514,250 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player.CharacterId))
                 throw new InvalidPacketValueException();
 
-            residence.Flags           = flagsUpdate.Flags;
+            residence.Flags = flagsUpdate.Flags;
             residence.ResourceSharing = flagsUpdate.ResourceSharing;
-            residence.GardenSharing   = flagsUpdate.GardenSharing;
+            residence.GardenSharing = flagsUpdate.GardenSharing;
 
             SendHousingProperties();
+        }
+
+        /// <summary>
+        /// Sends <see cref="ServerHousingPlots"/> to the player
+        /// </summary>
+        private void SendHousingPlots(Player player = null)
+        {
+            var housingPlots = new ServerHousingPlots
+            {
+                RealmId = WorldServer.RealmId,
+                ResidenceId = residence.Id,
+            };
+
+            foreach (Plot plot in residence.GetPlots())
+            {
+                housingPlots.Plots.Add(new ServerHousingPlots.Plot
+                {
+                    PlotPropertyIndex = plot.Index,
+                    PlotInfoId = plot.PlotEntry.Id,
+                    PlugFacing = plot.PlugFacing,
+                    PlugItemId = plot.PlugEntry?.Id ?? 0u,
+                    BuildState = plot.BuildState
+                });
+            }
+
+            if (player != null)
+                player.Session.EnqueueMessageEncrypted(housingPlots);
+            else
+                EnqueueToAll(housingPlots);
+        }
+
+        /// <summary>
+        /// Install a House Plug into a Plot
+        /// </summary>
+        private void SetHousePlug(Player player, ClientHousingPlugUpdate housingPlugUpdate, HousingPlugItemEntry plugItemEntry)
+        {
+            if (!residence.CanModifyResidence(player.CharacterId))
+                throw new InvalidPacketValueException();
+
+            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            if (plot == null)
+                throw new HousingException();
+
+            // TODO: Confirm that this plug is usable in said slot
+
+            // TODO: Figure out how the "Construction Yard" shows up. Appears to be related to time and not a specific packet. 
+            //       Telling the client that the Plots were updated looks to be the only trigger for the building animation.
+
+            // Update the Plot and queue necessary plug updates
+            if (residence.SetHouse(plugItemEntry))
+            {
+                HandleHouseChange(player, plot, housingPlugUpdate);
+            }
+            else
+                player.Session.EnqueueMessageEncrypted(new ServerHousingResult
+                {
+                    RealmId = WorldServer.RealmId,
+                    ResidenceId = residence.Id,
+                    PlayerName = player.Name,
+                    Result = HousingResult.Plug_InvalidPlug
+                });
+        }
+
+        /// <summary>
+        /// Handles updating the client with changes following a 2x2 Plot change
+        /// </summary>
+        private void HandleHouseChange(Player player, Plot plot, ClientHousingPlugUpdate housingPlugUpdate = null)
+        {
+            Vector3 houseLocation = new Vector3(1471f, -715f, 1443f);
+            // TODO: Crate all decor stored inside the house?
+
+            UpdatePlot(player, plot, housingPlugUpdate, houseLocation);
+
+            // Send updated Property data (informs residence, roof, door, etc.)
+            SendHousingProperties();
+
+            // Send plots again after Property was updated
+            SendHousingPlots();
+
+            // Resend the Action Bar because buttons may've been enabled after adding a house
+            player.Session.EnqueueMessageEncrypted(new ServerShowActionBar
+            {
+                ShortcutSet = ShortcutSet.FloatingSpellBar,
+                ActionBarShortcutSetId = 1553,
+                Guid = player.Guid
+            });
+
+            // Send plots again after Property was updated
+            SendHousingPlots();
+
+            // Send residence decor after house change
+            SendResidenceDecor();
+
+            // TODO: Run script(s) associated with PlugItem
+
+            // Set plot to "Built", and inform all clients
+            plot.BuildState = 4;
+            // TODO: Move this to an Update method, and ensure any timers are honoured before build is completed
+            EnqueueToAll(new ServerHousingPlotUpdate
+            {
+                RealmId = WorldServer.RealmId,
+                ResidenceId = residence.Id,
+                PlotIndex = plot.Index,
+                BuildStage = 0,
+                BuildState = plot.BuildState
+            });
+        }
+
+        /// <summary>
+        /// Install a Plug into a Plot; Should only be called on a client update.
+        /// </summary>
+        public void SetPlug(Player player, ClientHousingPlugUpdate housingPlugUpdate)
+        {
+            if (!residence.CanModifyResidence(player.CharacterId))
+                throw new InvalidPacketValueException();
+
+            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            if (plot == null)
+                throw new HousingException();
+
+            HousingPlugItemEntry plugItemEntry = GameTableManager.Instance.HousingPlugItem.GetEntry(housingPlugUpdate.PlugItem);
+            if (plugItemEntry == null)
+                throw new InvalidPacketValueException();
+
+            // TODO: Confirm that this plug is usable in said slot
+
+            if (plot.Index == 0)
+                SetHousePlug(player, housingPlugUpdate, plugItemEntry);
+            else
+            {
+                // TODO: Figure out how the "Construction Yard" shows up. Appears to be related to time and not a specific packet. 
+                //       Telling the client that the Plots were updated looks to be the only trigger for the building animation.
+
+                // Update the Plot and queue necessary plug updates
+                UpdatePlot(player, plot, housingPlugUpdate);
+
+                SendHousingPlots();
+
+                // TODO: Run script(s) associated with PlugItem
+
+                // Set plot to "Built", and inform all clients
+                plot.BuildState = 4;
+                // TODO: Move this to an Update method, and ensure any timers are honoured before build is completed
+                EnqueueToAll(new ServerHousingPlotUpdate
+                {
+                    RealmId = WorldServer.RealmId,
+                    ResidenceId = residence.Id,
+                    PlotIndex = plot.Index,
+                    BuildStage = 0,
+                    BuildState = plot.BuildState
+                });
+            }
+
+            // TODO: Deduct any cost and/or items
+        }
+
+        /// <summary>
+        /// Update supplied <see cref="Plot"/>; Should only be called by <see cref="ResidenceMap"/> when updating plot information
+        /// </summary>
+        private void UpdatePlot(Player player, Plot plot, ClientHousingPlugUpdate housingPlugUpdate = null, Vector3 position = new Vector3())
+        {
+            // Set this Plot to use the correct Plug
+            if (housingPlugUpdate != null)
+                plot.SetPlug(housingPlugUpdate.PlugItem, (HousingPlugFacing)housingPlugUpdate.PlugFacing == HousingPlugFacing.Default ? HousingPlugFacing.East : (HousingPlugFacing)housingPlugUpdate.PlugFacing);
+
+            SendHousingPlots();
+
+            // TODO: Figure out what this packet is for
+            player.Session.EnqueueMessageEncrypted(new Server051F
+            {
+                RealmId = WorldServer.RealmId,
+                ResidenceId = residence.Id,
+                PlotIndex = plot.Index
+            });
+
+            // Instatiate new plug entity and assign to Plot's PlugEntity cache
+            var newPlug = new Plug(plot.PlotEntry, plot.PlugEntry);
+
+            if (plot.PlugEntity != null)
+                plot.PlugEntity.EnqueueReplace(newPlug);
+            else
+                EnqueueAdd(newPlug, position);
+
+            // Update plot with PlugEntity reference
+            plot.SetPlugEntity(newPlug);
+        }
+
+        /// <summary>
+        /// Updates <see cref="Plot"/> to have no plug installed; Should only be called on a client update.
+        /// </summary>
+        public void RemovePlug(Player player, ClientHousingPlugUpdate housingPlugUpdate)
+        {
+            if (!residence.CanModifyResidence(player.CharacterId))
+                throw new InvalidPacketValueException();
+
+            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            if (plot == null)
+                throw new HousingException();
+
+            RemovePlug(player, plot);
+        }
+
+        /// <summary>
+        /// Updates <see cref="Plot"/> to have no plug installed
+        /// </summary>
+        private void RemovePlug(Player player, Plot plot)
+        {
+            // Handle changes if plot is the house plot
+            if (plot.Index == 0)
+                RemoveHouse(player, plot);
+            else
+            {
+                plot.PlugEntity.RemoveFromMap();
+                plot.RemovePlug();
+
+                SendHousingPlots();
+            }
+        }
+
+        /// <summary>
+        /// Updates supplied <see cref="Plot"/> to have no house on it
+        /// </summary>
+        private void RemoveHouse(Player player, Plot plot)
+        {
+            if (plot.Index > 0)
+                throw new ArgumentOutOfRangeException("plot.Index", "Plot Index must be 0 to remove a house");
+
+            // Clear all House information from the Residence instance associated with this map
+            residence.RemoveHouse();
+
+            // Even when no house is being used, the plug must be set for the house otherwise clients will get stuck on load screen
+            plot.SetPlug(531); // Defaults to Starter Tent
+
+            HandleHouseChange(player, plot);
+
+            player.Session.EnqueueMessageEncrypted(new ServerTutorial
+            {
+                TutorialId = 142
+            });
         }
     }
 }
