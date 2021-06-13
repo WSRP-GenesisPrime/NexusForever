@@ -8,6 +8,7 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -93,6 +94,40 @@ namespace NexusForever.WorldServer.Command.Handler
 
             ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
             target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
+        }
+
+        [Command(Permission.None, "Change ground/sky.", "remodel")]
+        public void HandleRemodelCommand(ICommandContext context,
+            [Parameter("Ground or sky?")]
+            string option,
+            [Parameter("ID")]
+            ushort id)
+        {
+            Player target = context.GetTargetOrInvoker<Player>();
+            //remodel
+            ClientHousingRemodel clientRemod = new ClientHousingRemodel();
+            ResidenceMap residenceMap = target.Map as ResidenceMap;
+            if (residenceMap == null)
+            {
+                context.SendError("You need to be on a housing map to use this command!");
+            }
+
+            Residence residence = ResidenceManager.Instance.GetResidence(target.Name).GetAwaiter().GetResult();
+
+            if (option.ToLower() == "ground")
+            {
+                residence.Ground = id;
+            }
+            else if (option.ToLower() == "sky")
+            {
+                residence.Sky = id;
+            }
+            else
+            {
+                context.SendError("You can only change the ground or sky with this command.");
+            }
+
+            residenceMap.Remodel(target, clientRemod);
         }
     }
 }

@@ -19,5 +19,11 @@ namespace NexusForever.WorldServer.Command.Handler
             foreach (WorldSession session in NetworkManager<WorldSession>.Instance.GetSessions())
                 GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
         }
+
+        [Command(Permission.None, "Display the current uptime of the server.", "uptime")]
+        public void HandleUptimeCheck(ICommandContext context)
+        {
+            context.SendMessage($"Currently up for {WorldServer.Uptime:%d}d {WorldServer.Uptime:%h}h {WorldServer.Uptime:%m}m {WorldServer.Uptime:%s}s");
+        }
     }
 }

@@ -176,7 +176,7 @@ namespace NexusForever.WorldServer.Game.Entity
             // deliberately empty
         }
 
-        protected void SetProperty(Property property, float value, float baseValue = 0.0f)
+        public void SetProperty(Property property, float value, float baseValue = 0.0f)
         {
             if (Properties.ContainsKey(property))
                 Properties[property].Value = value;

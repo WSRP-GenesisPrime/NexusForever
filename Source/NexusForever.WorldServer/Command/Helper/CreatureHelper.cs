@@ -731,6 +731,10 @@ namespace NexusForever.WorldServer.Command.Helper
         /// </summary>
         public static uint? GetCreatureIdFromType(string creatureType, string creatureVariant)
         {
+            if(creatureType == null || creatureType.Length <= 0 || creatureVariant == null || creatureVariant.Length <= 0)
+            {
+                return null;
+            }
             Dictionary<string, uint> creatureSubLibrary;
             // get the creature type-specific dictionary
             //log.Info($"Looking up {creatureType} in the Creature Library...");
@@ -761,7 +765,7 @@ namespace NexusForever.WorldServer.Command.Helper
                 return CreatureLibrary.Keys.ToList();
             }
             // not a storyteller, then.
-            return CreatureLibrary.Keys.Where(k => !isStoryTellerOnly(k)).ToList();
+            return CreatureLibrary.Keys.Where(k => !IsStoryTellerOnly(k)).ToList();
         }
 
         /// <summary>
@@ -779,7 +783,7 @@ namespace NexusForever.WorldServer.Command.Helper
             return null;
         }
 
-        public static bool isStoryTellerOnly(string creatureType)
+        public static bool IsStoryTellerOnly(string creatureType)
         {
             return StorytellerOnly.Contains(creatureType);
         }

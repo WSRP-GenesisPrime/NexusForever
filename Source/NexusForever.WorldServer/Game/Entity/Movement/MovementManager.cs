@@ -322,6 +322,61 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             LaunchGenerator(generator, 8f);
         }
 
+        public void Follow(WorldEntity entity, float distance, bool sideAngle, bool faceEntity)
+        {
+            Position followRot = new Position(entity.Rotation);
+            float angle = -entity.Rotation.X;
+            if (sideAngle)
+            {
+
+                if (faceEntity)
+                {
+                    AddCommand(new SetRotationFaceUnitCommand
+                    {
+                        UnitId = entity.Guid
+                    });
+                }
+                else
+                {
+                    AddCommand(new SetRotationCommand
+                    {
+                        Position = followRot
+                    });
+                }
+
+                angle += MathF.PI; // angle is directly left of the entity being followed
+            }
+            else
+            {
+                if (faceEntity)
+                {
+                    AddCommand(new SetRotationFaceUnitCommand
+                    {
+                        UnitId = entity.Guid
+                    });
+                }
+                else
+                {
+                    AddCommand(new SetRotationCommand
+                    {
+                        Position = followRot
+                    });
+                }
+
+                angle += MathF.PI / 2; // angle is directly behind entity being followed
+            }
+
+            var generator = new DirectMovementGenerator
+            {
+                Begin = splinePath?.GetPosition() ?? owner.Position,
+                Final = entity.Position.GetPoint2D(angle, distance),
+                Map = entity.Map
+            };
+
+            // TODO: calculate speed based on entity being followed.
+            LaunchGenerator(generator, 8f);
+        }
+
         private T GetCommand<T>() where T : IEntityCommandModel
         {
             EntityCommand? command = EntityCommandManager.Instance.GetCommand(typeof(T));

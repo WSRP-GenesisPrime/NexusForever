@@ -945,6 +945,67 @@ namespace NexusForever.WorldServer.Game.Entity
             // TODO: Remove pets, scanbots
         }
 
+        public void DestroyPet()
+        {
+            // enqueue removal of existing vanity pet if summoned
+            if (VanityPetGuid != null)
+            {
+                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+                pet?.RemoveFromMap();
+                VanityPetGuid = null;
+            }
+        }
+
+        public void SetPetFollowing(bool isPetFollowing)
+        {
+            if (VanityPetGuid != null)
+            {
+                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+                pet?.SetIsFollowingPlayer(isPetFollowing);
+            }
+        }
+
+        public void SetPetFacingPlayer(bool isPetFacingPlayer)
+        {
+            if (VanityPetGuid != null)
+            {
+                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+                pet?.SetIsFacingPlayer(isPetFacingPlayer);
+            }
+        }
+
+        public void SetPetFollowingOnSide(bool isPetFollowingOnSide)
+        {
+            if (VanityPetGuid != null)
+            {
+                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+                pet?.SetFollowingOnSide(isPetFollowingOnSide);
+            }
+        }
+
+        public void SetPetFollowDistance(float dist)
+        {
+            if (VanityPetGuid != null)
+            {
+                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+                pet?.SetFollowDistance(dist);
+            }
+        }
+        public void SetPetFollowRecalculateDistance(float dist)
+        {
+            if (VanityPetGuid != null)
+            {
+                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+                pet?.SetFollowFollowMinRecalculateDistance(dist);
+            }
+        }
+
+        public Creature2Entry VanityPetCreatureEntry()
+        {
+            VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
+            return pet?.Creature;
+        }
+
         /// <summary>
         /// Returns the time in seconds that has past since the last <see cref="Player"/> save.
         /// </summary>

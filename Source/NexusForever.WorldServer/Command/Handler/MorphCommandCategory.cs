@@ -31,7 +31,7 @@ namespace NexusForever.WorldServer.Command.Handler
             type = type.ToLower();
             subtype = subtype.ToLower();
 
-            bool storyTellerOnly = CreatureHelper.isStoryTellerOnly(type);
+            bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(type);
             if(storyTellerOnly && !player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))
             {
                 context.SendError("This creature category is only for storytellers and game masters!");
@@ -85,7 +85,7 @@ namespace NexusForever.WorldServer.Command.Handler
             Player player = context.GetTargetOrInvoker<Player>();
 
             bool storyteller = player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller);
-            if (type != null && (!CreatureHelper.isStoryTellerOnly(type) || storyteller))
+            if (type != null && (!CreatureHelper.IsStoryTellerOnly(type) || storyteller))
             {
                 List<string> variants = CreatureHelper.getCreatureVariantsForType(type);
                 if(variants != null && variants.Count > 0)
