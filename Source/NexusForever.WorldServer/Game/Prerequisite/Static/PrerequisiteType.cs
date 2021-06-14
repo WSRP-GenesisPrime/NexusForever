@@ -11,9 +11,12 @@
         Reputation  = 5,
         Quest       = 6,
         Achievement = 7,
+        MountUnknown3 = 11,
         Path        = 52,
         Vital       = 73,
+        MountUnknown= 129,
         SpellBaseId = 214,
+        MountUnknown2 = 232,
         BaseFaction = 250
     }
 }

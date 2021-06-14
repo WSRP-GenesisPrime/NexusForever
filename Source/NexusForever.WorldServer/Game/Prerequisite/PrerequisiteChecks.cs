@@ -90,6 +90,24 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
+        [PrerequisiteCheck(PrerequisiteType.MountUnknown)]
+        private static bool PrerequisiteCheckMountUnknown(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            return true;
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.MountUnknown2)]
+        private static bool PrerequisiteCheckMountUnknown2(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            return true;
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.MountUnknown3)]
+        private static bool PrerequisiteCheckMountUnknown3(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            return true;
+        }
+
         [PrerequisiteCheck(PrerequisiteType.SpellBaseId)]
         private static bool PrerequisiteCheckSpellBaseId(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
