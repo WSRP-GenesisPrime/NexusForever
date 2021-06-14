@@ -80,7 +80,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     }
                     else if (val > 5f)
                     {
-                        context.SendError("Mount speed multiplier can not be above 8.");
+                        context.SendError("Mount speed multiplier can not be above 5.");
                         return;
                     }
                     else
