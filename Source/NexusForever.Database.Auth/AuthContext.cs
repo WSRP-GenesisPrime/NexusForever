@@ -867,6 +867,36 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
+                        Id = 50300,
+                        Name = "Category: XRoll"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50400,
+                        Name = "Command: CharacterProps"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50500,
+                        Name = "Category: Boost"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50600,
+                        Name = "Command: HouseRemodel"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50700,
+                        Name = "Command: RealmOnline"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 50710,
+                        Name = "Command: RealmUptime"
+                    },
+                    new PermissionModel
+                    {
                         Id   = 10000,
                         Name = "Other: InstantLogout"
                     },
