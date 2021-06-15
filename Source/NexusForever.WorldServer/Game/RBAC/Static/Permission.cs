@@ -173,6 +173,22 @@
         // Genesis Prime: chron command
         Chron                       = 50200,
 
+        // Genesis Prime: xroll command
+        XRoll                       = 50300,
+
+        // GP: !character props/resetprops
+        CharacterProps              = 50400,
+
+        // GP: boost
+        Boost                       = 50500,
+
+        // GP: !house remodel
+        HouseRemodel                = 50600,
+
+        // GP: realm
+        RealmOnline                 = 50700,
+        RealmUptime                 = 50710,
+
         // non command permissions
         InstantLogout               = 10000,
         Signature                   = 10001

@@ -21,13 +21,13 @@ namespace NexusForever.WorldServer.Command.Handler
             context.GetTargetOrInvoker<Player>().PetCustomisationManager.UnlockFlair(petFlairEntryId);
         }
 
-        [Command(Permission.None, "Dismiss pet.", "dismiss")]
+        [Command(Permission.Pet, "Dismiss pet.", "dismiss")]
         public void HandlePetDismiss(ICommandContext context)
         {
             context.GetTargetOrInvoker<Player>()?.DestroyPet();
         }
 
-        [Command(Permission.None, "Make pet stay.", "stay")]
+        [Command(Permission.Pet, "Make pet stay.", "stay")]
         public void HandlePetStay(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();
@@ -35,7 +35,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.SetPetFacingPlayer(false);
         }
 
-        [Command(Permission.None, "Make pet follow by your side.", "side")]
+        [Command(Permission.Pet, "Make pet follow by your side.", "side")]
         public void HandlePetSide(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();
@@ -43,7 +43,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.SetPetFacingPlayer(false);
         }
 
-        [Command(Permission.None, "Make pet follow behind you.", "behind")]
+        [Command(Permission.Pet, "Make pet follow behind you.", "behind")]
         public void HandlePetBehind(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();
@@ -51,7 +51,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.SetPetFacingPlayer(true);
         }
 
-        [Command(Permission.None, "Make pet follow you.", "follow")]
+        [Command(Permission.Pet, "Make pet follow you.", "follow")]
         public void HandlePetFollow(ICommandContext context,
             [Parameter("Distance (short/medium/long).", Static.ParameterFlags.Optional)]
             string distanceParameter)
@@ -88,7 +88,7 @@ namespace NexusForever.WorldServer.Command.Handler
             return;
         }
 
-        [Command(Permission.None, "Summon pet.", "summon")]
+        [Command(Permission.Pet, "Summon pet.", "summon")]
         public void HandlePetSummon(ICommandContext context,
             [Parameter("Creature type.")]
             string creatureType,

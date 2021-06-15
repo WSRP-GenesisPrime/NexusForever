@@ -96,7 +96,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
         }
 
-        [Command(Permission.None, "Change ground/sky.", "remodel")]
+        [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
         public void HandleRemodelCommand(ICommandContext context,
             [Parameter("Ground or sky?")]
             string option,

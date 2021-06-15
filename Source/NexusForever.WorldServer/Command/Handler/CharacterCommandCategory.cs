@@ -45,7 +45,7 @@ namespace NexusForever.WorldServer.Command.Handler
             context.GetTargetOrInvoker<Player>().Save();
         }
 
-        [Command(Permission.None, "[propertyname] [amount] - change character properties", "props")]
+        [Command(Permission.CharacterProps, "[propertyname] [amount] - change character properties", "props")]
         public void HandleProps(ICommandContext context,
            [Parameter("Property name.")]
             string prop,
@@ -129,7 +129,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.None, "Reset character properties.", "resetprops")]
+        [Command(Permission.CharacterProps, "Reset character properties.", "resetprops")]
         public void HandleCharacterLevel(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();

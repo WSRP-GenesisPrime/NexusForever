@@ -13,11 +13,11 @@ using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
-    [Command(Permission.None, "Character Boosts and Unlocks.", "boost")]
+    [Command(Permission.Boost, "Character Boosts and Unlocks.", "boost")]
     [CommandTarget(typeof(Player))]
     public class BoostCommandCategory : CommandCategory
     {
-        [Command(Permission.None, "Boosts your character to level 50, restart client for it to take effect.", "level")]
+        [Command(Permission.Boost, "Boosts your character to level 50, restart client for it to take effect.", "level")]
         public void HandleBoostLevel(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();
@@ -27,7 +27,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.None, "Grants some character currencies.", "money")]
+        [Command(Permission.Boost, "Grants some character currencies.", "money")]
         public void HandleBoostMoney(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();
@@ -39,7 +39,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.CurrencyManager.CurrencyAddAmount(CurrencyType.Glory, 500000);
         }
 
-        [Command(Permission.None, "Level boost, currencies and unlock all dyes.", "all")]
+        [Command(Permission.Boost, "Level boost, currencies and unlock all dyes.", "all")]
         public void HandleBoostAll(ICommandContext context)
         {
             Player target = context.GetTargetOrInvoker<Player>();

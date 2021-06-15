@@ -7,7 +7,7 @@ using NexusForever.WorldServer.Game.RBAC.Static;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
-    [Command(Permission.None, "Go.", "go")]
+    [Command(Permission.TeleportName, "Go.", "go")]
     public class GoCommandCategory : CommandCategory
     {
         /// <summary>
