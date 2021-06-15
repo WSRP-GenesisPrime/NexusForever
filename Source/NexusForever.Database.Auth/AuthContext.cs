@@ -956,6 +956,12 @@ namespace NexusForever.Database.Auth
                         Id    = 5,
                         Name  = "WebSocket",
                         Flags = 2
+                    },
+                    new RoleModel
+                    {
+                        Id    = 6,
+                        Name  = "Storyteller",
+                        Flags = 1
                     });
             });
 

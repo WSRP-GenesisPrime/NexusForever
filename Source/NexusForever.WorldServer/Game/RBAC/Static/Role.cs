@@ -6,6 +6,7 @@
         GameMaster    = 2,
         Administrator = 3,
         Console       = 4,
-        WebSocket     = 5
+        WebSocket     = 5,
+        StoryTeller   = 6
     }
 }

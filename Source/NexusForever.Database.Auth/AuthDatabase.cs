@@ -97,11 +97,17 @@ namespace NexusForever.Database.Auth
                 throw new InvalidOperationException($"Account with that username already exists.");
 
             using var context = new AuthContext(config);
-            context.Account.Add(new AccountModel
+            AccountModel acc = new AccountModel
             {
                 Email = email,
-                S     = s,
-                V     = v
+                S = s,
+                V = v
+            };
+            context.Account.Add(acc);
+            context.AccountRole.Add(new AccountRoleModel
+            {
+                Account = acc,
+                RoleId = 1
             });
 
             context.SaveChanges();

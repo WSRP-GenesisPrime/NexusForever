@@ -22,6 +22,14 @@ namespace NexusForever.Database.Auth.Migrations
                     { 50700u, "Command: RealmOnline" },
                     { 50710u, "Command: RealmUptime" }
                 });
+
+            migrationBuilder.InsertData(
+                table: "role",
+                columns: new[] { "id", "name", "flags" },
+                values: new object[,]
+                {
+                    { 6u, "Storyteller", 1u }
+                });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
