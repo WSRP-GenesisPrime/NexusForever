@@ -28,6 +28,18 @@ namespace NexusForever.WorldServer.Command.Handler
             context.SendMessage($"Account {email} created successfully");
         }
 
+        [Command(Permission.AccountChangePass, "Change the password of an account.", "changepass")]
+        public void HandleAccountPassChange(ICommandContext context,
+            [Parameter("Email address of the account to change")]
+            string email,
+            [Parameter("New password")]
+            string password)
+        {
+            (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            DatabaseManager.Instance.AuthDatabase.ChangeAccountPassword(email, salt, verifier);
+            context.SendMessage($"Account {email} successfully changed!");
+        }
+
         [Command(Permission.AccountDelete, "Delete an account.", "delete")]
         public void HandleAccountDelete(ICommandContext context,
             [Parameter("Email address of the account to delete")]
