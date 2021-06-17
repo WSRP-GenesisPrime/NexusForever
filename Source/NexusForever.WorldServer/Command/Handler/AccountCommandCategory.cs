@@ -2,6 +2,7 @@
 using NexusForever.Shared.Database;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
+using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 
 namespace NexusForever.WorldServer.Command.Handler
@@ -29,7 +30,7 @@ namespace NexusForever.WorldServer.Command.Handler
         }
 
         [Command(Permission.AccountChangePass, "Change the password of an account.", "changepass")]
-        public void HandleAccountPassChange(ICommandContext context,
+        public void HandleAccountChangePass(ICommandContext context,
             [Parameter("Email address of the account to change")]
             string email,
             [Parameter("New password")]
@@ -38,6 +39,16 @@ namespace NexusForever.WorldServer.Command.Handler
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
             DatabaseManager.Instance.AuthDatabase.ChangeAccountPassword(email, salt, verifier);
             context.SendMessage($"Account {email} successfully changed!");
+        }
+
+        [Command(Permission.AccountChangeMyPass, "Change the password of your account.", "changemypass")]
+        [CommandTarget(typeof(Player))]
+        public void HandleAccountChangeMyPass(ICommandContext context,
+            [Parameter("New password")]
+            string password)
+        {
+            Player target = context.GetTargetOrInvoker<Player>();
+            HandleAccountChangePass(context, target.Session.Account.Email, password);
         }
 
         [Command(Permission.AccountDelete, "Delete an account.", "delete")]

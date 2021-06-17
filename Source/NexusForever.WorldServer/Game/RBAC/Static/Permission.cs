@@ -191,6 +191,7 @@
 
         // GP: Change account password
         AccountChangePass           = 50800,
+        AccountChangeMyPass         = 50810,
 
         // non command permissions
         InstantLogout               = 10000,
