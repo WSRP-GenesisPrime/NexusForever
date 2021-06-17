@@ -384,6 +384,9 @@ namespace NexusForever.WorldServer.Game.Housing
             foreach (Decor decor in decors.Values)
                 decor.Save(context);
 
+            foreach (Decor decor in deletedDecors.ToList())
+                decor.Save(context);
+
             foreach (Plot plot in plots)
                 plot.Save(context);
         }
