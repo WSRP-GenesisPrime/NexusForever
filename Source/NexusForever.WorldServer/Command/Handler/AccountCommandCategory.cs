@@ -28,7 +28,7 @@ namespace NexusForever.WorldServer.Command.Handler
             context.SendMessage($"Account {email} created successfully");
         }
 
-        [Command(Permission.AccountCreate, "Change the password of an account.", "changepass")]
+        [Command(Permission.AccountChangePass, "Change the password of an account.", "changepass")]
         public void HandleAccountPassChange(ICommandContext context,
             [Parameter("Email address of the account to change")]
             string email,
