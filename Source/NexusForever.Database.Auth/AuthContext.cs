@@ -895,6 +895,11 @@ namespace NexusForever.Database.Auth
                         Id = 50710,
                         Name = "Command: RealmUptime"
                     },
+                    /*new PermissionModel
+                    {
+                        Id = 50800,
+                        Name = "Command: AccountChangePass"
+                    },*/
                     new PermissionModel
                     {
                         Id   = 10000,

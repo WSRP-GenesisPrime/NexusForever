@@ -114,6 +114,22 @@ namespace NexusForever.Database.Auth
         }
 
         /// <summary>
+        /// Change the password of an account.
+        /// </summary>
+        public void ChangeAccountPassword(string email, string s, string v)
+        {
+            if (!AccountExists(email))
+                throw new InvalidOperationException($"Account with that username already exists.");
+
+            using var context = new AuthContext(config);
+            AccountModel account = context.Account.SingleOrDefault(a => a.Email == email);
+            account.S = s;
+            account.V = v;
+
+            context.SaveChanges();
+        }
+
+        /// <summary>
         /// Delete an existing account with the supplied email.
         /// </summary>
         public bool DeleteAccount(string email)
