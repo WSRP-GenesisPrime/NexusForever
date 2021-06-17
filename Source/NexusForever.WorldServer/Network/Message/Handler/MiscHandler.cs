@@ -30,7 +30,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         {
             ICharacter character = CharacterManager.Instance.GetCharacterInfo(request.Identity.CharacterId);
             if (character == null)
-                throw new InvalidPacketValueException();
+                return;
+                //throw new InvalidPacketValueException();
             
             float? onlineStatus = character.GetOnlineStatus();
             if (request.Type == ContactType.Ignore) // Ignored user data request
