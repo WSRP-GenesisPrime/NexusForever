@@ -307,6 +307,10 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public void SetAppearance(ItemVisual visual)
         {
+            if (visual == null)
+            {
+                return;
+            }
             if (visual.DisplayId != 0)
             {
                 if (!itemVisuals.ContainsKey(visual.Slot))

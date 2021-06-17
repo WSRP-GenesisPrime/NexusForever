@@ -112,6 +112,10 @@ namespace NexusForever.WorldServer.Game.Entity
         private ItemVisual GetItemVisual(ItemSlot itemSlot, Costume costume)
         {
             ImmutableList<EquippedItem> indexes = AssetManager.Instance.GetEquippedBagIndexes(itemSlot);
+            if(itemSlot == ItemSlot.Bag)
+            {
+                return null;
+            }
             if (indexes == null || indexes.Count != 1)
                 throw new ArgumentOutOfRangeException();
 
