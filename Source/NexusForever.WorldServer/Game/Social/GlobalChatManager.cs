@@ -352,6 +352,10 @@ namespace NexusForever.WorldServer.Game.Social
 
             foreach (WorldSession channelSession in chatChannelSessions[chat.Channel.Type])
             {
+                if(channelSession == session)
+                {
+                    continue;
+                }
                 serverChat.CrossFaction = session.Player.Faction1 != channelSession.Player.Faction1;
                 channelSession.EnqueueMessageEncrypted(serverChat);
             }
