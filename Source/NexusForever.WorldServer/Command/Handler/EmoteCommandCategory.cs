@@ -19,7 +19,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Emote name.")]
             string emote)
         {
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
 
             emote = emote.ToLower();
 
@@ -50,7 +50,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.Emote, "List available emotes.", "list")]
         public void HandleEmoteList(ICommandContext context)
         {
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
             string message = "Emotes for your race:";
             foreach(string emote in EmoteHelper.GetEmoteList((uint)player.Race)) {
                 message += $"\n{emote}";

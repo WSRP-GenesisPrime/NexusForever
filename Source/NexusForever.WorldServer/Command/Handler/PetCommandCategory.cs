@@ -18,19 +18,19 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Pet flair entry id to unlock.")]
             ushort petFlairEntryId)
         {
-            context.GetTargetOrInvoker<Player>().PetCustomisationManager.UnlockFlair(petFlairEntryId);
+            context.InvokingPlayer.PetCustomisationManager.UnlockFlair(petFlairEntryId);
         }
 
         [Command(Permission.Pet, "Dismiss pet.", "dismiss")]
         public void HandlePetDismiss(ICommandContext context)
         {
-            context.GetTargetOrInvoker<Player>()?.DestroyPet();
+            context.InvokingPlayer?.DestroyPet();
         }
 
         [Command(Permission.Pet, "Make pet stay.", "stay")]
         public void HandlePetStay(ICommandContext context)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             target.SetPetFollowing(false);
             target.SetPetFacingPlayer(false);
         }
@@ -38,7 +38,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.Pet, "Make pet follow by your side.", "side")]
         public void HandlePetSide(ICommandContext context)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             target.SetPetFollowingOnSide(true);
             target.SetPetFacingPlayer(false);
         }
@@ -46,7 +46,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.Pet, "Make pet follow behind you.", "behind")]
         public void HandlePetBehind(ICommandContext context)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             target.SetPetFollowingOnSide(false);
             target.SetPetFacingPlayer(true);
         }
@@ -56,7 +56,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Distance (short/medium/long).", Static.ParameterFlags.Optional)]
             string distanceParameter)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
 
             float followDistance = 4f;
             float recalcDistance = 5f;
@@ -95,7 +95,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature variant.")]
             string creatureVariant)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (target.VanityPetGuid != null)
             {
                 context.SendError("You already have a pet - please dismiss it before summoning another.");
@@ -133,7 +133,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
         public void SummonCreatureToPlayer(ICommandContext context, uint creatureId)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry(creatureId);
 
             if (creature2 == null || creatureId == 0)

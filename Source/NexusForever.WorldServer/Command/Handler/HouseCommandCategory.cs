@@ -28,7 +28,7 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 quantity ??= 1u;
 
-                if (!(context.GetTargetOrInvoker<Player>().Map is ResidenceMap residenceMap))
+                if (!(context.InvokingPlayer.Map is ResidenceMap residenceMap))
                 {
                     context.SendMessage("You need to be on a housing map to use this command!");
                     return;
@@ -71,7 +71,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("", ParameterFlags.Optional)]
             string lastName)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
@@ -79,8 +79,13 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             string name = $"{firstName} {lastName}";
+            if(firstName == null && lastName == null)
+            {
+                name = target.Name;
+            }
+            name = name.ToLower();
 
-            Residence residence = ResidenceManager.Instance.GetResidence(name ?? target.Name).GetAwaiter().GetResult();
+            Residence residence = ResidenceManager.Instance.GetResidence(name).GetAwaiter().GetResult();
             if (residence == null)
             {
                 if (firstName == null && lastName == null)
@@ -103,7 +108,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("ID")]
             ushort id)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             //remodel
             ClientHousingRemodel clientRemod = new ClientHousingRemodel();
             ResidenceMap residenceMap = target.Map as ResidenceMap;

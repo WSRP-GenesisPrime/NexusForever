@@ -26,7 +26,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Optional world id for target teleport position.")]
             ushort? worldId)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
@@ -49,7 +49,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
@@ -63,7 +63,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
         public static void teleportByName(ICommandContext context, string name)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");

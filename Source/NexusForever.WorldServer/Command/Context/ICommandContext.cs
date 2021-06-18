@@ -27,5 +27,9 @@ namespace NexusForever.WorldServer.Command.Context
         /// Return <see cref="WorldEntity"/> target, if no target is present return the <see cref="WorldEntity"/> invoker.
         /// </summary>
         T GetTargetOrInvoker<T>() where T : WorldEntity;
+        Player InvokingPlayer { get { 
+                return Invoker as Player;
+            }
+        }
     }
 }

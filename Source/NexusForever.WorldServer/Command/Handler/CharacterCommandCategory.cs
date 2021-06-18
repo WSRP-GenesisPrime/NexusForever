@@ -14,7 +14,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount of XP to grant character.")]
             uint amount)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (target.Level >= 50)
             {
                 context.SendMessage("You must be less than max level.");
@@ -29,7 +29,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Level to set character.")]
             byte level)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (level <= target.Level || level > 50)
             {
                 context.SendMessage("Level must be greater than your current level and less than max level.");
@@ -42,7 +42,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.CharacterSave, "Save any pending changes to the character to the database.", "save")]
         public void HandleCharacterSave(ICommandContext context)
         {
-            context.GetTargetOrInvoker<Player>().Save();
+            context.InvokingPlayer.Save();
         }
 
         [Command(Permission.CharacterProps, "[propertyname] [amount] - change character properties", "props")]
@@ -52,7 +52,7 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Property value.")]
             float val)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             switch(prop.ToLower())
             {
                 case "speed":
@@ -132,7 +132,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.CharacterProps, "Reset character properties.", "resetprops")]
         public void HandleCharacterLevel(ICommandContext context)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             target.SetProperty(Property.MoveSpeedMultiplier, 1f, 1f);
             target.SetProperty(Property.MountSpeedMultiplier, 2f, 2f);
             target.SetProperty(Property.GravityMultiplier, 1f, 1f);

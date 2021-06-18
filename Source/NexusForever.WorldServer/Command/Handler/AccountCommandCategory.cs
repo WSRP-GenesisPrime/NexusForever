@@ -47,7 +47,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("New password")]
             string password)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             HandleAccountChangePass(context, target.Session.Account.Email, password);
         }
 

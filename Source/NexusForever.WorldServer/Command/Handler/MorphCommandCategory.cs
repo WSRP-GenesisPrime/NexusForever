@@ -26,7 +26,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature subtype.")]
             string subtype)
         {
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
 
             type = type.ToLower();
             subtype = subtype.ToLower();
@@ -73,7 +73,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.Morph, "Change back to your usual amazing self.", "demorph")]
         public void HandleDemorph(ICommandContext context)
         {
-            Player p = context.GetTargetOrInvoker<Player>();
+            Player p = context.InvokingPlayer;
             p.ResetAppearance();
         }
 
@@ -82,7 +82,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature type.", ParameterFlags.Optional)]
             string type)
         {
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
 
             bool storyteller = player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller);
             if (type != null && (!CreatureHelper.IsStoryTellerOnly(type) || storyteller))

@@ -20,7 +20,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            context.GetTargetOrInvoker<Player>().TitleManager.AddTitle(characterTitleId);
+            context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
         }
 
         [Command(Permission.TitleRevoke, "evoke a title from character.", "revoke")]
@@ -34,19 +34,19 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            context.GetTargetOrInvoker<Player>().TitleManager.RevokeTitle(characterTitleId);
+            context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);
         }
 
         [Command(Permission.TitleAll, "Add all titles to character.", "all")]
         public void HandleTitleAll(ICommandContext context)
         {
-            context.GetTargetOrInvoker<Player>().TitleManager.AddAllTitles();
+            context.InvokingPlayer.TitleManager.AddAllTitles();
         }
 
         [Command(Permission.TitleNone, "Revoke all titles from character.", "none")]
         public void HandleTitleNone(ICommandContext context)
         {
-            context.GetTargetOrInvoker<Player>().TitleManager.RevokeAllTitles();
+            context.InvokingPlayer.TitleManager.RevokeAllTitles();
         }
     }
 }

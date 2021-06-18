@@ -84,7 +84,7 @@ namespace NexusForever.WorldServer.Command.Handler
             string feedback = $"{numDice}d{dieType}{modifierText}: ({numString}){modifierText} = {num}";
             context.SendMessage($"You roll {feedback}");
 
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
 
             // get players in local chat range
             player.Map.Search(

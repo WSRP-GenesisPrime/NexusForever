@@ -174,6 +174,10 @@ namespace NexusForever.WorldServer.Game.Entity
             EntitlementEntry entry = GameTableManager.Instance.Entitlement.GetEntry((ulong)type);
             if (entry == null)
                 throw new ArgumentException($"Invalid entitlement type {type}!");
+            if (entry.Id == 12)
+            {
+                entry.MaxCount = 48;
+            }
 
             AccountEntitlement entitlement = SetEntitlement(accountEntitlements, entry, value,
                 () => new AccountEntitlement(session.Account.Id, entry, (uint)value));

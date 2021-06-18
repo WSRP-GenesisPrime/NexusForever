@@ -16,7 +16,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Path id to unlock.", ParameterFlags.None, typeof(EnumParameterConverter<Path>))]
             Path path)
         {
-            context.GetTargetOrInvoker<Player>().PathManager.UnlockPath(path);
+            context.InvokingPlayer.PathManager.UnlockPath(path);
         }
 
         [Command(Permission.PathActivate, "Activate a path for character.", "activate")]
@@ -24,7 +24,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Path id to activate.", ParameterFlags.None, typeof(EnumParameterConverter<Path>))]
             Path path)
         {
-            context.GetTargetOrInvoker<Player>().PathManager.ActivatePath(path);
+            context.InvokingPlayer.PathManager.ActivatePath(path);
         }
 
         [Command(Permission.PathXP, "Add XP to current path for character.", "xp")]
@@ -32,7 +32,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("XP amount to add to currency path.")]
             uint xp)
         {
-            context.GetTargetOrInvoker<Player>().PathManager.AddXp(xp);
+            context.InvokingPlayer.PathManager.AddXp(xp);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace NexusForever.WorldServer.Command.Handler
             ChronCommandParameterConverter con = new ChronCommandParameterConverter();
             con.Convert(context, queue);
 
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
 
             Player targetPlayer = null;
 
