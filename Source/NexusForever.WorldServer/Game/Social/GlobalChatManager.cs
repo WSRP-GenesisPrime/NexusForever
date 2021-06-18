@@ -40,6 +40,13 @@ namespace NexusForever.WorldServer.Game.Social
         private readonly Dictionary<ChatChannelType, Dictionary<string, ulong>> chatChannelNames = new();
         private readonly Dictionary<ChatChannelType, Dictionary<ulong, List<ulong>>> characterChatChannels = new();
 
+        // TODO: Switch to caching session GUIDs and announce to each session by Guid.
+        private readonly Dictionary<ChatChannelType, List<WorldSession>> chatChannelSessions = new Dictionary<ChatChannelType, List<WorldSession>>
+        {
+            { ChatChannelType.Nexus, new List<WorldSession>() },
+            { ChatChannelType.Trade, new List<WorldSession>() }
+        };
+
         private readonly UpdateTimer saveTimer = new(60d);
 
         private GlobalChatManager()
@@ -270,6 +277,36 @@ namespace NexusForever.WorldServer.Game.Social
             });
         }
 
+        /// <summary>
+        /// Add the <see cref="WorldSession"/> to the chat channels sessions list for appropriate chat channels.
+        /// </summary>
+        /// <param name="session"></param>
+        public void JoinChatChannels(WorldSession session)
+        {
+            foreach (KeyValuePair<ChatChannelType, List<WorldSession>> chatChannel in chatChannelSessions)
+            {
+                if (chatChannelSessions[chatChannel.Key].Contains(session) || chatChannelSessions[chatChannel.Key].FindAll(s => s.Player == session.Player).ToList().Count <= 0)
+                    chatChannelSessions[chatChannel.Key].Remove(session);
+
+                chatChannelSessions[chatChannel.Key].Add(session);
+
+                session.EnqueueMessageEncrypted(new ServerChatJoin
+                {
+                    Channel = new Channel { Type = chatChannel.Key }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Removes the <see cref="WorldSession"/> from appropriate chat channels.
+        /// </summary>
+        /// <param name="session"></param>
+        public void LeaveChatChannels(WorldSession session)
+        {
+            foreach (KeyValuePair<ChatChannelType, List<WorldSession>> chatChannel in chatChannelSessions)
+                chatChannelSessions[chatChannel.Key].Remove(session);
+        }
+
         [ChatChannelHandler(ChatChannelType.Say)]
         [ChatChannelHandler(ChatChannelType.Yell)]
         [ChatChannelHandler(ChatChannelType.Emote)]
@@ -294,6 +331,31 @@ namespace NexusForever.WorldServer.Game.Social
 
             var serverChat = builder.Build();
             intersectedEntities.ForEach(e => ((Player)e).Session.EnqueueMessageEncrypted(serverChat));
+            SendChatAccept(session);
+        }
+
+        [ChatChannelHandler(ChatChannelType.Nexus)]
+        [ChatChannelHandler(ChatChannelType.Trade)]
+        private void HandleGlobalChat(WorldSession session, ClientChat chat)
+        {
+            var builder = new ChatMessageBuilder
+            {
+                Type = chat.Channel.Type,
+                FromName = session.Player.Name,
+                Text = chat.Message,
+                Formats = ParseChatLinks(session, chat.Formats).ToList(),
+                Guid = session.Player.Guid,
+                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
+            };
+
+            var serverChat = builder.Build();
+
+            foreach (WorldSession channelSession in chatChannelSessions[chat.Channel.Type])
+            {
+                serverChat.CrossFaction = session.Player.Faction1 != channelSession.Player.Faction1;
+                channelSession.EnqueueMessageEncrypted(serverChat);
+            }
+
             SendChatAccept(session);
         }
 
