@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Controllers\statusOff.png" />
+    <Content Include="Controllers\statusOn.png" />
+    <Content Include="Views\Home\Mainbackground.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NexusForever.Database.Auth\NexusForever.Database.Auth.csproj" />
+    <ProjectReference Include="..\NexusForever.Shared\NexusForever.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

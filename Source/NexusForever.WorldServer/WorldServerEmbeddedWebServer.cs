@@ -26,7 +26,7 @@ namespace NexusForever.WorldServer
                 logging.SetMinimumLevel(LogLevel.Trace);
             })
             .UseNLog()
-            .UseUrls($"http://localhost:5000")
+            .UseUrls($"http://localhost:5050")
             .PreferHostingUrls(false); // Can override in XXX.json
     }
 }
