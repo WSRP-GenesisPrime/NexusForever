@@ -193,6 +193,9 @@
         AccountChangePass           = 50800,
         AccountChangeMyPass         = 50810,
 
+        // GP: GM flag
+        GMFlag                      = 50900,
+
         // non command permissions
         InstantLogout               = 10000,
         Signature                   = 10001

@@ -265,7 +265,8 @@ namespace NexusForever.WorldServer.Game.Social
             session.EnqueueMessageEncrypted(new ServerChatAccept
             {
                 Name = session.Player.Name,
-                Guid = session.Player.Guid
+                Guid = session.Player.Guid,
+                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             });
         }
 
@@ -280,7 +281,8 @@ namespace NexusForever.WorldServer.Game.Social
                 FromName = session.Player.Name,
                 Text     = chat.Message,
                 Formats  = ParseChatLinks(session, chat.Formats).ToList(),
-                Guid     = session.Player.Guid
+                Guid     = session.Player.Guid,
+                GM       = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
 
             session.Player.Map.Search(
@@ -328,7 +330,8 @@ namespace NexusForever.WorldServer.Game.Social
                 FromName = session.Player.Name,
                 Text     = chat.Message,
                 Formats  = ParseChatLinks(session, chat.Formats).ToList(),
-                Guid     = session.Player.Guid
+                Guid     = session.Player.Guid,
+                GM       = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
 
             channel.Broadcast(builder.Build());
@@ -367,7 +370,8 @@ namespace NexusForever.WorldServer.Game.Social
                 FromName     = whisper.PlayerName,
                 Text         = whisper.Message,
                 Formats      = ParseChatLinks(session, whisper.Formats).ToList(),
-                CrossFaction = session.Player.Faction1 != target.Faction1
+                CrossFaction = session.Player.Faction1 != target.Faction1,
+                GM           = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
             session.EnqueueMessageEncrypted(builder.Build());
 
