@@ -370,7 +370,8 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.BoneIndex)
                     .HasColumnName("boneIndex")
                     .HasColumnType("tinyint(4) unsigned")
-                    .HasDefaultValue(0);
+                    .HasDefaultValue(0)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.Bone)
                     .HasColumnName("bone")
