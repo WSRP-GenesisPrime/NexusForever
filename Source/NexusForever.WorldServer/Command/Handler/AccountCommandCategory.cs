@@ -37,6 +37,11 @@ namespace NexusForever.WorldServer.Command.Handler
             string password)
         {
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            if(email == null || email.Length <= 0)
+            {
+                context.SendError("Account name wasn't specified properly.");
+                return;
+            }
             DatabaseManager.Instance.AuthDatabase.ChangeAccountPassword(email, salt, verifier);
             context.SendMessage($"Account {email} successfully changed!");
         }
