@@ -83,7 +83,6 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 name = target.Name;
             }
-            name = name.ToLower();
 
             Residence residence = ResidenceManager.Instance.GetResidence(name).GetAwaiter().GetResult();
             if (residence == null)
