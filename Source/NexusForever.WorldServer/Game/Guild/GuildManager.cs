@@ -11,6 +11,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Game.TextFilter.Static;
+using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NLog;
@@ -149,7 +150,7 @@ namespace NexusForever.WorldServer.Game.Guild
         /// </summary>
         public void OnLogin()
         {
-            SendGuildInitialise();
+            SendInitialPackets(owner.Session);
             if (Guild != null)
                 UpdateHolomark();
 
@@ -157,28 +158,35 @@ namespace NexusForever.WorldServer.Game.Guild
                 guild.OnPlayerLogin(owner);
         }
 
-        private void SendGuildInitialise()
+        /// <summary>
+        /// Used to send initial packets to the <see cref="Player"/> containing associated guilds
+        /// </summary>
+        public static void SendInitialPackets(WorldSession session)
         {
-            var guildInit = new ServerGuildInit();
-
-            uint index = 0u;
-            foreach (GuildBase guild in guilds.Values)
+            List<GuildData> playerGuilds = new List<GuildData>();
+            List<NetworkGuildMember> playerMemberInfo = new List<NetworkGuildMember>();
+            List<GuildPlayerLimits> playerUnknowns = new List<GuildPlayerLimits>();
+            foreach (GuildBase guild in session.Player.GuildManager.guilds.Values)
             {
-                NetworkGuildMember member = guild.GetMember(owner.CharacterId).Build();
-                if (guildAffiliation?.Id == guild.Id)
-                {
-                    guildInit.NameplateIndex = index;
-                    member.Unknown10 = 1; // TODO: research this
-                }
-
-                guildInit.Self.Add(member);
-                guildInit.SelfPrivate.Add(new GuildPlayerLimits());
-                guildInit.Guilds.Add(guild.Build());
-
-                index++;
+                playerGuilds.Add(guild.BuildGuildDataPacket());
+                var selfPacket = guild.GetMember(session.Player.CharacterId).BuildGuildMemberPacket();
+                if (session.Player.GuildManager.GuildAffiliation == guild)
+                    selfPacket.Unknown10 = 1;
+                playerMemberInfo.Add(selfPacket);
+                playerUnknowns.Add(new GuildPlayerLimits());
             }
 
-            owner.Session.EnqueueMessageEncrypted(guildInit);
+            int index = 0;
+            if (session.Player.GuildManager.GuildAffiliation != null)
+                index = playerGuilds.FindIndex(a => a.GuildId == session.Player.GuildManager.GuildAffiliation.Id);
+            ServerGuildInit serverGuildInit = new ServerGuildInit
+            {
+                NameplateIndex = (uint)index,
+                Guilds = playerGuilds,
+                Self = playerMemberInfo,
+                SelfPrivate = playerUnknowns
+            };
+            session.EnqueueMessageEncrypted(serverGuildInit);
         }
 
         /// <summary>

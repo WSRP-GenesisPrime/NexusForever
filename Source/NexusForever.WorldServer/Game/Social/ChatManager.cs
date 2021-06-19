@@ -44,9 +44,6 @@ namespace NexusForever.WorldServer.Game.Social
         /// </summary>
         public ChatResult CanJoin(string name, string password)
         {
-            if (channels.Count >= 20)
-                return ChatResult.TooManyCustomChannels;
-
             if (!TextFilterManager.Instance.IsTextValid(name)
                 || !TextFilterManager.Instance.IsTextValid(name, UserText.ChatCustomChannelName))
                 return ChatResult.InvalidPasswordText;
@@ -54,6 +51,9 @@ namespace NexusForever.WorldServer.Game.Social
             ChatChannel channel = GlobalChatManager.Instance.GetChatChannel(ChatChannelType.Custom, name);
             if (channel == null)
             {
+                if (channels.Count >= 200)
+                    return ChatResult.TooManyCustomChannels;
+
                 // new channel
                 if (!string.IsNullOrEmpty(password)
                     && (!TextFilterManager.Instance.IsTextValid(password)

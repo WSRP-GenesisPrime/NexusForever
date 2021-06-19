@@ -144,5 +144,26 @@ namespace NexusForever.WorldServer.Game.Guild
             else
                 saveMask &= ~GuildMemberSaveMask.Delete;
         }
+
+        /// <summary>
+        /// Return a <see cref="GuildMember"/> packet of this <see cref="Member"/>
+        /// </summary>
+        public NetworkGuildMember BuildGuildMemberPacket()
+        {
+            ICharacter characterInfo = CharacterManager.Instance.GetCharacterInfo(CharacterId);
+            return new NetworkGuildMember
+            {
+                Realm = WorldServer.RealmId,
+                CharacterId = CharacterId,
+                Rank = Rank.Index,
+                Name = characterInfo.Name,
+                Sex = characterInfo.Sex,
+                Class = characterInfo.Class,
+                Path = characterInfo.Path,
+                Level = characterInfo.Level,
+                Note = Note,
+                LastLogoutTimeDays = (float) (characterInfo.GetOnlineStatus() ?? 0.0f)
+            };
+        }
     }
 }

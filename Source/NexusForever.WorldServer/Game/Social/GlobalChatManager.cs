@@ -166,9 +166,18 @@ namespace NexusForever.WorldServer.Game.Social
         }
 
         /// <summary>
-        /// Create a new <see cref="ChatChannel"/> with supplied <see cref="ChatChannelType"/> and id.
+        /// Create a new <see cref="ChatChannel"/> with supplied <see cref="ChatChannelType"/>.
         /// </summary>
         public ChatChannel CreateChatChannel(ChatChannelType type, string name, string password = null)
+        {
+            ulong id = chatChannelIds[type]++;
+            return CreateChatChannel(type, id, name, password);
+        }
+
+        /// <summary>
+        /// Create a new <see cref="ChatChannel"/> with supplied <see cref="ChatChannelType"/> and id.
+        /// </summary>
+        public ChatChannel CreateChatChannel(ChatChannelType type, ulong id, string name, string password = null)
         {
             if (chatChannelNames[type].TryGetValue(name, out ulong chatId))
             {
@@ -181,7 +190,6 @@ namespace NexusForever.WorldServer.Game.Social
             }
             else
             {
-                ulong id = chatChannelIds[type]++;
                 var channel = new ChatChannel(type, id, name, password);
                 chatChannels[type].Add(id, channel);
                 chatChannelNames[type].Add(name, id);

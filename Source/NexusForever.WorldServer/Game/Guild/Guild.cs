@@ -42,9 +42,6 @@ namespace NexusForever.WorldServer.Game.Guild
 
         private GuildSaveMask saveMask;
 
-        private ChatChannel memberChannel;
-        private ChatChannel officerChannel;
-
         /// <summary>
         /// Create a new <see cref="Guild"/> from an existing database model.
         /// </summary>
@@ -71,8 +68,8 @@ namespace NexusForever.WorldServer.Game.Guild
 
         protected override void InitialiseChatChannels()
         {
-            memberChannel  = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.Guild, Name);
-            officerChannel = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.GuildOfficer, Name);
+            memberChannel  = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.Guild, Id, Name);
+            officerChannel = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.GuildOfficer, Id, Name);
         }
 
         protected override void Save(CharacterContext context, GuildBaseSaveMask baseSaveMask)
@@ -155,6 +152,30 @@ namespace NexusForever.WorldServer.Game.Guild
                 officerChannel.Leave(member.CharacterId);
 
             base.MemberOffline(member);
+        }
+
+        /// <summary>
+        /// Return a <see cref="GuildData"/> packet of this <see cref="Guild"/>
+        /// </summary>
+        public override GuildData BuildGuildDataPacket()
+        {
+            return new GuildData
+            {
+                GuildId = Id,
+                GuildName = Name,
+                Flags = Flags,
+                Type = Type,
+                Ranks = GetGuildRanksPackets().ToList(),
+                GuildStandard = Standard.Build(),
+                MemberCount = (uint)members.Count,
+                OnlineMemberCount = (uint)onlineMembers.Count,
+                GuildInfo =
+                {
+                    MessageOfTheDay = MessageOfTheDay,
+                    GuildInfo = AdditionalInfo,
+                    GuildCreationDateInDays = (float)DateTime.Now.Subtract(CreateTime).TotalDays * -1f
+                }
+            };
         }
     }
 }

@@ -10,6 +10,8 @@ using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Guild.Static;
+using NexusForever.WorldServer.Game.Social;
+using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
@@ -78,6 +80,9 @@ namespace NexusForever.WorldServer.Game.Guild
         /// Maximum number of <see cref="GuildMember"/>'s allowed in the guild.
         /// </summary>
         public abstract uint MaxMembers { get; }
+
+        public ChatChannel memberChannel { get; protected set; }
+        public ChatChannel officerChannel { get; protected set; }
 
         protected readonly SortedDictionary</*index*/byte, GuildRank> ranks = new();
         protected readonly Dictionary</*characterId*/ulong, GuildMember> members = new();
@@ -291,6 +296,8 @@ namespace NexusForever.WorldServer.Game.Guild
 
             AnnounceGuildMemberChange(member);
             AnnounceGuildResult(GuildResult.MemberOnline, referenceText: player.Name);
+
+            memberChannel?.Join(player.CharacterId);
         }
 
         protected virtual void MemberOnline(GuildMember member)
@@ -310,6 +317,8 @@ namespace NexusForever.WorldServer.Game.Guild
 
             AnnounceGuildMemberChange(member);
             AnnounceGuildResult(GuildResult.MemberOffline, referenceText: player.Name);
+
+            memberChannel?.Leave(player.CharacterId);
         }
 
         protected virtual void MemberOffline(GuildMember member)
@@ -358,6 +367,8 @@ namespace NexusForever.WorldServer.Game.Guild
             SendGuildJoin(player.Session, member.Build(), new GuildPlayerLimits());
             SendGuildRoster(player.Session);
             AnnounceGuildMemberChange(member);
+
+            memberChannel?.Join(player.CharacterId);
         }
 
         private void SendGuildJoin(WorldSession session, NetworkGuildMember guildMember, GuildPlayerLimits playerLimits)
@@ -426,6 +437,8 @@ namespace NexusForever.WorldServer.Game.Guild
                 RealmId = WorldServer.RealmId,
                 GuildId = Id
             });
+
+            memberChannel?.Leave(player.CharacterId);
         }
 
         /// <summary>
@@ -781,5 +794,10 @@ namespace NexusForever.WorldServer.Game.Guild
         {
             return GetEnumerator();
         }
+
+        /// <summary>
+        /// Return a <see cref="GuildData"/> packet of this <see cref="GuildBase"/>
+        /// </summary>
+        public abstract GuildData BuildGuildDataPacket();
     }
 }
