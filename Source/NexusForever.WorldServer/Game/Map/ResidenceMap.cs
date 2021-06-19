@@ -443,8 +443,8 @@ namespace NexusForever.WorldServer.Game.Map
 
             // TODO: Investigate need for offset.
             // Offset added due to calculation being +/- 1 sometimes when placing very close to plots. They were valid placements in the client, though.
-            uint maxBound = worldSocketEntry.BoundIds.Max() + 1;
-            uint minBound = worldSocketEntry.BoundIds.Min() - 1;
+            uint maxBound = worldSocketEntry.BoundIds.Max() + 2;
+            uint minBound = worldSocketEntry.BoundIds.Min() - 2;
 
             log.Debug($"IsValidPlotForPosition - PlotIndex: {update.PlotIndex}, Range: {minBound}-{maxBound}, Coords: {globalCellX}, {globalCellZ}");
 
