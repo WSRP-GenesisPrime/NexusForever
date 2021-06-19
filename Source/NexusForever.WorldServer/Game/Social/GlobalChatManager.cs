@@ -441,16 +441,26 @@ namespace NexusForever.WorldServer.Game.Social
             {
                 Type         = ChatChannelType.Whisper,
                 Self         = true,
-                FromName     = whisper.PlayerName,
+                FromName     = target.Name,
                 Text         = whisper.Message,
                 Formats      = ParseChatLinks(session, whisper.Formats).ToList(),
                 CrossFaction = session.Player.Faction1 != target.Faction1,
-                GM           = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
+                GM           = target.Session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
             session.EnqueueMessageEncrypted(builder.Build());
 
+
             // target player message
-            builder.Self = false;
+            builder = new ChatMessageBuilder
+            {
+                Type = ChatChannelType.Whisper,
+                Self = false,
+                FromName = session.Player.Name,
+                Text = whisper.Message,
+                Formats = ParseChatLinks(session, whisper.Formats).ToList(),
+                CrossFaction = session.Player.Faction1 != target.Faction1,
+                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
+            };
             target.Session.EnqueueMessageEncrypted(builder.Build());
         }
 
