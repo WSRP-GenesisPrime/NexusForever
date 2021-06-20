@@ -92,7 +92,7 @@ namespace NexusForever.WorldServer.Command.Handler
         public void HandlePetSummon(ICommandContext context,
             [Parameter("Creature type.")]
             string creatureType,
-            [Parameter("Creature variant.")]
+            [Parameter("Creature variant.", Static.ParameterFlags.Optional)]
             string creatureVariant)
         {
             Player target = context.InvokingPlayer;

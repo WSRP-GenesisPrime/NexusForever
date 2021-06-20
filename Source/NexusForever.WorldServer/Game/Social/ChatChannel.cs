@@ -369,7 +369,7 @@ namespace NexusForever.WorldServer.Game.Social
                 Type      = Type,
                 ChannelId = Id,
                 Names     = members.Values
-                    .Where(m => !m.PendingDelete)
+                    .Where(m => !m.PendingDelete && m.IsOnline)
                     .Select(m => CharacterManager.Instance.GetCharacterInfo(m.CharacterId).Name)
                     .ToList(),
                 Flags     = members.Values

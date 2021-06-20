@@ -14,7 +14,7 @@ namespace NexusForever.WorldServer.Command.Helper
         /// <summary>
         /// (GENESIS PRIME) 2D Dictionary of legal creature type/variant combinations.
         /// </summary>
-        private static readonly Dictionary<string, Dictionary<string, uint>> CreatureLibrary = new Dictionary<string, Dictionary<string, uint>>() {
+        private static readonly Dictionary<string, Dictionary<string, uint>> CreatureVariantLibrary = new Dictionary<string, Dictionary<string, uint>>() {
             // Type: Boss (Storyteller Only)
             { "boss", new Dictionary<string, uint>(){
                 { "avatus", 60057 },
@@ -401,8 +401,8 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "sabertooth", 69427 },
                 { "sienna", 69422 },
                 { "snowy", 69418 },
-                { "snowstripe", 69428 },
-                { "steely", 69426 },
+                { "snowstripe", 69426 },
+                { "steely", 69428 },
                 { "strain", 69432 },
                 { "tawny", 69419 },
                 { "torine", 69429 },
@@ -706,6 +706,194 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "old", 16636 }
             }}
         };
+        
+        private static readonly Dictionary<string, uint> CreatureLibrary = new Dictionary<string, uint>() {
+            // Type: Boss (Storyteller Only)
+            { "boss", 60057 },
+            
+            // Type: Canimid
+            { "canimid", 19299 },
+            
+            // Type: Chompy
+            { "chompy", 69490 },
+            
+            // Type: Construct (Storyteller Only)
+            { "construct", 45865 },
+            
+            // Type: Dagun
+            { "dagun", 69407 },
+            
+            // Type: Dawngrazer
+            { "dawngrazer", 69404 },
+            
+            // Type: Eeklu
+            { "eeklu", 4087 },
+            
+            // Type: Ekose
+            { "ekose", 32219 },
+
+            // Type: Elemental (Storyteller Only)
+            { "elemental", 52519 },
+
+            // Type: Falkrin
+            { "falkrin", 20648 },
+
+            // Type: Freebot
+            { "freebot", 26449 },
+
+            // Type: Garr
+            { "garr", 69520 },
+
+            // Type: Girrok
+            { "girrok", 1753 },
+            
+            // Type: Grumpel
+            { "grumpel", 17381 },
+
+            // Type: Grund
+            { "grund", 9634 },
+
+            // Type: Heynar
+            { "heynar", 48028 },
+
+            // Type: High Priest (Storyteller Only)
+            { "highpriest", 42948 },
+
+            // Type: Ikthian
+            { "ikthian", 21436 },
+
+            // Type: Jabbit
+            { "jabbit", 69412 },
+
+            // Type: Krogg
+            { "krogg", 19729 },
+
+            // Type: Kurg
+            { "kurg", 42293 },
+
+            // Type: Lopp
+            { "lopp", 20810 },
+
+            // Type: Malverine
+            { "malverine", 41659 },
+
+            // Type: Moodie
+            { "moodie", 69593 },
+
+            // Type: Nerid
+            { "nerid", 30602 },
+
+            // Type: Oghra
+            { "oghra", 28079 },
+
+            // Type: Osun (Storyteller Only)
+            { "osun", 13019 },
+
+            // Type: Pell
+            { "pell", 14397 },
+
+            // Type: Protostar
+            { "protostar", 7301 },
+
+            // Type: Pumera
+            { "pumera", 69422 },
+
+            // Type: Ravenok
+            { "ravenok", 69453 },
+
+            // Type: Roan
+            { "roan", 1741 },
+
+            // Type: Rowsdower
+            { "rowsdower", 12921 },
+
+            // Type: Slank
+            { "slank", 27250 },
+
+            // Type: Strain (Storyteller Only)
+            { "strain", 48146 },
+
+            // Type: Tank (Storyteller Only)
+            { "tank", 47567 },
+
+            // Type: Triton (Storyteller Only)
+            { "triton", 34093 },
+
+            // Type: Vind
+            { "vind", 2410 },
+
+            // Type: Warbot (Storyteller Only)
+            { "warbot", 20998 },
+
+            // Type: Witch Giant (Storyteller Only)
+            { "witchgiant", 21804 },
+
+            // Type: Equivar
+            { "equivar", 8725 },
+
+            // Type: Velocirex
+            { "velocirex", 54261 },
+
+            // Type: Trask
+            { "trask", 5212 },
+
+            // Type: Warpig
+            { "warpig", 22297 },
+
+            // Type: Woolie
+            { "woolie", 56827 },
+
+            // Type: Uniblade
+            { "uniblade", 48178 },
+
+            // Type: Grinder
+            { "grinder", 11085 },
+
+            // Type: Orbitron
+            { "orbitron", 52319 },
+
+            // Type: Speeder
+            { "speeder", 75649 },
+
+            // Type: Hellhound
+            { "hellhound", 75743 },
+
+            // Type: Mech
+            { "mech", 75918 },
+
+            // Type: Spiderbot
+            { "spiderbot", 70020 },
+
+            // Type: Skeledroid
+            { "skeledroid", 26193 },
+
+            // Type: Gorganoth (Storyteller Only)
+            { "gorganoth", 48065 },
+
+            // Type: Invisible
+            { "invisible", 5609 },
+
+            // Type: Scrab
+            { "scrab", 69566 },
+
+            // Type: Buzzbing
+            { "buzzbing", 69530 },
+
+            // Type: Spider
+            { "spider", 69610 },
+
+            // Type: Spikehorde
+            { "spikehorde", 69499 },
+
+            // Type: Scanbot
+            { "scanbot", 32151 },
+
+            // Type: Stemdragon (Storyteller Only)
+            { "stemdragon", 2016 },
+
+            // Type: NPC Human
+            { "npchuman", 13386 }
+        };
 
         /// <summary>
         /// (GENESIS PRIME) Creature types privileged to the Storyteller Role.
@@ -731,18 +919,28 @@ namespace NexusForever.WorldServer.Command.Helper
         /// </summary>
         public static uint? GetCreatureIdFromType(string creatureType, string creatureVariant)
         {
-            if(creatureType == null || creatureType.Length <= 0 || creatureVariant == null || creatureVariant.Length <= 0)
+            if(string.IsNullOrWhiteSpace(creatureType))
             {
                 return null;
             }
             Dictionary<string, uint> creatureSubLibrary;
             // get the creature type-specific dictionary
+
+            if(string.IsNullOrWhiteSpace(creatureVariant))
+            {
+                if(CreatureLibrary.TryGetValue(creatureType.ToLower(), out uint creatureID))
+                {
+                    return creatureID;
+                }
+                return null;
+            }
+
             //log.Info($"Looking up {creatureType} in the Creature Library...");
-            if (CreatureLibrary.TryGetValue(creatureType, out creatureSubLibrary))
+            if (CreatureVariantLibrary.TryGetValue(creatureType.ToLower(), out creatureSubLibrary))
             {
                 //log.Info($"{creatureType} found as a creature type!");
                 // get the creature ID corresponding to the variant
-                if (creatureSubLibrary.TryGetValue(creatureVariant, out uint returnCreatureId))
+                if (creatureSubLibrary.TryGetValue(creatureVariant.ToLower(), out uint returnCreatureId))
                 {
                     log.Info($"Creature type {creatureType} and variant {creatureVariant} resolved to ID: {returnCreatureId}");
                     return returnCreatureId;
@@ -762,10 +960,10 @@ namespace NexusForever.WorldServer.Command.Helper
         {
             if (storyteller)
             {
-                return CreatureLibrary.Keys.ToList();
+                return CreatureVariantLibrary.Keys.ToList();
             }
             // not a storyteller, then.
-            return CreatureLibrary.Keys.Where(k => !IsStoryTellerOnly(k)).ToList();
+            return CreatureVariantLibrary.Keys.Where(k => !IsStoryTellerOnly(k)).ToList();
         }
 
         /// <summary>
@@ -776,7 +974,7 @@ namespace NexusForever.WorldServer.Command.Helper
             Dictionary<string, uint> creatureSubLibrary;
             // get the creature type-specific dictionary
             //log.Info($"Looking up {creatureType} in the Creature Library...");
-            if (CreatureLibrary.TryGetValue(creatureType, out creatureSubLibrary))
+            if (CreatureVariantLibrary.TryGetValue(creatureType, out creatureSubLibrary))
             {
                 return new List<string>(creatureSubLibrary.Keys);
             }

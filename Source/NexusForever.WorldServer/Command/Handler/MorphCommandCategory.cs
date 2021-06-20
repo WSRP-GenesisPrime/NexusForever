@@ -23,13 +23,10 @@ namespace NexusForever.WorldServer.Command.Handler
         public void HandleMorph(ICommandContext context,
             [Parameter("Creature type.")]
             string type,
-            [Parameter("Creature subtype.")]
+            [Parameter("Creature subtype.", ParameterFlags.Optional)]
             string subtype)
         {
             Player player = context.InvokingPlayer;
-
-            type = type.ToLower();
-            subtype = subtype.ToLower();
 
             bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(type);
             if(storyTellerOnly && !player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))

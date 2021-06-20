@@ -76,6 +76,8 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
+            log.Info($"{target.Name} is requesting a teleport to plot {firstName} {lastName}.");
+
             string name = $"{firstName} {lastName}";
             if(firstName == null && lastName == null)
             {
