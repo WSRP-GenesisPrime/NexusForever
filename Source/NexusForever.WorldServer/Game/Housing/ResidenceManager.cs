@@ -9,11 +9,13 @@ using NexusForever.Shared.Database;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
     public sealed class ResidenceManager : Singleton<ResidenceManager>, IUpdate
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         // TODO: move this to the config file
         private const double SaveDuration = 60d;
 
@@ -101,15 +103,23 @@ namespace NexusForever.WorldServer.Game.Housing
         public async Task<Residence> GetResidence(string name)
         {
             if (ownerCache.TryGetValue(name, out ulong residenceId))
-                return GetCachedResidence(residenceId);
+            {
+                Residence r = GetCachedResidence(residenceId);
+                log.Info($"Getting residence from cache: {residenceId}, {r.Id}, {r.OwnerId}, for name {name}.");
+                return r;
+            }
 
             ResidenceModel model = await DatabaseManager.Instance.CharacterDatabase.GetResidence(name);
             if (model == null)
+            {
+                log.Info($"Found no residence for name {name}, returning null.");
                 return null;
+            }
 
             var residence = new Residence(model);
             residences.TryAdd(residence.Id, residence);
             ownerCache.TryAdd(name, residence.Id);
+            log.Info($"Getting residence from database: {residence.Id}, {residence.OwnerId}, for name {name}.");
             return residence;
         }
 

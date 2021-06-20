@@ -436,20 +436,6 @@ namespace NexusForever.WorldServer.Game.Social
                 return;
             }
 
-            /*// echo message
-            var builder = new ChatMessageBuilder
-            {
-                Type         = ChatChannelType.Whisper,
-                Self         = true,
-                FromName     = target.Name,
-                Text         = whisper.Message,
-                Formats      = ParseChatLinks(session, whisper.Formats).ToList(),
-                CrossFaction = session.Player.Faction1 != target.Faction1,
-                GM           = target.Session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
-            };
-            session.EnqueueMessageEncrypted(builder.Build());*/
-
-
             // target player message
             var builder = new ChatMessageBuilder
             {
@@ -464,8 +450,6 @@ namespace NexusForever.WorldServer.Game.Social
                 GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
             target.Session.EnqueueMessageEncrypted(builder.Build());
-
-            //SendChatAccept(session);
 
             session.EnqueueMessageEncrypted(new ServerChatAccept
             {

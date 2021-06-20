@@ -432,7 +432,9 @@ namespace NexusForever.WorldServer.Game.Map
             if (update.PlotIndex == int.MaxValue)
                 return true;
 
-            WorldSocketEntry worldSocketEntry = GameTableManager.Instance.WorldSocket.GetEntry(residence.GetPlot((byte)update.PlotIndex).PlotEntry.WorldSocketId);
+            return true; // ignore boundaries, YOLO.
+
+            /*WorldSocketEntry worldSocketEntry = GameTableManager.Instance.WorldSocket.GetEntry(residence.GetPlot((byte)update.PlotIndex).PlotEntry.WorldSocketId);
 
             // TODO: Calculate position based on individual maps on Community & Warplot residences
             var worldPosition = new Vector3(1472f + update.Position.X, update.Position.Y, 1440f + update.Position.Z);
@@ -448,7 +450,7 @@ namespace NexusForever.WorldServer.Game.Map
 
             log.Debug($"IsValidPlotForPosition - PlotIndex: {update.PlotIndex}, Range: {minBound}-{maxBound}, Coords: {globalCellX}, {globalCellZ}");
 
-            return (globalCellX >= minBound && globalCellX <= maxBound && globalCellZ >= minBound && globalCellZ <= maxBound);
+            return (globalCellX >= minBound && globalCellX <= maxBound && globalCellZ >= minBound && globalCellZ <= maxBound);*/
         }
 
         /// <summary>

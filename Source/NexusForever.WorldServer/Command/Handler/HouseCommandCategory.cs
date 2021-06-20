@@ -9,6 +9,7 @@ using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -16,52 +17,48 @@ namespace NexusForever.WorldServer.Command.Handler
     [CommandTarget(typeof(Player))]
     public class HouseCommandCategory : CommandCategory
     {
-        [Command(Permission.HouseDecor, "A collection of commands to modify decor in housing residences.", "decor")]
-        public class HouseDecorCommandCategory : CommandCategory
+        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
+        public void HandleHouseDecorAdd(ICommandContext context,
+            [Parameter("Decor info id entry to add to the crate.")]
+            uint decorInfoId,
+            [Parameter("Quantity of decor to add to the crate.")]
+            uint? quantity)
         {
-            [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "add")]
-            public void HandleHouseDecorAdd(ICommandContext context,
-                [Parameter("Decor info id entry to add to the crate.")]
-                uint decorInfoId,
-                [Parameter("Quantity of decor to add to the crate.")]
-                uint? quantity)
+            quantity ??= 1u;
+
+            if (!(context.InvokingPlayer.Map is ResidenceMap residenceMap))
             {
-                quantity ??= 1u;
-
-                if (!(context.InvokingPlayer.Map is ResidenceMap residenceMap))
-                {
-                    context.SendMessage("You need to be on a housing map to use this command!");
-                    return;
-                }
-
-                HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
-                if (entry == null)
-                {
-                    context.SendMessage($"Invalid decor info id {decorInfoId}!");
-                    return;
-                }
-
-                residenceMap.DecorCreate(entry, quantity.Value);
+                context.SendMessage("You need to be on a housing map to use this command!");
+                return;
             }
 
-            [Command(Permission.HouseDecorLookup, "Returns a list of decor ids that match the supplied name.", "lookup")]
-            public void HandleHouseDecorLookup(ICommandContext context,
-                [Parameter("Name or partial name of the housing decor item to search for.")]
-                string name)
+            HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
+            if (entry == null)
             {
-                var sw = new StringBuilder();
-                sw.AppendLine("Decor Lookup Results:");
-
-                TextTable tt = GameTableManager.Instance.GetTextTable(context.Language);
-                foreach (HousingDecorInfoEntry decorEntry in
-                    SearchManager.Instance.Search<HousingDecorInfoEntry>(name, context.Language, e => e.LocalizedTextIdName, true))
-                {
-                    string text = tt.GetEntry(decorEntry.LocalizedTextIdName);
-                    sw.AppendLine($"({decorEntry.Id}) {text}");
-                }
-
-                context.SendMessage(sw.ToString());
+                context.SendMessage($"Invalid decor info id {decorInfoId}!");
+                return;
             }
+
+            residenceMap.DecorCreate(entry, quantity.Value);
+        }
+
+        [Command(Permission.HouseDecorLookup, "Returns a list of decor ids that match the supplied name.", "decorlookup")]
+        public void HandleHouseDecorLookup(ICommandContext context,
+            [Parameter("Name or partial name of the housing decor item to search for.")]
+            string name)
+        {
+            var sw = new StringBuilder();
+            sw.AppendLine("Decor Lookup Results:");
+
+            TextTable tt = GameTableManager.Instance.GetTextTable(context.Language);
+            foreach (HousingDecorInfoEntry decorEntry in
+                SearchManager.Instance.Search<HousingDecorInfoEntry>(name, context.Language, e => e.LocalizedTextIdName, true))
+            {
+                string text = tt.GetEntry(decorEntry.LocalizedTextIdName);
+                sw.AppendLine($"({decorEntry.Id}) {text}");
+            }
+
+            context.SendMessage(sw.ToString());
         }
 
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]
@@ -88,7 +85,10 @@ namespace NexusForever.WorldServer.Command.Handler
             if (residence == null)
             {
                 if (firstName == null && lastName == null)
+                {
                     residence = ResidenceManager.Instance.CreateResidence(target);
+                    log.Info($"Creating residence {residence.Id} for name {name}, firstname {firstName}, lastname {lastName}.");
+                }
                 else
                 {
                     context.SendMessage("A residence for that character doesn't exist!");
