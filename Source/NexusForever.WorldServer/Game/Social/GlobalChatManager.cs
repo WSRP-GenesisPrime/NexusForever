@@ -12,6 +12,7 @@ using NexusForever.Shared.Database;
 using NexusForever.Shared.Game;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Map.Search;
 using NexusForever.WorldServer.Game.Social.Model;
 using NexusForever.WorldServer.Game.Social.Static;
@@ -371,12 +372,6 @@ namespace NexusForever.WorldServer.Game.Social
             SendChatAccept(session);
         }
 
-        [ChatChannelHandler(ChatChannelType.Guild)]
-        [ChatChannelHandler(ChatChannelType.Society)]
-        [ChatChannelHandler(ChatChannelType.WarParty)]
-        [ChatChannelHandler(ChatChannelType.Community)]
-        [ChatChannelHandler(ChatChannelType.GuildOfficer)]
-        [ChatChannelHandler(ChatChannelType.WarPartyOfficer)]
         [ChatChannelHandler(ChatChannelType.Custom)]
         private void HandleChannelChat(WorldSession session, ClientChat chat)
         {
@@ -409,6 +404,31 @@ namespace NexusForever.WorldServer.Game.Social
             };
 
             channel.Broadcast(builder.Build());
+        }
+
+        [ChatChannelHandler(ChatChannelType.Guild)]
+        [ChatChannelHandler(ChatChannelType.Society)]
+        [ChatChannelHandler(ChatChannelType.WarParty)]
+        [ChatChannelHandler(ChatChannelType.Community)]
+        [ChatChannelHandler(ChatChannelType.GuildOfficer)]
+        [ChatChannelHandler(ChatChannelType.WarPartyOfficer)]
+        private void HandleGuildChat(WorldSession session, ClientChat chat)
+        {
+            GuildBase g = GlobalGuildManager.Instance.GetGuild(chat.Channel.ChatId);
+
+            var builder = new ChatMessageBuilder
+            {
+                Type = chat.Channel.Type,
+                ChatId = chat.Channel.ChatId,
+                FromName = session.Player.Name,
+                Text = chat.Message,
+                Formats = ParseChatLinks(session, chat.Formats).ToList(),
+                Guid = session.Player.Guid,
+                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
+            };
+
+            g.BroadcastChat(builder.Build(), session.Player, chat.Channel.Type);
+            SendChatAccept(session);
         }
 
         /// <summary>

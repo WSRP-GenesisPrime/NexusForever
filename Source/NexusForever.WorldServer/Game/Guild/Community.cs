@@ -28,11 +28,6 @@ namespace NexusForever.WorldServer.Game.Guild
         {
         }
 
-        protected override void InitialiseChatChannels()
-        {
-            memberChannel = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.Community, Id, Name);
-        }
-
         /// <summary>
         /// Return a <see cref="GuildData"/> packet of this <see cref="Community"/>
         /// </summary>

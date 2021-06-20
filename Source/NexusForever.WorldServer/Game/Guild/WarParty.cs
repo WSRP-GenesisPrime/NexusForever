@@ -13,8 +13,6 @@ namespace NexusForever.WorldServer.Game.Guild
     {
         public override uint MaxMembers => 30u;
 
-        public ChatChannel officerChannel { get; protected set; }
-
         /// <summary>
         /// Create a new <see cref="WarParty"/> using <see cref="GuildModel"/>
         /// </summary>
@@ -29,26 +27,6 @@ namespace NexusForever.WorldServer.Game.Guild
         public WarParty(string name, string leaderRankName, string councilRankName, string memberRankName)
             : base(GuildType.WarParty, name, leaderRankName, councilRankName, memberRankName)
         {
-        }
-
-        protected override void InitialiseChatChannels()
-        {
-            memberChannel = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.WarParty, Id, Name);
-            officerChannel = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.WarPartyOfficer, Id, Name);
-        }
-
-        protected override List<ChatChannel> availableChats(GuildMember member)
-        {
-            var list = new List<ChatChannel>();
-            if (member.Rank.HasPermission(GuildRankPermission.MemberChat))
-            {
-                list.Add(memberChannel);
-            }
-            if (member.Rank.HasPermission(GuildRankPermission.OfficerChat))
-            {
-                list.Add(officerChannel);
-            }
-            return list;
         }
 
         /// <summary>

@@ -81,8 +81,6 @@ namespace NexusForever.WorldServer.Game.Guild
         /// </summary>
         public abstract uint MaxMembers { get; }
 
-        public ChatChannel memberChannel { get; protected set; }
-
         protected readonly SortedDictionary</*index*/byte, GuildRank> ranks = new();
         protected readonly Dictionary</*characterId*/ulong, GuildMember> members = new();
         protected readonly List</*characterId*/ulong> onlineMembers = new();
@@ -112,8 +110,6 @@ namespace NexusForever.WorldServer.Game.Guild
                 members.Add(memberModel.CharacterId, member);
             }
 
-            InitialiseChatChannels();
-
             saveMask = GuildBaseSaveMask.None;
         }
 
@@ -129,7 +125,6 @@ namespace NexusForever.WorldServer.Game.Guild
             CreateTime = DateTime.Now;
 
             InitialiseRanks(leaderRankName, councilRankName, memberRankName);
-            InitialiseChatChannels();
 
             saveMask = GuildBaseSaveMask.Create;
         }
@@ -139,11 +134,6 @@ namespace NexusForever.WorldServer.Game.Guild
             AddRank(0, leaderRankName, GuildRankPermission.Leader, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue);
             AddRank(1, councilRankName, GuildRankPermission.Council, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue);
             AddRank(9, memberRankName, GuildRankPermission.MemberChat, 0, 0, 0);
-        }
-
-        protected virtual void InitialiseChatChannels()
-        {
-            // deliberately empty
         }
 
         /// <summary>
@@ -300,8 +290,6 @@ namespace NexusForever.WorldServer.Game.Guild
         protected virtual void MemberOnline(GuildMember member)
         {
             onlineMembers.Add(member.CharacterId);
-
-            joinChannels(member);
         }
 
         /// <summary>
@@ -321,8 +309,6 @@ namespace NexusForever.WorldServer.Game.Guild
         protected virtual void MemberOffline(GuildMember member)
         {
             onlineMembers.Remove(member.CharacterId);
-
-            leaveChannels(member);
         }
 
         /// <summary>
@@ -461,29 +447,6 @@ namespace NexusForever.WorldServer.Game.Guild
             }
 
             GlobalGuildManager.Instance.UntrackCharacterGuild(member.CharacterId, Id);
-        }
-
-        protected virtual List<ChatChannel> availableChats(GuildMember member)
-        {
-            return new List<ChatChannel>
-            {
-                memberChannel
-            };
-        }
-
-        private void joinChannels(GuildMember member)
-        {
-            foreach (ChatChannel c in availableChats(member)) {
-                c.Join(member.CharacterId);
-            }
-        }
-
-        private void leaveChannels(GuildMember member)
-        {
-            foreach (ChatChannel c in availableChats(member))
-            {
-                c.Leave(member.CharacterId);
-            }
         }
 
         /// <summary>
@@ -748,15 +711,39 @@ namespace NexusForever.WorldServer.Game.Guild
             });
         }
 
+        public virtual bool hasChatChannel(ChatChannelType type, GuildMember g)
+        {
+            return true;
+        }
+
         /// <summary>
         /// Send <see cref="IWritable"/> to all online members.
         /// </summary>
-        public void Broadcast(IWritable writable)
+        public void Broadcast(IWritable writable, ulong? except = null)
         {
             foreach (ulong characterId in onlineMembers)
             {
-                Player player = CharacterManager.Instance.GetPlayer(characterId);
-                player?.Session?.EnqueueMessageEncrypted(writable);
+                if (characterId != except)
+                {
+                    Player player = CharacterManager.Instance.GetPlayer(characterId);
+                    player?.Session?.EnqueueMessageEncrypted(writable);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Send <see cref="IWritable"/> to all online members.
+        /// </summary>
+        public void BroadcastChat(IWritable writable, Player player, ChatChannelType type)
+        {
+            foreach (ulong characterId in onlineMembers)
+            {
+                Player p = CharacterManager.Instance.GetPlayer(characterId);
+                GuildMember g = GetMember(p.CharacterId);
+                if(hasChatChannel(type, g) && player != p)
+                {
+                    player?.Session?.EnqueueMessageEncrypted(writable);
+                }
             }
         }
 

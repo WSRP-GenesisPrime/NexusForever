@@ -69,12 +69,6 @@ namespace NexusForever.WorldServer.Game.Guild
             additionalInfo     = "";
         }
 
-        protected override void InitialiseChatChannels()
-        {
-            memberChannel  = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.Guild, Id, Name);
-            officerChannel = GlobalChatManager.Instance.CreateChatChannel(ChatChannelType.GuildOfficer, Id, Name);
-        }
-
         protected override void Save(CharacterContext context, GuildBaseSaveMask baseSaveMask)
         {
             if ((baseSaveMask & GuildBaseSaveMask.Create) != 0)
@@ -135,20 +129,6 @@ namespace NexusForever.WorldServer.Game.Guild
                     GuildCreationDateInDays = (float)DateTime.Now.Subtract(CreateTime).TotalDays * -1f
                 }
             };
-        }
-
-        protected override List<ChatChannel> availableChats(GuildMember member)
-        {
-            var list = new List<ChatChannel>();
-            if (member.Rank.HasPermission(GuildRankPermission.MemberChat))
-            {
-                list.Add(memberChannel);
-            }
-            if(member.Rank.HasPermission(GuildRankPermission.OfficerChat))
-            {
-                list.Add(officerChannel);
-            }
-            return list;
         }
 
         /// <summary>
