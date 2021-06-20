@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
@@ -17,6 +18,8 @@ namespace NexusForever.WorldServer.Game.Guild
 
         public GuildStandard Standard { get; }
         public GuildAchievementManager AchievementManager { get; }
+
+        public ChatChannel officerChannel { get; protected set; }
 
         public string MessageOfTheDay
         {
@@ -134,24 +137,18 @@ namespace NexusForever.WorldServer.Game.Guild
             };
         }
 
-        protected override void MemberOnline(GuildMember member)
+        protected override List<ChatChannel> availableChats(GuildMember member)
         {
+            var list = new List<ChatChannel>();
             if (member.Rank.HasPermission(GuildRankPermission.MemberChat))
-                memberChannel.Join(member.CharacterId);
-            if (member.Rank.HasPermission(GuildRankPermission.OfficerChat))
-                officerChannel.Join(member.CharacterId);
-
-            base.MemberOnline(member);
-        }
-
-        protected override void MemberOffline(GuildMember member)
-        {
-            if (member.Rank.HasPermission(GuildRankPermission.MemberChat))
-                memberChannel.Leave(member.CharacterId);
-            if (member.Rank.HasPermission(GuildRankPermission.OfficerChat))
-                officerChannel.Leave(member.CharacterId);
-
-            base.MemberOffline(member);
+            {
+                list.Add(memberChannel);
+            }
+            if(member.Rank.HasPermission(GuildRankPermission.OfficerChat))
+            {
+                list.Add(officerChannel);
+            }
+            return list;
         }
 
         /// <summary>

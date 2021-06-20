@@ -17,6 +17,7 @@ namespace NexusForever.WorldServer.Command.Handler
     [CommandTarget(typeof(Player))]
     public class HouseCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
         public void HandleHouseDecorAdd(ICommandContext context,
             [Parameter("Decor info id entry to add to the crate.")]

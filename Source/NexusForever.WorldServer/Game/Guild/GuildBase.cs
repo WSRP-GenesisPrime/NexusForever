@@ -82,7 +82,6 @@ namespace NexusForever.WorldServer.Game.Guild
         public abstract uint MaxMembers { get; }
 
         public ChatChannel memberChannel { get; protected set; }
-        public ChatChannel officerChannel { get; protected set; }
 
         protected readonly SortedDictionary</*index*/byte, GuildRank> ranks = new();
         protected readonly Dictionary</*characterId*/ulong, GuildMember> members = new();
@@ -296,13 +295,13 @@ namespace NexusForever.WorldServer.Game.Guild
 
             AnnounceGuildMemberChange(member);
             AnnounceGuildResult(GuildResult.MemberOnline, referenceText: player.Name);
-
-            memberChannel?.Join(player.CharacterId);
         }
 
         protected virtual void MemberOnline(GuildMember member)
         {
             onlineMembers.Add(member.CharacterId);
+
+            joinChannels(member);
         }
 
         /// <summary>
@@ -317,13 +316,13 @@ namespace NexusForever.WorldServer.Game.Guild
 
             AnnounceGuildMemberChange(member);
             AnnounceGuildResult(GuildResult.MemberOffline, referenceText: player.Name);
-
-            memberChannel?.Leave(player.CharacterId);
         }
 
         protected virtual void MemberOffline(GuildMember member)
         {
             onlineMembers.Remove(member.CharacterId);
+
+            leaveChannels(member);
         }
 
         /// <summary>
@@ -367,8 +366,6 @@ namespace NexusForever.WorldServer.Game.Guild
             SendGuildJoin(player.Session, member.Build(), new GuildPlayerLimits());
             SendGuildRoster(player.Session);
             AnnounceGuildMemberChange(member);
-
-            memberChannel?.Join(player.CharacterId);
         }
 
         private void SendGuildJoin(WorldSession session, NetworkGuildMember guildMember, GuildPlayerLimits playerLimits)
@@ -437,8 +434,6 @@ namespace NexusForever.WorldServer.Game.Guild
                 RealmId = WorldServer.RealmId,
                 GuildId = Id
             });
-
-            memberChannel?.Leave(player.CharacterId);
         }
 
         /// <summary>
@@ -466,6 +461,29 @@ namespace NexusForever.WorldServer.Game.Guild
             }
 
             GlobalGuildManager.Instance.UntrackCharacterGuild(member.CharacterId, Id);
+        }
+
+        protected virtual List<ChatChannel> availableChats(GuildMember member)
+        {
+            return new List<ChatChannel>
+            {
+                memberChannel
+            };
+        }
+
+        private void joinChannels(GuildMember member)
+        {
+            foreach (ChatChannel c in availableChats(member)) {
+                c.Join(member.CharacterId);
+            }
+        }
+
+        private void leaveChannels(GuildMember member)
+        {
+            foreach (ChatChannel c in availableChats(member))
+            {
+                c.Leave(member.CharacterId);
+            }
         }
 
         /// <summary>
