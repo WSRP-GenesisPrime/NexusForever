@@ -27,6 +27,7 @@ namespace NexusForever.WorldServer.Game.Map
 
         public override void Initialise(MapInfo info, Player player)
         {
+            log.Trace($"Initializing residencemap {info.ResidenceId}, {info.InstanceId}, {player.Name}.");
             base.Initialise(info, player);
 
             if (info.ResidenceId != 0u)
@@ -36,7 +37,10 @@ namespace NexusForever.WorldServer.Game.Map
                     throw new InvalidOperationException();
             }
             else
+            {
+                log.Info($"ResidenceMap: creating new residence.");
                 residence = ResidenceManager.Instance.CreateResidence(player);
+            }
 
             // initialise plug entities
             foreach (Plot plot in residence.GetPlots().Where(p => p.PlugEntry != null))
@@ -49,8 +53,11 @@ namespace NexusForever.WorldServer.Game.Map
 
         public override void OnAddToMap(Player player)
         {
-            if (residence == null)
+            if (residence == null) {
+                log.Error($"Adding player to null residencemap: {player.Name}.");
                 throw new InvalidOperationException();
+            }
+            log.Trace($"Adding player to residencemap: {player.Name}, residence: {residence.Id}, {residence.OwnerName}.");
 
             SendHousingPrivacy(player);
             SendHousingProperties(player);

@@ -105,21 +105,21 @@ namespace NexusForever.WorldServer.Game.Housing
             if (ownerCache.TryGetValue(name, out ulong residenceId))
             {
                 Residence r = GetCachedResidence(residenceId);
-                log.Info($"Getting residence from cache: {residenceId}, {r.Id}, {r.OwnerId}, for name {name}.");
+                log.Trace($"Getting residence from cache: {residenceId}, {r.Id}, {r.OwnerId}, for name {name}.");
                 return r;
             }
 
             ResidenceModel model = await DatabaseManager.Instance.CharacterDatabase.GetResidence(name);
             if (model == null)
             {
-                log.Info($"Found no residence for name {name}, returning null.");
+                log.Trace($"Found no residence for name {name}, returning null.");
                 return null;
             }
 
             var residence = new Residence(model);
             residences.TryAdd(residence.Id, residence);
             ownerCache.TryAdd(name, residence.Id);
-            log.Info($"Getting residence from database: {residence.Id}, {residence.OwnerId}, for name {name}.");
+            log.Trace($"Getting residence from database: {residence.Id}, {residence.OwnerId}, for name {name}.");
             return residence;
         }
 
