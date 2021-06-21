@@ -134,6 +134,15 @@ namespace NexusForever.WorldServer.Game.Housing
             // TODO: Kick any players out of the ResidenceMap and close the Instance.
         }
 
+        public void UnloadResidence(string name)
+        {
+            if (ownerCache.TryGetValue(name, out ulong residenceId))
+            {
+                residences.TryRemove(residenceId, out _);
+                ownerCache.TryRemove(name, out _);
+            }
+        }
+
         /// <summary>
         /// Return cached <see cref="Residence"/> by supplied residence id.
         /// </summary>

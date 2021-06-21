@@ -27,7 +27,7 @@ namespace NexusForever.WorldServer.Game.Map
 
         public override void Initialise(MapInfo info, Player player)
         {
-            log.Trace($"Initializing residencemap {info.ResidenceId}, {info.InstanceId}, {player.Name}.");
+            log.Trace($"Initializing residencemap {info.ResidenceId}, {info.InstanceId}, player: {player.Name}.");
             base.Initialise(info, player);
 
             if (info.ResidenceId != 0u)

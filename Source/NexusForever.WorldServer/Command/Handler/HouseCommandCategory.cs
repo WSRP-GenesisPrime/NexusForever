@@ -103,6 +103,26 @@ namespace NexusForever.WorldServer.Command.Handler
             target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
         }
 
+        [Command(Permission.GMFlag, "Unload a residence", "unload")]
+        public void HandleHouseUnload(ICommandContext context,
+            [Parameter("", ParameterFlags.Optional)]
+            string firstName,
+            [Parameter("", ParameterFlags.Optional)]
+            string lastName)
+        {
+            Player target = context.InvokingPlayer;
+            
+            log.Trace($"{target.Name} is requesting to unload plot {firstName} {lastName}.");
+
+            string name = $"{firstName} {lastName}".Trim();
+            if (firstName == null && lastName == null)
+            {
+                name = target.Name;
+            }
+
+            ResidenceManager.Instance.UnloadResidence(name);
+        }
+
         [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
         public void HandleRemodelCommand(ICommandContext context,
             [Parameter("Ground or sky?")]
