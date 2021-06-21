@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Numerics;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Map
 {
     public sealed class InstancedMap<T> : IInstancedMap where T : IMap, new()
     {
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
         private WorldEntry entry;
         private readonly Dictionary</*instanceId*/ uint, T> instances = new();
         private readonly Queue<T> pendingInstances = new();
@@ -44,8 +46,13 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 T instance = GetInstance(i => (i as ResidenceMap)?.Id == info.ResidenceId);
                 if (instance != null)
+                {
+                    log.Trace($"Found instance for residence {info.ResidenceId}");
                     return instance;
+                }
             }
+
+            log.Trace($"Did not find instance for residence {info.ResidenceId}, creating now.");
 
             var newInstance = new T();
             newInstance.Initialise(info, player);

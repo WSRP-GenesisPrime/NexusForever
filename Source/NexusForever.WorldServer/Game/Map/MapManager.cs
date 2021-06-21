@@ -73,7 +73,11 @@ namespace NexusForever.WorldServer.Game.Map
         private IMap CreateBaseMap(MapInfo info)
         {
             if (maps.TryGetValue((ushort)info.Entry.Id, out IMap map))
+            {
+                log.Trace($"MapManager: Loading existing map {info.Entry.Id}");
                 return map;
+            }
+            log.Trace($"MapManager: Creating map instance {info.Entry.Id}");
 
             switch (info.Entry.Type)
             {
