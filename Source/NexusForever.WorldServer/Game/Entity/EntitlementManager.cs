@@ -41,12 +41,6 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateRewardPropertiesPremiumModifiers(false);
-
-            UpdateRewardProperty(RewardPropertyType.ExtraDecorSlots, 5000);
-            UpdateRewardProperty(RewardPropertyType.GuildCreateOrInviteAccess, 1);
-            UpdateRewardProperty(RewardPropertyType.GuildHolomarkUnlimited, 1);
-            UpdateRewardProperty(RewardPropertyType.BagSlots, 4);
-            UpdateRewardProperty(RewardPropertyType.Trading, 1);
         }
 
         public void Save(AuthContext context)
@@ -125,6 +119,12 @@ namespace NexusForever.WorldServer.Game.Entity
 
             // TODO: load from DB? Might be useful for custom
             UpdateRewardPropertiesPremiumModifiers(true);
+
+            UpdateRewardProperty(RewardPropertyType.ExtraDecorSlots, 5000);
+            UpdateRewardProperty(RewardPropertyType.GuildCreateOrInviteAccess, 1);
+            UpdateRewardProperty(RewardPropertyType.GuildHolomarkUnlimited, 1);
+            UpdateRewardProperty(RewardPropertyType.BagSlots, 4);
+            UpdateRewardProperty(RewardPropertyType.Trading, 1);
         }
 
         private void UpdateRewardPropertiesPremiumModifiers(bool character)
