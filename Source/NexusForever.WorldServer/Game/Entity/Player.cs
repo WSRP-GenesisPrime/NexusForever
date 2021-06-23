@@ -698,13 +698,6 @@ namespace NexusForever.WorldServer.Game.Entity
             Session.EnqueueMessageEncrypted(new ServerInstanceSettings());
             SetControl(this);
 
-            // Session.EntitlementManager.UpdateRewardProperty(RewardPropertyType.CostumeSlots, 10u); // extra costumes don't work.
-            Session.EntitlementManager.UpdateRewardProperty(RewardPropertyType.ExtraDecorSlots, 5000);
-            Session.EntitlementManager.UpdateRewardProperty(RewardPropertyType.GuildCreateOrInviteAccess, 1);
-            Session.EntitlementManager.UpdateRewardProperty(RewardPropertyType.GuildHolomarkUnlimited, 1);
-            Session.EntitlementManager.UpdateRewardProperty(RewardPropertyType.BagSlots, 4);
-            Session.EntitlementManager.UpdateRewardProperty(RewardPropertyType.Trading, 1);
-
             CostumeManager.SendInitialPackets();
 
             var playerCreate = new ServerPlayerCreate

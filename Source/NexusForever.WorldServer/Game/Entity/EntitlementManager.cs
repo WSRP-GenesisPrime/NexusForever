@@ -41,6 +41,12 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateRewardPropertiesPremiumModifiers(false);
+
+            UpdateRewardProperty(RewardPropertyType.ExtraDecorSlots, 5000);
+            UpdateRewardProperty(RewardPropertyType.GuildCreateOrInviteAccess, 1);
+            UpdateRewardProperty(RewardPropertyType.GuildHolomarkUnlimited, 1);
+            UpdateRewardProperty(RewardPropertyType.BagSlots, 4);
+            UpdateRewardProperty(RewardPropertyType.Trading, 1);
         }
 
         public void Save(AuthContext context)
@@ -101,6 +107,15 @@ namespace NexusForever.WorldServer.Game.Entity
 
                 var entitlement = new CharacterEntitlement(entitlementModel, entry);
                 characterEntitlements.Add(entitlement.Type, entitlement);
+            }
+
+            if(characterEntitlements.TryGetValue(EntitlementType.CostumeSlots, out CharacterEntitlement costumeSlots))
+            {
+                costumeSlots.Amount = 8;
+            }
+            else
+            {
+                characterEntitlements.Add(EntitlementType.CostumeSlots, new CharacterEntitlement(model.Id, GameTableManager.Instance.Entitlement.GetEntry((uint) EntitlementType.CostumeSlots), 8));
             }
         }
 
