@@ -34,11 +34,13 @@ using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
     public class Player : UnitEntity, ISaveAuth, ISaveCharacter, ICharacter
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         // TODO: move this to the config file
         private const double SaveDuration = 60d;
 
@@ -624,6 +626,14 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
+            if(guid <= 0)
+            {
+                log.Warn($"Adding player {Name} to map with guid 0!");
+            }
+            else
+            {
+                log.Info($"Adding player {Name} to map with guid {guid}.");
+            }
             IsLoading = true;
 
             Session.EnqueueMessageEncrypted(new ServerChangeWorld

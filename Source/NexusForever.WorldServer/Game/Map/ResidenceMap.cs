@@ -53,6 +53,10 @@ namespace NexusForever.WorldServer.Game.Map
 
         public override void OnAddToMap(Player player)
         {
+            if (player.Guid <= 0)
+            {
+                log.Warn("Player guid is 0!");
+            }
             if (residence == null) {
                 log.Error($"Adding player to null residencemap: {player.Name}.");
                 throw new InvalidOperationException();
