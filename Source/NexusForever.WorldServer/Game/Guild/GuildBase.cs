@@ -738,11 +738,10 @@ namespace NexusForever.WorldServer.Game.Guild
         {
             foreach (ulong characterId in onlineMembers)
             {
-                Player p = CharacterManager.Instance.GetPlayer(characterId);
-                GuildMember g = GetMember(p.CharacterId);
-                if(hasChatChannel(type, g) && player != p)
+                GuildMember g = GetMember(characterId);
+                if(hasChatChannel(type, g) && characterId != player.CharacterId)
                 {
-                    player?.Session?.EnqueueMessageEncrypted(writable);
+                    CharacterManager.Instance.GetPlayer(characterId)?.Session?.EnqueueMessageEncrypted(writable);
                 }
             }
         }
