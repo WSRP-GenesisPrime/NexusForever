@@ -125,7 +125,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
         [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
         public void HandleRemodelCommand(ICommandContext context,
-            [Parameter("Ground or sky?")]
+            [Parameter("Ground, sky, or music?")]
             string option,
             [Parameter("ID")]
             ushort id)
@@ -149,9 +149,13 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 residence.Sky = id;
             }
+            else if (option.ToLower() == "music")
+            {
+                residence.Music = id;
+            }
             else
             {
-                context.SendError("You can only change the ground or sky with this command.");
+                context.SendError("You can only change the ground, sky, or music with this command.");
             }
 
             residenceMap.Remodel(target, clientRemod);
