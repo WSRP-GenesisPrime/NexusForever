@@ -30,16 +30,16 @@ namespace MainSite.Controllers
         
         public IActionResult Register(AccountBaseModel newUser)
         {
-            
+            string username = newUser.Email?.ToLower();
             GetStatusImage();
-            if (newUser.Email != null && newUser.Confirmation != null && newUser.Password != null)
+            if (username != null && newUser.Confirmation != null && newUser.Password != null)
             {
                 if (newUser.Password.Equals(newUser.Confirmation))
                 {
                     try
                     {
-                        (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(newUser.Email, newUser.Password);
-                        DatabaseManager.Instance.AuthDatabase.CreateAccount(newUser.Email.ToLower(), salt, verifier);
+                        (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(username, newUser.Password);
+                        DatabaseManager.Instance.AuthDatabase.CreateAccount(username, salt, verifier);
                         return View("RegisterSuccess");
                     }
                     catch (Exception e)
