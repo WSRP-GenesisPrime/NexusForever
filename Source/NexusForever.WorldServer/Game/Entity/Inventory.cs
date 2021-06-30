@@ -139,6 +139,17 @@ namespace NexusForever.WorldServer.Game.Entity
                 }
             }
 
+            ushort? overrideID = costume?.getOverride(itemSlot);
+            if(overrideID != null)
+            {
+                return new ItemVisual
+                {
+                    Slot = itemSlot,
+                    DisplayId = (ushort) overrideID,
+                    DyeData = costumeItem?.DyeData ?? 0
+                };
+            }
+
             Bag bag = GetBag(InventoryLocation.Equipped);
             Debug.Assert(bag != null);
             Item item = bag.GetItem((uint)index);

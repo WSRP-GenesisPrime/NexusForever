@@ -35,6 +35,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private CostumeSaveMask saveMask;
 
+        private Dictionary<ItemSlot, ushort?> overrides = new Dictionary<ItemSlot, ushort?>();
+
         /// <summary>
         /// Create a new <see cref="Costume"/> from an existing <see cref="CharacterCostumeModel"/> database model.
         /// </summary>
@@ -123,6 +125,20 @@ namespace NexusForever.WorldServer.Game.Entity
                 items[i].ItemId  = costumeSave.Items[i].ItemId;
                 items[i].DyeData = CostumeItem.GenerateDyeMask(costumeSave.Items[i].Dyes);
             }
+        }
+
+        public void setOverride(ItemSlot slot, ushort? displayID)
+        {
+            overrides[slot] = displayID;
+        }
+
+        public ushort? getOverride(ItemSlot slot)
+        {
+            if(overrides.TryGetValue(slot, out ushort? displayID))
+            {
+                return displayID;
+            }
+            return null;
         }
         
         public IEnumerator<CostumeItem> GetEnumerator()
