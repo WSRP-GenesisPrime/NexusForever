@@ -1,16 +1,10 @@
-﻿using System.Text;
-using NexusForever.Shared.GameTable;
-using NexusForever.Shared.GameTable.Model;
-using NexusForever.WorldServer.Command.Context;
+﻿using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
+using NexusForever.WorldServer.Command.Helper;
 using NexusForever.WorldServer.Command.Static;
-using NexusForever.WorldServer.Game;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
-using NexusForever.WorldServer.Game.Housing;
-using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
-using NexusForever.WorldServer.Network.Message.Model;
 using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
@@ -32,6 +26,43 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 return;
             }
+            Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+            costume.setOverride(slot, displayID);
+            p.EmitVisualUpdate();
+        }
+
+        [Command(Permission.GMFlag, "Override an item slot with an item type and variant.", "override")]
+        public void HandleCostumeOverride(ICommandContext context,
+            [Parameter("Item slot (your only choice right now is 'weapon').", ParameterFlags.None, typeof(EnumParameterConverter<ItemSlot>))]
+            string slotName,
+            [Parameter("Override item type.")]
+            string itemType,
+            [Parameter("Override item variant.")]
+            string itemVariant)
+        {
+            Player p = context.InvokingPlayer;
+            if (p.CostumeIndex == 0)
+            {
+                return;
+            }
+
+            ItemSlot slot;
+            if ("weapon".Equals(slotName))
+            {
+                slot = ItemSlot.WeaponPrimary;
+            }
+            else
+            {
+                return;
+            }
+
+            ushort? displayID = CostumeHelper.GetItemDisplayIdFromType(itemType, itemVariant);
+            if (displayID == null)
+            {
+                context.SendError("A Display ID for the given type and variant could not be found!");
+                return;
+            }
+
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
             costume.setOverride(slot, displayID);
             p.EmitVisualUpdate();
