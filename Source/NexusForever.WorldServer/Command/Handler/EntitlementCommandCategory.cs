@@ -5,6 +5,7 @@ using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -12,6 +13,7 @@ namespace NexusForever.WorldServer.Command.Handler
     [CommandTarget(typeof(Player))]
     public class EntitlementCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.EntitlementAccount, "A collection of commands to manage account entitlements", "account")]
         public class EntitlementCommandAccountCategory : CommandCategory
         {
@@ -27,7 +29,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendMessage($"{entitlementType} isn't a valid entitlement id!");
                     return;
                 }
-
+                log.Info($"{context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}) requesting account entitlement ID {entitlementType} (value: {value}).");
                 context.InvokingPlayer.Session.EntitlementManager.SetAccountEntitlement(entitlementType, value);
             }
 
@@ -56,7 +58,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendMessage($"{entitlementType} isn't a valid entitlement id!");
                     return;
                 }
-
+                log.Info($"{context.InvokingPlayer.Name} requesting character entitlement ID {entitlementType} (value: {value}).");
                 context.InvokingPlayer.Session.EntitlementManager.SetCharacterEntitlement(entitlementType, value);
             }
 

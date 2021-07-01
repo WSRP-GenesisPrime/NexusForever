@@ -112,17 +112,14 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendError("Creature not found!");
                     return;
                 }
-                log.Info($"PetCommand : CreatureID: {id}, lookup by: {target.Name}");
 
                 bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(creatureType);
                 if (storyTellerOnly && !target.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))
                 {
-                    //log.Info($"PetCommand : {context.Session.Player.Name} is not Storyteller");
                     context.SendError($"Your account lacks permission to use this Storyteller Only summon: {creatureType}");
                     return;
                 }
 
-                //log.Info($"PetCommand : {context.Session.Player.Name} is summoning");
                 SummonCreatureToPlayer(context, (uint) id);
             }
             catch (System.TypeInitializationException tie)
@@ -138,7 +135,6 @@ namespace NexusForever.WorldServer.Command.Handler
 
             if (creature2 == null || creatureId == 0)
             {
-                log.Info($"{target.Name} : summon : invalid variant");
                 context.SendError($"Invalid summon variant.");
                 return;
             }

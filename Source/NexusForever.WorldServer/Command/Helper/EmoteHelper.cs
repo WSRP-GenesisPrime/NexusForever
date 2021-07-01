@@ -141,10 +141,8 @@ namespace NexusForever.WorldServer.Command.Helper
         /// </summary>
         public static uint? GetEmoteId(string emoteName)
         {
-            log.Info($"Looking up {emoteName} in the Emote Library...");
             if (EmoteLibrary.TryGetValue(emoteName, out uint returnEmoteId))
             {
-                log.Info($"Found emote {emoteName}, resolved to ID: {returnEmoteId}");
                 return returnEmoteId;
             }
             return null;

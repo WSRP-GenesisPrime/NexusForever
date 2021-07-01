@@ -39,7 +39,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendMessage($"Invalid decor info id {decorInfoId}!");
                 return;
             }
-
+            log.Info($"{context.InvokingPlayer.Name} requested to add decor ID {decorInfoId} (x{quantity}) to their crate.");
             residenceMap.DecorCreate(entry, quantity.Value);
         }
 
@@ -76,7 +76,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            log.Trace($"{target.Name} is requesting a teleport to plot {firstName} {lastName}.");
+            log.Info($"{target.Name} is requesting a teleport to plot {firstName} {lastName}.");
 
             string name = $"{firstName} {lastName}";
             if(firstName == null && lastName == null)
@@ -144,20 +144,22 @@ namespace NexusForever.WorldServer.Command.Handler
             if (option.ToLower() == "ground")
             {
                 residence.Ground = id;
+                log.Trace($"{target.Name} is requesting to remodel their plot, ground ID {id}.");
             }
             else if (option.ToLower() == "sky")
             {
                 residence.Sky = id;
+                log.Trace($"{target.Name} is requesting to remodel their plot, sky ID {id}.");
             }
             else if (option.ToLower() == "music")
             {
                 residence.Music = id;
+                log.Trace($"{target.Name} is requesting to remodel their plot, music ID {id}.");
             }
             else
             {
                 context.SendError("You can only change the ground, sky, or music with this command.");
             }
-
             residenceMap.Remodel(target, clientRemod);
         }
     }

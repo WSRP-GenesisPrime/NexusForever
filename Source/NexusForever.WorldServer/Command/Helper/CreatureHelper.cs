@@ -942,12 +942,7 @@ namespace NexusForever.WorldServer.Command.Helper
                 // get the creature ID corresponding to the variant
                 if (creatureSubLibrary.TryGetValue(creatureVariant.ToLower(), out uint returnCreatureId))
                 {
-                    log.Info($"Creature type {creatureType} and variant {creatureVariant} resolved to ID: {returnCreatureId}");
                     return returnCreatureId;
-                }
-                else
-                {
-                    log.Info($"Creature type {creatureType} and variant {creatureVariant} could not be resolved to a known ID");
                 }
             }
             return null;

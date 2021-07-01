@@ -628,11 +628,11 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if(guid <= 0)
             {
-                log.Warn($"Adding player {Name} to map with guid 0!");
+                log.Warn($"Adding player {Name} to map {map.Entry.Id} with guid 0!");
             }
             else
             {
-                log.Info($"Adding player {Name} to map with guid {guid}.");
+                log.Info($"Adding player {Name} to map {map.Entry.Id} with guid {guid}.");
             }
             IsLoading = true;
 

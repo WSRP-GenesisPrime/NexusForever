@@ -4,12 +4,14 @@ using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
     [Command(Permission.Account, "A collection of commands to modify game accounts.", "acc", "account")]
     public class AccountCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.AccountCreate, "Create a new account.", "create")]
         public void HandleAccountCreate(ICommandContext context,
             [Parameter("Email address for the new account", converter: typeof(StringLowerParameterConverter))]
@@ -26,6 +28,7 @@ namespace NexusForever.WorldServer.Command.Handler
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
             DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier);
 
+            log.Info($"Account {email} created successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
             context.SendMessage($"Account {email} created successfully");
         }
 
@@ -43,6 +46,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
             DatabaseManager.Instance.AuthDatabase.ChangeAccountPassword(email, salt, verifier);
+            log.Info($"Account {email} password changed successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
             context.SendMessage($"Account {email} successfully changed!");
         }
 
@@ -53,6 +57,7 @@ namespace NexusForever.WorldServer.Command.Handler
             string password)
         {
             Player target = context.InvokingPlayer;
+            log.Info($"{context.InvokingPlayer.Name} successfully changed password of their account {target.Session.Account.Email}.");
             HandleAccountChangePass(context, target.Session.Account.Email, password);
         }
 
@@ -62,7 +67,10 @@ namespace NexusForever.WorldServer.Command.Handler
             string email)
         {
             if (DatabaseManager.Instance.AuthDatabase.DeleteAccount(email))
+            {
+                log.Info($"Account {email} deleted successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
                 context.SendMessage($"Account {email} successfully removed!");
+            } 
             else
                 context.SendMessage($"Cannot find account with Email: {email}");
         }

@@ -8,6 +8,7 @@ using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Game;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -15,6 +16,7 @@ namespace NexusForever.WorldServer.Command.Handler
     [CommandTarget(typeof(Player))]
     public class TeleportCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.TeleportCoordinates, "Teleport to the specified coordinates optionally specifying the world.", "coordinates")]
         public void HandleTeleportCoordinates(ICommandContext context,
             [Parameter("X coordinate for target teleport position.")]
@@ -34,6 +36,9 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             worldId ??= (ushort)target.Map.Entry.Id;
+
+            log.Info($"{target.Name} is requesting a teleport to world coordinates: {worldId.Value} ({x}, {y}, {z}).");
+
             target.TeleportTo(worldId.Value, x, y, z);
         }
 
@@ -72,6 +77,9 @@ namespace NexusForever.WorldServer.Command.Handler
 
             WorldLocation2Entry zone = SearchManager.Instance.Search<WorldLocation2Entry>(name, context.Language, GetTextIds)
                 .FirstOrDefault();
+
+            log.Info($"{target.Name} is requesting a teleport to world location name: {name}.");
+
             if (zone == null)
                 context.SendMessage($"Unknown zone: {name}");
             else

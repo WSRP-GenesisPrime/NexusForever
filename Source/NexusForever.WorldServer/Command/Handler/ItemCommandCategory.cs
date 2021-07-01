@@ -8,6 +8,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -15,6 +16,7 @@ namespace NexusForever.WorldServer.Command.Handler
     [CommandTarget(typeof(Player))]
     public class ItemCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.ItemAdd, "Add an item to inventory, optionally specifying quantity and charges.", "add")]
         public void HandleItemAdd(ICommandContext context,
             [Parameter("Item id to create.")]
@@ -26,6 +28,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             quantity ??= 1u;
             charges ??= 1u;
+            log.Info($"{context.InvokingPlayer.Name} requested to add item ID {itemId} (x{quantity}, {charges} charges) to their bag.");
             context.InvokingPlayer.Inventory.ItemCreate(itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
         }
 

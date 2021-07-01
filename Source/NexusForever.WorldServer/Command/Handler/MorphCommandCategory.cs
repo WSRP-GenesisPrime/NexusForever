@@ -45,7 +45,6 @@ namespace NexusForever.WorldServer.Command.Handler
             Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong) creatureID);
             if (creature2 == null || creatureID == 0)
             {
-                log.Info($"Invalid morph variant.");
                 return;
             }
 

@@ -43,7 +43,6 @@ namespace NexusForever.WorldServer.Command.Handler
                 Silent = false
             };
 
-            log.Info($"EmoteCommand : PlayEmote: playing emote ID: {id}");
             SocialHandler.SetEmote(player.Session, clientEmote);
         }
 
