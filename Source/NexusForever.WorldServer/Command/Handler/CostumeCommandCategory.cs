@@ -24,12 +24,13 @@ namespace NexusForever.WorldServer.Command.Handler
             Player p = context.InvokingPlayer;
             if (p.CostumeIndex == 0)
             {
+                context.SendError("There is no costume equipped.");
                 return;
             }
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
             if (costume == null)
             {
-                context.SendError("There is no costume equipped, or the current costume is invalid.");
+                context.SendError("The current costume is invalid.");
                 return;
             }
             costume.setOverride(slot, displayID);
@@ -48,6 +49,7 @@ namespace NexusForever.WorldServer.Command.Handler
             Player p = context.InvokingPlayer;
             if (p.CostumeIndex == 0)
             {
+                context.SendError("There is no costume equipped.");
                 return;
             }
 
@@ -72,7 +74,7 @@ namespace NexusForever.WorldServer.Command.Handler
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
             if (costume == null)
             {
-                context.SendError("There is no costume equipped, or the current costume is invalid.");
+                context.SendError("The current costume is invalid.");
                 return;
             }
             costume.setOverride(slot, displayID);
@@ -87,12 +89,13 @@ namespace NexusForever.WorldServer.Command.Handler
             Player p = context.InvokingPlayer;
             if (p.CostumeIndex == 0)
             {
+                context.SendError("There is no costume equipped.");
                 return;
             }
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
             if (costume == null)
             {
-                context.SendError("There is no costume equipped, or the current costume is invalid.");
+                context.SendError("The current costume is invalid.");
                 return;
             }
             costume.setOverride(slot, null);
