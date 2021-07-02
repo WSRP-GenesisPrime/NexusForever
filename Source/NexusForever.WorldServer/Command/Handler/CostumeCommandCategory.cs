@@ -27,13 +27,18 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+            if (costume == null)
+            {
+                context.SendError("There is no costume equipped, or the current costume is invalid.");
+                return;
+            }
             costume.setOverride(slot, displayID);
             p.EmitVisualUpdate();
         }
 
         [Command(Permission.CostumeOverride, "Override an item slot with an item type and variant.", "override")]
         public void HandleCostumeOverride(ICommandContext context,
-            [Parameter("Item slot (your only choice right now is 'weapon').", ParameterFlags.None, typeof(EnumParameterConverter<ItemSlot>))]
+            [Parameter("Item slot (your only choice right now is 'weapon').")]
             string slotName,
             [Parameter("Override item type.")]
             string itemType,
@@ -47,12 +52,13 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             ItemSlot slot;
-            if ("weapon".Equals(slotName))
+            if ("weapon".Equals(slotName.ToLower()))
             {
                 slot = ItemSlot.WeaponPrimary;
             }
             else
             {
+                context.SendError("Invalid item slot: " + slotName);
                 return;
             }
 
@@ -64,6 +70,11 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+            if (costume == null)
+            {
+                context.SendError("There is no costume equipped, or the current costume is invalid.");
+                return;
+            }
             costume.setOverride(slot, displayID);
             p.EmitVisualUpdate();
         }
@@ -79,6 +90,11 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
             Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+            if (costume == null)
+            {
+                context.SendError("There is no costume equipped, or the current costume is invalid.");
+                return;
+            }
             costume.setOverride(slot, null);
             p.EmitVisualUpdate();
         }
