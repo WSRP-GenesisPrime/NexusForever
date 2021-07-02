@@ -37,7 +37,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
             worldId ??= (ushort)target.Map.Entry.Id;
 
-            log.Info($"{target.Name} is requesting a teleport to world coordinates: {worldId.Value} ({x}, {y}, {z}).");
+            log.Info($"{target.Name} requesting teleport to coordinates: {worldId.Value} ({x}, {y}, {z}).");
 
             target.TeleportTo(worldId.Value, x, y, z);
         }
@@ -78,7 +78,7 @@ namespace NexusForever.WorldServer.Command.Handler
             WorldLocation2Entry zone = SearchManager.Instance.Search<WorldLocation2Entry>(name, context.Language, GetTextIds)
                 .FirstOrDefault();
 
-            log.Info($"{target.Name} is requesting a teleport to world location name: {name}.");
+            log.Info($"{target.Name} requesting teleport to location: {name}.");
 
             if (zone == null)
                 context.SendMessage($"Unknown zone: {name}");

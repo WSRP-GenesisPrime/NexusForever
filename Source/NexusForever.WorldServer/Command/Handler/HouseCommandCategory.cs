@@ -39,7 +39,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendMessage($"Invalid decor info id {decorInfoId}!");
                 return;
             }
-            log.Info($"{context.InvokingPlayer.Name} requested to add decor ID {decorInfoId} (x{quantity}) to their crate.");
+            log.Info($"{context.InvokingPlayer.Name} requesting to add decor ID {decorInfoId} (x{quantity}).");
             residenceMap.DecorCreate(entry, quantity.Value);
         }
 
@@ -76,13 +76,13 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            log.Info($"{target.Name} is requesting a teleport to plot {firstName} {lastName}.");
-
             string name = $"{firstName} {lastName}";
             if(firstName == null && lastName == null)
             {
                 name = target.Name;
             }
+
+            log.Info($"{target.Name} requesting teleport to plot {name}.");
 
             Residence residence = ResidenceManager.Instance.GetResidence(name).GetAwaiter().GetResult();
             if (residence == null)
@@ -112,7 +112,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             Player target = context.InvokingPlayer;
             
-            log.Trace($"{target.Name} is requesting to unload plot {firstName} {lastName}.");
+            log.Trace($"{target.Name} requesting to unload plot {firstName} {lastName}.");
 
             string name = $"{firstName} {lastName}".Trim();
             if (firstName == null && lastName == null)
@@ -144,17 +144,17 @@ namespace NexusForever.WorldServer.Command.Handler
             if (option.ToLower() == "ground")
             {
                 residence.Ground = id;
-                log.Trace($"{target.Name} is requesting to remodel their plot, ground ID {id}.");
+                log.Trace($"{target.Name} requesting to remodel: ground ID {id}.");
             }
             else if (option.ToLower() == "sky")
             {
                 residence.Sky = id;
-                log.Trace($"{target.Name} is requesting to remodel their plot, sky ID {id}.");
+                log.Trace($"{target.Name} requesting to remodel: sky ID {id}.");
             }
             else if (option.ToLower() == "music")
             {
                 residence.Music = id;
-                log.Trace($"{target.Name} is requesting to remodel their plot, music ID {id}.");
+                log.Trace($"{target.Name} requesting to remodel: music ID {id}.");
             }
             else
             {
