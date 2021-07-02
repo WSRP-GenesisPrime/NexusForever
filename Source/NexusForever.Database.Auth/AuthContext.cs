@@ -912,6 +912,21 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
+                        Id = 60000,
+                        Name = "Category: Costume"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 60010,
+                        Name = "Command: CostumeOverride"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 60020,
+                        Name = "Command: CostumeOverrideId"
+                    },
+                    new PermissionModel
+                    {
                         Id   = 10000,
                         Name = "Other: InstantLogout"
                     },
