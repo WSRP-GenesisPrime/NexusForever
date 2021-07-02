@@ -28,7 +28,15 @@ namespace NexusForever.WorldServer.Command.Handler
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
             DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier);
 
-            log.Info($"Account {email} created successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+            if (context.InvokingPlayer != null)
+            {
+                log.Info($"Account {email} created successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+            }
+            else
+            {
+                log.Info($"Account {email} created successfully.");
+            }
+            
             context.SendMessage($"Account {email} created successfully");
         }
 
@@ -46,7 +54,15 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
             DatabaseManager.Instance.AuthDatabase.ChangeAccountPassword(email, salt, verifier);
-            log.Info($"Account {email} password changed successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+            
+            if (context.InvokingPlayer != null)
+            {
+                log.Info($"Account {email} password changed successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+            }
+            else
+            {
+                log.Info($"Account {email} password changed successfully.");
+            }
             context.SendMessage($"Account {email} successfully changed!");
         }
 
@@ -68,7 +84,14 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             if (DatabaseManager.Instance.AuthDatabase.DeleteAccount(email))
             {
-                log.Info($"Account {email} deleted successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+                if (context.InvokingPlayer != null)
+                {
+                    log.Info($"Account {email} deleted successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+                }
+                else
+                {
+                    log.Info($"Account {email} deleted successfully.");
+                }
                 context.SendMessage($"Account {email} successfully removed!");
             } 
             else
