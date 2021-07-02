@@ -208,7 +208,7 @@ namespace NexusForever.WorldServer.Command.Helper
         /// <summary>
         /// (GENESIS PRIME) Get a list of valid item display variants for a type.
         /// </summary>
-        public static List<string> getCreatureVariantsForType(string itemType)
+        public static List<string> getItemsForType(string itemType)
         {
             Dictionary<string, ushort> itemDisplaySubLibrary;
             // get the item display type-specific dictionary

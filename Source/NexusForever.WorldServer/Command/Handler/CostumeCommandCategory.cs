@@ -81,7 +81,46 @@ namespace NexusForever.WorldServer.Command.Handler
             p.EmitVisualUpdate();
         }
 
-        [Command(Permission.Costume, "Restore an overridden item slot.", "restoreslot")]
+        [Command(Permission.CostumeOverride, "Restore an overridden item slot.", "overridelist")]
+        public void HandleCostumeList(ICommandContext context,
+           [Parameter("Item slot.", ParameterFlags.None)]
+            string slotName,
+           [Parameter("Category.", ParameterFlags.Optional)]
+            string category)
+        {
+            if (!"weapon".Equals(slotName.ToLower()))
+            {
+                context.SendError("Invalid item slot: " + slotName);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                string message = $"Available {slotName} types:";
+                var list = CostumeHelper.getItemTypeList();
+                foreach(var entry in list)
+                {
+                    message += $"\n{entry}";
+                }
+                context.SendMessage(message);
+                return;
+            }
+            { // listing a category. Just a scope thing.
+                string message = $"Available {category} items:";
+                var list = CostumeHelper.getItemsForType(category);
+                if (list == null)
+                {
+                    context.SendError("No such category!");
+                    return;
+                }
+                foreach(var entry in list)
+                {
+                    message += $"\n{entry}";
+                }
+                context.SendMessage(message);
+            }
+        }
+
+        [Command(Permission.CostumeOverride, "Restore an overridden item slot.", "restoreslot")]
         public void HandleCostumeRestoreSlot(ICommandContext context,
            [Parameter("Item slot.", ParameterFlags.None, typeof(EnumParameterConverter<ItemSlot>))]
             ItemSlot slot)
