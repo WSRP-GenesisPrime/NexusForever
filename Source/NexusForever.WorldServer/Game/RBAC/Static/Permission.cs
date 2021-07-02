@@ -196,6 +196,11 @@
         // GP: GM flag
         GMFlag                      = 50900,
 
+        // GP: Costume commands
+        Costume                     = 60000,
+        CostumeOverride             = 60010,
+        CostumeOverrideId           = 60020,
+
         // non command permissions
         InstantLogout               = 10000,
         Signature                   = 10001
