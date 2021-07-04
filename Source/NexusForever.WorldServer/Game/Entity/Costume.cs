@@ -140,6 +140,11 @@ namespace NexusForever.WorldServer.Game.Entity
             }
             return null;
         }
+
+        public IEnumerable<KeyValuePair<ItemSlot, ushort?>> getOverrides()
+        {
+            return overrides.ToList();
+        }
         
         public IEnumerator<CostumeItem> GetEnumerator()
         {

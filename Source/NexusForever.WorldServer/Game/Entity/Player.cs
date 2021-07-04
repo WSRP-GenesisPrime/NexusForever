@@ -437,6 +437,32 @@ namespace NexusForever.WorldServer.Game.Entity
             foreach (var itemVisual in Inventory.GetItemVisuals(costume))
                 entityVisualUpdate.ItemVisuals.Add(itemVisual);
 
+            if(costume != null)
+            {
+                foreach (var overrideItem in costume.getOverrides())
+                {
+                    if(overrideItem.Value == null)
+                    {
+                        continue;
+                    }
+                    ItemVisual iv = entityVisualUpdate.ItemVisuals.Where(iv => iv.Slot == overrideItem.Key).FirstOrDefault();
+                    if(iv != null)
+                    {
+                        iv.DisplayId = (ushort) overrideItem.Value;
+                    }
+                    else
+                    {
+                        iv = new ItemVisual
+                        {
+                            DisplayId = (ushort)overrideItem.Value,
+                            Slot = overrideItem.Key,
+                            DyeData = 0
+                        };
+                        entityVisualUpdate.ItemVisuals.Add(iv);
+                    }
+                }
+            }
+
             EnqueueToVisible(entityVisualUpdate, true);
 
             EnqueueToVisible(new ServerEntityBoneUpdate
