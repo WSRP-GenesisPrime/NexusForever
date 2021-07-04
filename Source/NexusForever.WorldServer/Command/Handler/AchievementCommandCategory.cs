@@ -6,6 +6,7 @@ using NexusForever.WorldServer.Game.Achievement.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -25,9 +26,17 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Update count for matched criteria.")]
             uint count)
         {
-            Player player = context.InvokingPlayer;
-            log.Info($"{player.Name} requesting achievement update type {type}.");
-            player.AchievementManager.CheckAchievements(player, type, objectId, objectIdAlt, count);
+            try
+            {
+                Player player = context.InvokingPlayer;
+                log.Info($"{player.Name} requesting achievement update type {type}.");
+                player.AchievementManager.CheckAchievements(player, type, objectId, objectIdAlt, count);
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in AchievementCommandCategory.HandleAchievementUpdate!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.AchievementGrant, "Grant achievement to player.", "grant")]
@@ -35,14 +44,22 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Achievement id to grant.")]
             ushort achievementId)
         {
-            AchievementInfo info = GlobalAchievementManager.Instance.GetAchievement(achievementId);
-            if (info == null)
+            try
             {
-                context.SendMessage($"Invalid achievement id {achievementId}!");
-                return;
+                AchievementInfo info = GlobalAchievementManager.Instance.GetAchievement(achievementId);
+                if (info == null)
+                {
+                    context.SendMessage($"Invalid achievement id {achievementId}!");
+                    return;
+                }
+                log.Info($"{context.InvokingPlayer.Name} requesting achievement grant ID {achievementId}.");
+                context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
             }
-            log.Info($"{context.InvokingPlayer.Name} requesting achievement grant ID {achievementId}.");
-            context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in AchievementCommandCategory.HandleAchievementGrant!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
     }
 }

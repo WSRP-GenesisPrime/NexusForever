@@ -6,6 +6,7 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -21,20 +22,28 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("DisplayID to override with.")]
             ushort displayID)
         {
-            Player p = context.InvokingPlayer;
-            if (p.CostumeIndex == 0)
+            try
             {
-                context.SendError("There is no costume equipped.");
-                return;
+                Player p = context.InvokingPlayer;
+                if (p.CostumeIndex == 0)
+                {
+                    context.SendError("There is no costume equipped.");
+                    return;
+                }
+                Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+                if (costume == null)
+                {
+                    context.SendError("The current costume is invalid.");
+                    return;
+                }
+                costume.setOverride(slot, displayID);
+                p.EmitVisualUpdate();
             }
-            Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
-            if (costume == null)
+            catch (Exception e)
             {
-                context.SendError("The current costume is invalid.");
-                return;
+                log.Error($"Exception caught in CostumeCommandCategory.HandleCostumeOverrideID!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
-            costume.setOverride(slot, displayID);
-            p.EmitVisualUpdate();
         }
 
         [Command(Permission.CostumeOverride, "Override an item slot with an item type and variant.", "override")]
@@ -46,39 +55,47 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Override item variant.")]
             string itemVariant)
         {
-            Player p = context.InvokingPlayer;
-            if (p.CostumeIndex == 0)
+            try
             {
-                context.SendError("There is no costume equipped.");
-                return;
-            }
+                Player p = context.InvokingPlayer;
+                if (p.CostumeIndex == 0)
+                {
+                    context.SendError("There is no costume equipped.");
+                    return;
+                }
 
-            ItemSlot slot;
-            if ("weapon".Equals(slotName.ToLower()))
-            {
-                slot = ItemSlot.WeaponPrimary;
-            }
-            else
-            {
-                context.SendError("Invalid item slot: " + slotName);
-                return;
-            }
+                ItemSlot slot;
+                if ("weapon".Equals(slotName.ToLower()))
+                {
+                    slot = ItemSlot.WeaponPrimary;
+                }
+                else
+                {
+                    context.SendError("Invalid item slot: " + slotName);
+                    return;
+                }
 
-            ushort? displayID = CostumeHelper.GetItemDisplayIdFromType(itemType, itemVariant);
-            if (displayID == null)
-            {
-                context.SendError("A Display ID for the given type and variant could not be found!");
-                return;
-            }
+                ushort? displayID = CostumeHelper.GetItemDisplayIdFromType(itemType, itemVariant);
+                if (displayID == null)
+                {
+                    context.SendError("A Display ID for the given type and variant could not be found!");
+                    return;
+                }
 
-            Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
-            if (costume == null)
-            {
-                context.SendError("The current costume is invalid.");
-                return;
+                Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+                if (costume == null)
+                {
+                    context.SendError("The current costume is invalid.");
+                    return;
+                }
+                costume.setOverride(slot, displayID);
+                p.EmitVisualUpdate();
             }
-            costume.setOverride(slot, displayID);
-            p.EmitVisualUpdate();
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in CostumeCommandCategory.HandleCostumeOverride!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.CostumeOverride, "Restore an overridden item slot.", "overridelist")]
@@ -125,20 +142,27 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Item slot.", ParameterFlags.None, typeof(EnumParameterConverter<ItemSlot>))]
             ItemSlot slot)
         {
-            Player p = context.InvokingPlayer;
-            if (p.CostumeIndex == 0)
-            {
-                context.SendError("There is no costume equipped.");
-                return;
+            try {
+                Player p = context.InvokingPlayer;
+                if (p.CostumeIndex == 0)
+                {
+                    context.SendError("There is no costume equipped.");
+                    return;
+                }
+                Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
+                if (costume == null)
+                {
+                    context.SendError("The current costume is invalid.");
+                    return;
+                }
+                costume.setOverride(slot, null);
+                p.EmitVisualUpdate();
             }
-            Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
-            if (costume == null)
+            catch (Exception e)
             {
-                context.SendError("The current costume is invalid.");
-                return;
+                log.Error($"Exception caught in CostumeCommandCategory.HandleCostumeRestoreSlot!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
-            costume.setOverride(slot, null);
-            p.EmitVisualUpdate();
         }
     }
 }
