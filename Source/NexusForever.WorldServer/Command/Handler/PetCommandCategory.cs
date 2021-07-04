@@ -5,6 +5,7 @@ using NexusForever.WorldServer.Command.Helper;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -18,7 +19,15 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Pet flair entry id to unlock.")]
             ushort petFlairEntryId)
         {
-            context.InvokingPlayer.PetCustomisationManager.UnlockFlair(petFlairEntryId);
+            try
+            {
+                context.InvokingPlayer.PetCustomisationManager.UnlockFlair(petFlairEntryId);
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandlePetUnlockFlair!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.Pet, "Dismiss pet.", "dismiss")]
@@ -56,36 +65,44 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Distance (short/medium/long).", Static.ParameterFlags.Optional)]
             string distanceParameter)
         {
-            Player target = context.InvokingPlayer;
-
-            float followDistance = 4f;
-            float recalcDistance = 5f;
-
-            distanceParameter = distanceParameter?.ToLower();
-
-            switch (distanceParameter)
+            try
             {
-                case "short":
-                    followDistance = 1f;
-                    recalcDistance = 1f;
-                    break;
-                default:
-                    followDistance = 4f;
-                    recalcDistance = 5f;
-                    break;
-                case "long":
-                    followDistance = 7f;
-                    recalcDistance = 9f;
-                    break;
+                Player target = context.InvokingPlayer;
+
+                float followDistance = 4f;
+                float recalcDistance = 5f;
+
+                distanceParameter = distanceParameter?.ToLower();
+
+                switch (distanceParameter)
+                {
+                    case "short":
+                        followDistance = 1f;
+                        recalcDistance = 1f;
+                        break;
+                    default:
+                        followDistance = 4f;
+                        recalcDistance = 5f;
+                        break;
+                    case "long":
+                        followDistance = 7f;
+                        recalcDistance = 9f;
+                        break;
+                }
+
+                target.SetPetFollowing(true);
+                target.SetPetFacingPlayer(true);
+                target.SetPetFollowDistance(followDistance);
+                target.SetPetFollowRecalculateDistance(recalcDistance);
+                context.SendMessage($"Vanity pet set to follow: {target.Name}, Follow distance: {distanceParameter}");
+
+                return;
             }
-
-            target.SetPetFollowing(true);
-            target.SetPetFacingPlayer(true);
-            target.SetPetFollowDistance(followDistance);
-            target.SetPetFollowRecalculateDistance(recalcDistance);
-            context.SendMessage($"Vanity pet set to follow: {target.Name}, Follow distance: {distanceParameter}");
-
-            return;
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandlePetFollow!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.Pet, "Summon pet.", "summon")]
@@ -122,9 +139,10 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 SummonCreatureToPlayer(context, (uint) id);
             }
-            catch (System.TypeInitializationException tie)
+            catch (TypeInitializationException tie)
             {
-                log.Error(tie.ToString());
+                log.Error($"Exception caught in HouseCommandCategory.HandlePetSummon!\nInvoked by {context.InvokingPlayer.Name}; {tie.Message} : {tie.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
         }
 

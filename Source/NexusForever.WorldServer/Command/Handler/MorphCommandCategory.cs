@@ -11,6 +11,7 @@ using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Command.Helper;
 using NexusForever.WorldServer.Game.RBAC;
+using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -26,43 +27,51 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature subtype.", ParameterFlags.Optional)]
             string subtype)
         {
-            Player player = context.InvokingPlayer;
-
-            bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(type);
-            if(storyTellerOnly && !player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))
+            try
             {
-                context.SendError("This creature category is only for storytellers and game masters!");
-                return;
+                Player player = context.InvokingPlayer;
+
+                bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(type);
+                if (storyTellerOnly && !player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))
+                {
+                    context.SendError("This creature category is only for storytellers and game masters!");
+                    return;
+                }
+
+                uint? creatureID = CreatureHelper.GetCreatureIdFromType(type, subtype);
+                if (creatureID == null)
+                {
+                    context.SendError("A Creature ID for the given type and variant could not be found!");
+                    return;
+                }
+
+                Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong)creatureID);
+                if (creature2 == null || creatureID == 0)
+                {
+                    return;
+                }
+
+                Creature2DisplayGroupEntryEntry displayGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2DisplayGroupEntry.Entries, (d => d.Creature2DisplayGroupId == creature2.Creature2DisplayGroupId));
+                if (displayGroupEntry == null)
+                    return;
+
+                // change the player's display information to the creature's display information
+                Creature2OutfitGroupEntryEntry outfitGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2OutfitGroupEntry.Entries, (d => d.Creature2OutfitGroupId == creature2.Creature2OutfitGroupId));
+
+
+                if (outfitGroupEntry != null) // check if the creature has an outfit
+                {
+                    player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId, outfitGroupEntry.Creature2OutfitInfoId); // if there is outfit information, use outfit info parameter
+                }
+                else
+                {
+                    player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId);
+                }
             }
-
-            uint? creatureID = CreatureHelper.GetCreatureIdFromType(type, subtype);
-            if(creatureID == null)
+            catch (Exception e)
             {
-                context.SendError("A Creature ID for the given type and variant could not be found!");
-                return;
-            }
-            
-            Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong) creatureID);
-            if (creature2 == null || creatureID == 0)
-            {
-                return;
-            }
-
-            Creature2DisplayGroupEntryEntry displayGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2DisplayGroupEntry.Entries, (d => d.Creature2DisplayGroupId == creature2.Creature2DisplayGroupId));
-            if (displayGroupEntry == null)
-                return;
-
-            // change the player's display information to the creature's display information
-            Creature2OutfitGroupEntryEntry outfitGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2OutfitGroupEntry.Entries, (d => d.Creature2OutfitGroupId == creature2.Creature2OutfitGroupId));
-
-
-            if (outfitGroupEntry != null) // check if the creature has an outfit
-            {
-                player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId, outfitGroupEntry.Creature2OutfitInfoId); // if there is outfit information, use outfit info parameter
-            }
-            else
-            {
-                player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId);
+                log.Error($"Exception caught in MorphCommandCategory.HandleMorph!\n{e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
         }
 
@@ -78,34 +87,42 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature type.", ParameterFlags.Optional)]
             string type)
         {
-            Player player = context.InvokingPlayer;
-
-            bool storyteller = player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller);
-            if (type != null && (!CreatureHelper.IsStoryTellerOnly(type) || storyteller))
+            try
             {
-                List<string> variants = CreatureHelper.getCreatureVariantsForType(type);
-                if(variants != null && variants.Count > 0)
+                Player player = context.InvokingPlayer;
+
+                bool storyteller = player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller);
+                if (type != null && (!CreatureHelper.IsStoryTellerOnly(type) || storyteller))
                 {
-                    string message = string.Format("Morph list: {0}", type);
-                    foreach(string entry in variants)
+                    List<string> variants = CreatureHelper.getCreatureVariantsForType(type);
+                    if (variants != null && variants.Count > 0)
                     {
-                        message = message + "\n" + entry;
+                        string message = string.Format("Morph list: {0}", type);
+                        foreach (string entry in variants)
+                        {
+                            message = message + "\n" + entry;
+                        }
+                        context.SendMessage(message);
                     }
-                    context.SendMessage(message);
+                }
+                else
+                {
+                    List<string> types = CreatureHelper.getCreatureTypeList(storyteller);
+                    if (types != null && types.Count > 0)
+                    {
+                        string message = string.Format("Available morph types:");
+                        foreach (string entry in types)
+                        {
+                            message = message + "\n" + entry;
+                        }
+                        context.SendMessage(message);
+                    }
                 }
             }
-            else
+            catch (Exception e)
             {
-                List<string> types = CreatureHelper.getCreatureTypeList(storyteller);
-                if(types != null && types.Count > 0)
-                {
-                    string message = string.Format("Available morph types:");
-                    foreach(string entry in types)
-                    {
-                        message = message + "\n" + entry;
-                    }
-                    context.SendMessage(message);
-                }
+                log.Error($"Exception caught in MorphCommandCategory.HandleMorphList!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
         }
     }

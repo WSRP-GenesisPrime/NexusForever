@@ -4,6 +4,8 @@ using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network;
+using NLog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,14 +14,23 @@ namespace NexusForever.WorldServer.Command.Handler
     [Command(Permission.Realm, "A collection of commands to manage the realm.", "realm")]
     public class RealmCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.RealmMOTD, "Set the realm's message of the day and announce to the realm.", "motd")]
         public void HandleRealmMotd(ICommandContext context,
             [Parameter("New message of the day for the realm.")]
             string message)
         {
-            WorldServer.RealmMotd = message;
-            foreach (WorldSession session in NetworkManager<WorldSession>.Instance.GetSessions())
-                GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
+            try
+            {
+                WorldServer.RealmMotd = message;
+                foreach (WorldSession session in NetworkManager<WorldSession>.Instance.GetSessions())
+                    GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in RealmCommandCategory.HandleRealmMotd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.RealmOnline, "Displays the users online", "online")]

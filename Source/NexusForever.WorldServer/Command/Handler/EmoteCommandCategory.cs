@@ -6,6 +6,7 @@ using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Network.Message.Handler;
 using NexusForever.WorldServer.Network.Message.Model;
 using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -19,31 +20,39 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Emote name.")]
             string emote)
         {
-            Player player = context.InvokingPlayer;
-
-            emote = emote.ToLower();
-
-            if (!EmoteHelper.IsEmoteAllowedByRace(emote, (uint)player.Race))
+            try
             {
-                context.SendError($"{emote} is not a compatible emote with your character race!");
-                return;
+                Player player = context.InvokingPlayer;
+
+                emote = emote.ToLower();
+
+                if (!EmoteHelper.IsEmoteAllowedByRace(emote, (uint)player.Race))
+                {
+                    context.SendError($"{emote} is not a compatible emote with your character race!");
+                    return;
+                }
+
+                uint? id = EmoteHelper.GetEmoteId(emote);
+                if (id == null)
+                {
+                    context.SendError("An Emote ID for the given emote name could not be found!");
+                    return;
+                }
+
+                ClientEmote clientEmote = new ClientEmote
+                {
+                    EmoteId = (uint)id,
+                    Targeted = false,
+                    Silent = false
+                };
+
+                SocialHandler.SetEmote(player.Session, clientEmote);
             }
-
-            uint? id = EmoteHelper.GetEmoteId(emote);
-            if (id == null)
+            catch (Exception e)
             {
-                context.SendError("An Emote ID for the given emote name could not be found!");
-                return;
+                log.Error($"Exception caught in EmoteCommandCategory.HandleEmote!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
-
-            ClientEmote clientEmote = new ClientEmote
-            {
-                EmoteId = (uint)id,
-                Targeted = false,
-                Silent = false
-            };
-
-            SocialHandler.SetEmote(player.Session, clientEmote);
         }
 
         [Command(Permission.Emote, "List available emotes.", "list")]

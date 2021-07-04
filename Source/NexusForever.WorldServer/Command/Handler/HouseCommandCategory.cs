@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Command.Context;
@@ -25,22 +26,30 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Quantity of decor to add to the crate.")]
             uint? quantity)
         {
-            quantity ??= 1u;
-
-            if (!(context.InvokingPlayer.Map is ResidenceMap residenceMap))
+            try
             {
-                context.SendMessage("You need to be on a housing map to use this command!");
-                return;
-            }
+                quantity ??= 1u;
 
-            HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
-            if (entry == null)
-            {
-                context.SendMessage($"Invalid decor info id {decorInfoId}!");
-                return;
+                if (!(context.InvokingPlayer.Map is ResidenceMap residenceMap))
+                {
+                    context.SendMessage("You need to be on a housing map to use this command!");
+                    return;
+                }
+
+                HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
+                if (entry == null)
+                {
+                    context.SendMessage($"Invalid decor info id {decorInfoId}!");
+                    return;
+                }
+                log.Info($"{context.InvokingPlayer.Name} requesting to add decor ID {decorInfoId} (x{quantity}).");
+                residenceMap.DecorCreate(entry, quantity.Value);
             }
-            log.Info($"{context.InvokingPlayer.Name} requesting to add decor ID {decorInfoId} (x{quantity}).");
-            residenceMap.DecorCreate(entry, quantity.Value);
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandleHouseDecorAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.HouseDecorLookup, "Returns a list of decor ids that match the supplied name.", "decorlookup")]
@@ -48,18 +57,26 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Name or partial name of the housing decor item to search for.")]
             string name)
         {
-            var sw = new StringBuilder();
-            sw.AppendLine("Decor Lookup Results:");
-
-            TextTable tt = GameTableManager.Instance.GetTextTable(context.Language);
-            foreach (HousingDecorInfoEntry decorEntry in
-                SearchManager.Instance.Search<HousingDecorInfoEntry>(name, context.Language, e => e.LocalizedTextIdName, true))
+            try
             {
-                string text = tt.GetEntry(decorEntry.LocalizedTextIdName);
-                sw.AppendLine($"({decorEntry.Id}) {text}");
-            }
+                var sw = new StringBuilder();
+                sw.AppendLine("Decor Lookup Results:");
 
-            context.SendMessage(sw.ToString());
+                TextTable tt = GameTableManager.Instance.GetTextTable(context.Language);
+                foreach (HousingDecorInfoEntry decorEntry in
+                    SearchManager.Instance.Search<HousingDecorInfoEntry>(name, context.Language, e => e.LocalizedTextIdName, true))
+                {
+                    string text = tt.GetEntry(decorEntry.LocalizedTextIdName);
+                    sw.AppendLine($"({decorEntry.Id}) {text}");
+                }
+
+                context.SendMessage(sw.ToString());
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandleHouseDecorLookup!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]
@@ -69,38 +86,46 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("", ParameterFlags.Optional)]
             string lastName)
         {
-            Player target = context.InvokingPlayer;
-            if (!target.CanTeleport())
+            try
             {
-                context.SendMessage("You have a pending teleport! Please wait to use this command.");
-                return;
-            }
-
-            string name = $"{firstName} {lastName}";
-            if(firstName == null && lastName == null)
-            {
-                name = target.Name;
-            }
-
-            log.Info($"{target.Name} requesting teleport to plot {name}.");
-
-            Residence residence = ResidenceManager.Instance.GetResidence(name).GetAwaiter().GetResult();
-            if (residence == null)
-            {
-                if (firstName == null && lastName == null)
+                Player target = context.InvokingPlayer;
+                if (!target.CanTeleport())
                 {
-                    residence = ResidenceManager.Instance.CreateResidence(target);
-                    log.Info($"Creating residence {residence.Id} for name {name}, firstname {firstName}, lastname {lastName}.");
-                }
-                else
-                {
-                    context.SendMessage("A residence for that character doesn't exist!");
+                    context.SendMessage("You have a pending teleport! Please wait to use this command.");
                     return;
                 }
-            }
 
-            ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
-            target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
+                string name = $"{firstName} {lastName}";
+                if (firstName == null && lastName == null)
+                {
+                    name = target.Name;
+                }
+
+                log.Info($"{target.Name} requesting teleport to plot {name}.");
+
+                Residence residence = ResidenceManager.Instance.GetResidence(name).GetAwaiter().GetResult();
+                if (residence == null)
+                {
+                    if (firstName == null && lastName == null)
+                    {
+                        residence = ResidenceManager.Instance.CreateResidence(target);
+                        log.Info($"Creating residence {residence.Id} for name {name}, firstname {firstName}, lastname {lastName}.");
+                    }
+                    else
+                    {
+                        context.SendMessage("A residence for that character doesn't exist!");
+                        return;
+                    }
+                }
+
+                ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
+                target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandleHouseTeleport!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.GMFlag, "Unload a residence", "unload")]
@@ -110,17 +135,25 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("", ParameterFlags.Optional)]
             string lastName)
         {
-            Player target = context.InvokingPlayer;
-            
-            log.Trace($"{target.Name} requesting to unload plot {firstName} {lastName}.");
-
-            string name = $"{firstName} {lastName}".Trim();
-            if (firstName == null && lastName == null)
+            try
             {
-                name = target.Name;
-            }
+                Player target = context.InvokingPlayer;
 
-            ResidenceManager.Instance.UnloadResidence(name);
+                log.Trace($"{target.Name} requesting to unload plot {firstName} {lastName}.");
+
+                string name = $"{firstName} {lastName}".Trim();
+                if (firstName == null && lastName == null)
+                {
+                    name = target.Name;
+                }
+
+                ResidenceManager.Instance.UnloadResidence(name);
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandleHouseUnload!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
         }
 
         [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
@@ -130,37 +163,45 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("ID")]
             ushort id)
         {
-            Player target = context.InvokingPlayer;
-            //remodel
-            ClientHousingRemodel clientRemod = new ClientHousingRemodel();
-            ResidenceMap residenceMap = target.Map as ResidenceMap;
-            if (residenceMap == null)
+            try
             {
-                context.SendError("You need to be on a housing map to use this command!");
-            }
+                Player target = context.InvokingPlayer;
+                //remodel
+                ClientHousingRemodel clientRemod = new ClientHousingRemodel();
+                ResidenceMap residenceMap = target.Map as ResidenceMap;
+                if (residenceMap == null)
+                {
+                    context.SendError("You need to be on a housing map to use this command!");
+                }
 
-            Residence residence = ResidenceManager.Instance.GetResidence(target.Name).GetAwaiter().GetResult();
+                Residence residence = ResidenceManager.Instance.GetResidence(target.Name).GetAwaiter().GetResult();
 
-            if (option.ToLower() == "ground")
-            {
-                residence.Ground = id;
-                log.Trace($"{target.Name} requesting to remodel: ground ID {id}.");
+                if (option.ToLower() == "ground")
+                {
+                    residence.Ground = id;
+                    log.Trace($"{target.Name} requesting to remodel: ground ID {id}.");
+                }
+                else if (option.ToLower() == "sky")
+                {
+                    residence.Sky = id;
+                    log.Trace($"{target.Name} requesting to remodel: sky ID {id}.");
+                }
+                else if (option.ToLower() == "music")
+                {
+                    residence.Music = id;
+                    log.Trace($"{target.Name} requesting to remodel: music ID {id}.");
+                }
+                else
+                {
+                    context.SendError("You can only change the ground, sky, or music with this command.");
+                }
+                residenceMap.Remodel(target, clientRemod);
             }
-            else if (option.ToLower() == "sky")
+            catch (Exception e)
             {
-                residence.Sky = id;
-                log.Trace($"{target.Name} requesting to remodel: sky ID {id}.");
+                log.Error($"Exception caught in HouseCommandCategory.HandleRemodelCommand!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
-            else if (option.ToLower() == "music")
-            {
-                residence.Music = id;
-                log.Trace($"{target.Name} requesting to remodel: music ID {id}.");
-            }
-            else
-            {
-                context.SendError("You can only change the ground, sky, or music with this command.");
-            }
-            residenceMap.Remodel(target, clientRemod);
         }
     }
 }
