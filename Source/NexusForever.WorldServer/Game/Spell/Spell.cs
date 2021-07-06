@@ -214,6 +214,7 @@ namespace NexusForever.WorldServer.Game.Spell
         private void SelectTargets()
         {
             targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Caster, caster));
+            targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Unknown02, caster.TargetGuid > 0 ? caster.Map.GetEntity<UnitEntity>(caster.TargetGuid) : caster)); // probably TargetOrInvoker
             foreach (TelegraphDamageEntry telegraphDamageEntry in parameters.SpellInfo.Telegraphs)
             {
                 var telegraph = new Telegraph(telegraphDamageEntry, caster, caster.Position, caster.Rotation);
