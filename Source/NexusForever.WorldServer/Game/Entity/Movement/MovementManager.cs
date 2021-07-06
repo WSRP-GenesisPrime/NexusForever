@@ -44,7 +44,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
 
             AddCommand(new SetRotationCommand
             {
-                Position = new Position(rotation)
+                Rotation = new Position(rotation)
             });
 
             AddCommand(new SetVelocityDefaultsCommand());
@@ -123,7 +123,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             StopSpline();
             AddCommand(new SetRotationCommand
             {
-                Position = new Position(rotation)
+                Rotation = new Position(rotation)
             }, true);
         }
 
@@ -340,7 +340,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 {
                     AddCommand(new SetRotationCommand
                     {
-                        Position = followRot
+                        Rotation = followRot
                     });
                 }
 
@@ -359,7 +359,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 {
                     AddCommand(new SetRotationCommand
                     {
-                        Position = followRot
+                        Rotation = followRot
                     });
                 }
 
