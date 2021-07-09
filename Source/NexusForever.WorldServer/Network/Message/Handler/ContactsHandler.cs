@@ -59,6 +59,12 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 session.Player.ContactManager.SendContactsResult(ContactResult.PlayerNotFound);
         }
 
+        [MessageHandler(GameMessageOpcode.ClientHousingNeighborAdd)]
+        public static void HandleNeighborAdd(WorldSession session, ClientHousingNeighborAdd request)
+        {
+
+        }
+
         [MessageHandler(GameMessageOpcode.ClientContactsRequestResponse)]
         public static void HandleRequestResponse(WorldSession session, ClientContactsRequestResponse request)
         {
