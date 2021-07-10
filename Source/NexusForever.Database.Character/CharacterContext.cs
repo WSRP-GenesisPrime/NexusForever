@@ -45,6 +45,7 @@ namespace NexusForever.Database.Character
         public DbSet<ResidenceModel> Residence { get; set; }
         public DbSet<ResidenceDecor> ResidenceDecor { get; set; }
         public DbSet<ResidencePlotModel> ResidencePlot { get; set; }
+        public DbSet<ResidenceNeighborModel> ResidenceNeighbor { get; set; }
 
         private readonly IDatabaseConfig config;
 
@@ -1752,6 +1753,38 @@ namespace NexusForever.Database.Character
                     .WithMany(p => p.Plot)
                     .HasForeignKey(d => d.Id)
                     .HasConstraintName("FK__residence_plot_id__residence_id");
+            });
+
+            modelBuilder.Entity<ResidenceNeighborModel>(entity =>
+            {
+                entity.ToTable("residence_neighbor");
+
+                entity.HasKey(e => new { e.Id, e.ResidenceId, e.ContactId })
+                    .HasName("PRIMARY");
+
+                entity.HasIndex(e => e.Id)
+                    .HasName("residenceGuid")
+                    .IsUnique();
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.ResidenceId)
+                    .HasColumnName("ownerId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.ContactId)
+                    .HasColumnName("contactId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.IsRoommate)
+                    .HasColumnName("isroommate")
+                    .HasColumnType("bit")
+                    .HasDefaultValue(0);
             });
         }
     }
