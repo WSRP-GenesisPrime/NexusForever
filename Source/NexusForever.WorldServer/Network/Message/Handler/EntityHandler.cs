@@ -10,6 +10,7 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game;
 using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Network.Message.Handler
 {
@@ -23,8 +24,14 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             WorldEntity mover = session.Player;
             if (session.Player.ControlGuid != session.Player.Guid)
                 mover = session.Player.GetVisible<WorldEntity>(session.Player.ControlGuid);
-
-            mover.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);
+            try
+            {
+                mover.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);
+            }
+            catch (NullReferenceException nre)
+            {
+                log.Error($"Exception caught while invoking EntityHandler.HandleEntityCommand! mover = {mover} :\n{nre}");
+            }
         }
 
         [MessageHandler(GameMessageOpcode.ClientActivateUnit)]

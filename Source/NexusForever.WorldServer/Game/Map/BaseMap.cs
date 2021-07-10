@@ -306,26 +306,26 @@ namespace NexusForever.WorldServer.Game.Map
             //Debug.Assert(entity.Map != null);
             try
             {
+                ActivateGrid(entity, vector);
+                MapGrid newGrid = GetGrid(vector);
+                MapGrid oldGrid = GetGrid(entity.Position);
+
+                if (newGrid.Coord.X != oldGrid.Coord.X
+                    || newGrid.Coord.Z != oldGrid.Coord.Z)
+                {
+                    oldGrid.RemoveEntity(entity);
+                    newGrid.AddEntity(entity, vector);
+                }
+                else
+                    oldGrid.RelocateEntity(entity, vector);
+
                 if (entity.Map != null)
                 {
-                    ActivateGrid(entity, vector);
-                    MapGrid newGrid = GetGrid(vector);
-                    MapGrid oldGrid = GetGrid(entity.Position);
-
-                    if (newGrid.Coord.X != oldGrid.Coord.X
-                        || newGrid.Coord.Z != oldGrid.Coord.Z)
-                    {
-                        oldGrid.RemoveEntity(entity);
-                        newGrid.AddEntity(entity, vector);
-                    }
-                    else
-                        oldGrid.RelocateEntity(entity, vector);
-
                     entity.OnRelocate(vector);
                 }
                 else
                 {
-                    throw new NullReferenceException($"Exception caught while invoking BaseMap.RelocateEntity; entity (guid {entity.Guid}) BaseMap was null!");
+                    throw new NullReferenceException($"Entity (guid {entity.Guid}) BaseMap was null!");
                 }
             }
             catch (Exception e)
