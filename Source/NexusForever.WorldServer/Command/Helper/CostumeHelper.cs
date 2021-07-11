@@ -49,7 +49,9 @@ namespace NexusForever.WorldServer.Command.Helper
                     { "flashlight", 1588 },
                     { "mug", 1343 },
                     { "plank", 3400 },
-                    { "shovel", 684 }
+                    { "shovel", 684 },
+                    { "sandwich", 8051 },
+                    { "drumstick", 7829 }
                 }
             },
 
