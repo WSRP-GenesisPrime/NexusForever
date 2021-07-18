@@ -349,7 +349,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                             break;
                         }
                     case SetRotationCommand setRotation:
-                        owner.Rotation = setRotation.Position.Vector;
+                        owner.Rotation = setRotation.Rotation.Vector;
                         break;
                 }
 
