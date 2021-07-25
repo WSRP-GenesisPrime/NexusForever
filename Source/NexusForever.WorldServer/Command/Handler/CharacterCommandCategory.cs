@@ -2,6 +2,7 @@
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NexusForever.WorldServer.Game.Spell;
 using NLog;
 using System;
 
@@ -39,7 +40,7 @@ namespace NexusForever.WorldServer.Command.Handler
         public void HandleCharacterLevel(ICommandContext context,
             [Parameter("Level to set character.")]
             byte level)
-        {   
+        {
             try
             {
                 Player target = context.InvokingPlayer;
@@ -72,8 +73,9 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Property value.")]
             float val)
         {
-            try {
-            Player target = context.InvokingPlayer;
+            try
+            {
+                Player target = context.InvokingPlayer;
                 switch (prop.ToLower())
                 {
                     case "speed":
@@ -164,6 +166,116 @@ namespace NexusForever.WorldServer.Command.Handler
             target.SetProperty(Property.MountSpeedMultiplier, 2f, 2f);
             target.SetProperty(Property.GravityMultiplier, 1f, 1f);
             target.SetProperty(Property.JumpHeight, 5f, 5f);
+        }
+
+        [Command(Permission.None, "grow your character", "grow")]
+        public void HandleGrow(ICommandContext context,
+           [Parameter("Amount of stacks.", Static.ParameterFlags.Optional)]
+            uint? stacks)
+        {
+            if (stacks == null)
+            {
+                stacks = 1;
+            }
+            if (stacks > 20)
+            {
+                stacks = 20;
+            }
+            for (int i = 0; i < stacks; ++i)
+            {
+                context.GetTargetOrInvoker<UnitEntity>().CastSpell(63491, 1, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false
+                });
+            }
+        }
+
+        [Command(Permission.None, "shrink your character", "shrink")]
+        public void HandleShrink(ICommandContext context,
+           [Parameter("Amount of stacks.", Static.ParameterFlags.Optional)]
+            uint? stacks)
+        {
+            if (stacks == null)
+            {
+                stacks = 1;
+            }
+            if (stacks > 20)
+            {
+                stacks = 20;
+            }
+            for (int i = 0; i < stacks; ++i)
+            {
+                context.GetTargetOrInvoker<UnitEntity>().CastSpell(63490, 1, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false
+                });
+            }
+        }
+
+        [Command(Permission.None, "scale your character", "scale")]
+        public void HandleScale(ICommandContext context,
+           [Parameter("Scale.")]
+            float targetScale,
+           [Parameter("Maximum number of stacks.", Static.ParameterFlags.Optional)]
+            uint? maxStacks)
+        {
+            uint mStacks = maxStacks ?? 20;
+            if(mStacks > 100)
+            {
+                mStacks = 100;
+            }
+
+            uint smallStacks = 0;
+            uint largeStacks = 0;
+            uint bestSmallStacks = 0;
+            uint bestLargeStacks = 0;
+            float bestError = float.MaxValue;
+            float bestScale = 1f;
+
+            float scale = 1f;
+
+            while(smallStacks + largeStacks < mStacks)
+            {
+                if(scale < targetScale)
+                {
+                    largeStacks += 1;
+                }
+                else
+                {
+                    smallStacks += 1;
+                }
+                scale = MathF.Pow(1.5f, largeStacks) * MathF.Pow(0.8f, smallStacks);
+                float error = scale / targetScale;
+                if(error < 1f)
+                {
+                    error = 1f / error;
+                }
+                error -= 1f;
+                if(error < bestError)
+                {
+                    bestError = error;
+                    bestSmallStacks = smallStacks;
+                    bestLargeStacks = largeStacks;
+                    bestScale = scale;
+                }
+            }
+
+            context.SendMessage($"Scaling you by {bestScale}x.");
+
+            for (int i = 0; i < bestSmallStacks; ++i)
+            {
+                context.GetTargetOrInvoker<UnitEntity>().CastSpell(63490, 1, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false
+                });
+            }
+            for (int i = 0; i < bestLargeStacks; ++i)
+            {
+                context.GetTargetOrInvoker<UnitEntity>().CastSpell(63491, 1, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false
+                });
+            }
         }
     }
 }
