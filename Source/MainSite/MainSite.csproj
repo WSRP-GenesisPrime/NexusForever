@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="AuthServer.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Controllers\statusOff.png" />
     <Content Include="Controllers\statusOn.png" />
     <Content Include="Views\Home\Mainbackground.jpg" />
