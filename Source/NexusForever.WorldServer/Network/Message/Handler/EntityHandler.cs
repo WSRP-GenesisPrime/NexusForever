@@ -30,7 +30,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
             catch (NullReferenceException nre)
             {
-                log.Error($"Exception caught while invoking EntityHandler.HandleEntityCommand! mover = {mover} :\n{nre}");
+                log.Error($"Exception caught while invoking EntityHandler.HandleEntityCommand - Invoking player is null! :\n{nre}");
             }
         }
 
