@@ -171,7 +171,7 @@ namespace NexusForever.WorldServer.Game.Social
         /// </summary>
         public ChatChannel CreateChatChannel(ChatChannelType type, string name, string password = null)
         {
-            ulong id = chatChannelIds[type]++;
+            ulong id = (ulong) chatChannels[type].Count;
             return CreateChatChannel(type, id, name, password);
         }
 
@@ -180,6 +180,7 @@ namespace NexusForever.WorldServer.Game.Social
         /// </summary>
         public ChatChannel CreateChatChannel(ChatChannelType type, ulong id, string name, string password = null)
         {
+            log.Info($"Trying to create chat channel: (id {id}) {name}, password= {password}");
             if (chatChannelNames[type].TryGetValue(name, out ulong chatId))
             {
                 if (!chatChannels[type].TryGetValue(chatId, out ChatChannel channel) || !channel.PendingDelete)
