@@ -24,7 +24,18 @@ namespace NexusForever.WorldServer.Game.Housing
         public string OwnerName { get; }
         public string OwnerOriginalName { get; }
         public byte PropertyInfoId { get; }
-        public bool Has18PlusLock { get; private set; }
+        public bool Has18PlusLock {
+            get => has18PlusLock;
+            private set
+            {
+                if(has18PlusLock != value)
+                {
+                    saveMask |= ResidenceSaveMask.NSFWLock;
+                }
+                has18PlusLock = value;
+            }
+        }
+        private bool has18PlusLock = false;
 
         public string Name
         {
@@ -412,9 +423,10 @@ namespace NexusForever.WorldServer.Game.Housing
                 return true;
             }
             map.Search(Vector3.Zero, -1, new SearchCheckRangePlayerOnly(Vector3.Zero, -1), out List<GridEntity> entities);
-            foreach (Player player in entities)
+            foreach (GridEntity entity in entities)
             {
-                if (!player.IsAdult)
+                Player player = entity as Player;
+                if (player != null && !player.IsAdult)
                 {
                     return false; // can't lock, kiddies on the plot.
                 }
@@ -448,6 +460,7 @@ namespace NexusForever.WorldServer.Game.Housing
                     },
                     Text = "18+ lock created."
                 });
+                Has18PlusLock = doLock;
                 return true;
             }
             if (!doLock)
@@ -460,6 +473,7 @@ namespace NexusForever.WorldServer.Game.Housing
                     },
                     Text = "18+ lock dropped."
                 });
+                Has18PlusLock = doLock;
                 return true;
             }
             return false;
