@@ -55,6 +55,15 @@ namespace NexusForever.WorldServer.Game.Map
             map.EnqueueAdd(player, vector3);
         }
 
+        public IMap GetMap(MapInfo info)
+        {
+            IMap map = GetBaseMap(info);
+                if (map is IInstancedMap iMap)
+                    map = iMap.GetInstance(info);
+
+            return map;
+        }
+
         /// <summary>
         /// Create base or instanced <see cref="IMap"/> of <see cref="MapInfo"/> for <see cref="Player"/>.
         /// </summary>
@@ -67,16 +76,27 @@ namespace NexusForever.WorldServer.Game.Map
             return map;
         }
 
-        /// <summary>
-        /// Create and store base <see cref="IMap"/> of <see cref="MapInfo"/>.
-        /// </summary>
-        private IMap CreateBaseMap(MapInfo info)
+        private IMap GetBaseMap(MapInfo info)
         {
             if (maps.TryGetValue((ushort)info.Entry.Id, out IMap map))
             {
                 log.Trace($"MapManager: Loading existing map {info.Entry.Id}");
                 return map;
             }
+            return null;
+        }
+
+        /// <summary>
+        /// Create and store base <see cref="IMap"/> of <see cref="MapInfo"/>.
+        /// </summary>
+        private IMap CreateBaseMap(MapInfo info)
+        {
+            IMap map = GetBaseMap(info);
+            if(map != null)
+            {
+                return map;
+            }
+
             log.Trace($"MapManager: Creating map instance {info.Entry.Id}");
 
             switch (info.Entry.Type)

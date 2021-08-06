@@ -35,10 +35,7 @@ namespace NexusForever.WorldServer.Game.Map
                 map.Update(lastTick);
         }
 
-        /// <summary>
-        /// Create or find child <see cref="T"/> for <see cref="Player"/>.
-        /// </summary>
-        public IMap CreateInstance(MapInfo info, Player player)
+        public IMap GetInstance(MapInfo info)
         {
             if (info.InstanceId != 0u)
                 return GetInstance(info.InstanceId);
@@ -50,6 +47,20 @@ namespace NexusForever.WorldServer.Game.Map
                     log.Trace($"Found instance for residence {info.ResidenceId}");
                     return instance;
                 }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Create or find child <see cref="T"/> for <see cref="Player"/>.
+        /// </summary>
+        public IMap CreateInstance(MapInfo info, Player player)
+        {
+            IMap map = GetInstance(info);
+
+            if(map != null)
+            {
+                return map;
             }
 
             log.Trace($"Did not find instance for residence {info.ResidenceId}, creating now.");

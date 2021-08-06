@@ -7,6 +7,8 @@
         Administrator = 3,
         Console       = 4,
         WebSocket     = 5,
-        StoryTeller   = 6
+        StoryTeller   = 6,
+        NSFWS         = 7,
+        NSFWSMod      = 8
     }
 }
