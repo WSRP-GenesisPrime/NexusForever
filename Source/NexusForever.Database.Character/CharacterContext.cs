@@ -1616,6 +1616,11 @@ namespace NexusForever.Database.Character
                     .HasColumnType("smallint(5) unsigned")
                     .HasDefaultValue(0);
 
+                entity.Property(e => e.NSFWLock)
+                    .HasColumnName("nsfwlock")
+                    .HasColumnType("bit")
+                    .HasDefaultValue(0);
+
                 entity.HasOne(d => d.Character)
                     .WithOne(p => p.Residence)
                     .HasForeignKey<ResidenceModel>(d => d.OwnerId)

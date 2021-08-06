@@ -152,6 +152,36 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
+        [Command(Permission.AdultPlotLockOwner, "Toggle the 18+ lock on your plot.", "nsfwlock")]
+        public void HandleHouseNSFWLock(ICommandContext context,
+            [Parameter("On or off")]
+            string setting)
+        {
+            bool setLock;
+            if(setting.Equals("on", StringComparison.InvariantCultureIgnoreCase))
+            {
+                setLock = true;
+            }
+            else if(setting.Equals("off", StringComparison.InvariantCultureIgnoreCase))
+            {
+                setLock = false;
+            }
+            else
+            {
+                context.SendError("Setting was not 'on' or 'off'.");
+                return;
+            }
+            Residence res = ResidenceManager.Instance.GetResidence(context.InvokingPlayer.Name).GetAwaiter().GetResult();
+            if(res != null)
+            {
+                bool result = res.Set18PlusLock(setLock);
+                if(!result)
+                {
+                    context.SendError("Could not enable lock. Is there anyone on the plot that is not 18+?");
+                }
+            }
+        }
+
         [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
         public void HandleRemodelCommand(ICommandContext context,
             [Parameter("Ground, sky, or music?")]

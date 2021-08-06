@@ -235,6 +235,7 @@ namespace NexusForever.WorldServer.Game.Housing
             flags               = (ResidenceFlags)model.Flags;
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
+            Has18PlusLock       = model.NSFWLock;
 
             if (model.ResidenceInfoId > 0)
                 ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
@@ -382,6 +383,11 @@ namespace NexusForever.WorldServer.Game.Housing
                     {
                         model.GardenSharing = GardenSharing;
                         entity.Property(p => p.GardenSharing).IsModified = true;
+                    }
+                    if ((saveMask & ResidenceSaveMask.NSFWLock) != 0)
+                    {
+                        model.NSFWLock = Has18PlusLock;
+                        entity.Property(p => p.NSFWLock).IsModified = true;
                     }
                 }
 
