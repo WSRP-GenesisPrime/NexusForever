@@ -927,6 +927,26 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
+                        Id = 61000,
+                        Name = "Flag: Adult"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 61100,
+                        Name = "Command: AdultPlotLockSelf"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 61150,
+                        Name = "Command: AdultPlotLockNonOwner"
+                    },
+                    new PermissionModel
+                    {
+                        Id = 61200,
+                        Name = "Command: AdultPlotAlert"
+                    },
+                    new PermissionModel
+                    {
                         Id   = 10000,
                         Name = "Other: InstantLogout"
                     },
@@ -991,6 +1011,18 @@ namespace NexusForever.Database.Auth
                     {
                         Id    = 6,
                         Name  = "Storyteller",
+                        Flags = 1
+                    },
+                    new RoleModel
+                    {
+                        Id    = 7,
+                        Name  = "NSFWS",
+                        Flags = 1
+                    },
+                    new RoleModel
+                    {
+                        Id    = 8,
+                        Name  = "NFSWSMod",
                         Flags = 1
                     });
             });

@@ -200,6 +200,12 @@
         Costume                     = 60000,
         CostumeOverride             = 60010,
         CostumeOverrideId           = 60020,
+        
+        // GP: 18+ flag
+        Adult                       = 61000,
+        AdultPlotLockOwner          = 61100,
+        AdultPlotLockNonOwner       = 61150,
+        AdultPlotAlert              = 61200,
 
         // non command permissions
         InstantLogout               = 10000,

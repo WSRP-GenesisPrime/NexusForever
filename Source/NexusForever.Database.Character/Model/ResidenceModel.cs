@@ -20,6 +20,7 @@ namespace NexusForever.Database.Character.Model
         public ushort Flags { get; set; }
         public byte ResourceSharing { get; set; }
         public byte GardenSharing { get; set; }
+        public bool NSFWLock { get; set; }
 
         public CharacterModel Character { get; set; }
         public ICollection<ResidenceDecor> Decor { get; set; } = new HashSet<ResidenceDecor>();

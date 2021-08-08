@@ -173,11 +173,20 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     return;
                 }
 
+                if(residence.Has18PlusLock)
+                {
+                    if(!session.Player.IsAdult)
+                    {
+                        session.Player.SendSystemMessage("This plot is currently unavailable.");
+                        return;
+                    }
+                }
+
                 switch (residence.PrivacyLevel)
                 {
                     case ResidencePrivacyLevel.Private:
                     {
-                        // TODO: show error
+                        session.Player.SendSystemMessage("This plot is currently unavailable.");
                         return;
                     }
                     // TODO: check if player is either a neighbour or roommate

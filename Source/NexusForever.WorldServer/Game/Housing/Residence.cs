@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
@@ -8,6 +9,11 @@ using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
+using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Game.Map.Search;
+using NexusForever.WorldServer.Game.Social.Static;
+using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Network.Message.Model.Shared;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
@@ -18,6 +24,18 @@ namespace NexusForever.WorldServer.Game.Housing
         public string OwnerName { get; }
         public string OwnerOriginalName { get; }
         public byte PropertyInfoId { get; }
+        public bool Has18PlusLock {
+            get => has18PlusLock;
+            private set
+            {
+                if(has18PlusLock != value)
+                {
+                    saveMask |= ResidenceSaveMask.NSFWLock;
+                }
+                has18PlusLock = value;
+            }
+        }
+        private bool has18PlusLock = false;
 
         public string Name
         {
@@ -228,6 +246,7 @@ namespace NexusForever.WorldServer.Game.Housing
             flags               = (ResidenceFlags)model.Flags;
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
+            Has18PlusLock       = model.NSFWLock;
 
             if (model.ResidenceInfoId > 0)
                 ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
@@ -376,6 +395,11 @@ namespace NexusForever.WorldServer.Game.Housing
                         model.GardenSharing = GardenSharing;
                         entity.Property(p => p.GardenSharing).IsModified = true;
                     }
+                    if ((saveMask & ResidenceSaveMask.NSFWLock) != 0)
+                    {
+                        model.NSFWLock = Has18PlusLock;
+                        entity.Property(p => p.NSFWLock).IsModified = true;
+                    }
                 }
 
                 saveMask = ResidenceSaveMask.None;
@@ -390,6 +414,69 @@ namespace NexusForever.WorldServer.Game.Housing
 
             foreach (Plot plot in plots)
                 plot.Save(context);
+        }
+
+        private bool Can18PlusLock(ResidenceMap map)
+        {
+            if(map == null)
+            {
+                return true;
+            }
+            map.Search(Vector3.Zero, -1, new SearchCheckRangePlayerOnly(Vector3.Zero, -1), out List<GridEntity> entities);
+            foreach (GridEntity entity in entities)
+            {
+                Player player = entity as Player;
+                if (player != null && !player.IsAdult)
+                {
+                    return false; // can't lock, kiddies on the plot.
+                }
+            }
+            return true;
+        }
+
+        private ResidenceMap getMap()
+        {
+            ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(this);
+            MapInfo mi = new MapInfo(entrance.Entry, 0, Id);
+            ResidenceMap map = MapManager.Instance.GetMap(mi) as ResidenceMap;
+            return map;
+        }
+
+        public bool Set18PlusLock(bool doLock)
+        {
+            ResidenceMap map = getMap();
+            if(map == null)
+            {
+                Has18PlusLock = doLock;
+                return true;
+            }
+            if (doLock && Can18PlusLock(map))
+            {
+                map.EnqueueToAll(new ServerChat
+                {
+                    Channel = new Channel
+                    {
+                        Type = ChatChannelType.System
+                    },
+                    Text = "18+ lock created."
+                });
+                Has18PlusLock = doLock;
+                return true;
+            }
+            if (!doLock)
+            {
+                map.EnqueueToAll(new ServerChat
+                {
+                    Channel = new Channel
+                    {
+                        Type = ChatChannelType.System
+                    },
+                    Text = "18+ lock dropped."
+                });
+                Has18PlusLock = doLock;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
