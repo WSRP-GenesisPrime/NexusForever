@@ -43,7 +43,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 VendorInfo = new VendorInfo(model);
             }
 
-            CalculateProperties();
+            BuildProperties(CalculateProperties());
 
             ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnCreate(this);
         }
@@ -80,34 +80,53 @@ namespace NexusForever.WorldServer.Game.Entity
             ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnActivateSuccess(this, activator);
         }
 
-        private void CalculateProperties()
+        private float[] CalculateProperties()
         {
-            Creature2Entry creatureEntry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+            float[] values = new float[200];
 
+            Creature2Entry creatureEntry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+            if (creatureEntry == null)
+                return values;
+
+            CreatureLevelEntry levelEntry = GameTableManager.Instance.CreatureLevel.GetEntry(6);
+            if (levelEntry == null)
+                return values;
+
+            for (uint i = 0u; i < levelEntry.UnitPropertyValue.Length; i++)
+                values[i] = levelEntry.UnitPropertyValue[i];
+
+            Creature2ArcheTypeEntry archeTypeEntry = GameTableManager.Instance.Creature2ArcheType.GetEntry(creatureEntry.Creature2ArcheTypeId);
+            if (archeTypeEntry == null)
+                return values;
+
+            for (uint i = 0u; i < archeTypeEntry.UnitPropertyMultiplier.Length; i++)
+                values[i] *= archeTypeEntry.UnitPropertyMultiplier[i];
+
+            Creature2DifficultyEntry difficultyEntry = GameTableManager.Instance.Creature2Difficulty.GetEntry(creatureEntry.Creature2DifficultyId);
+            if (difficultyEntry == null)
+                return values;
+
+            for (uint i = 0u; i < difficultyEntry.UnitPropertyMultiplier.Length; i++)
+                values[i] *= archeTypeEntry.UnitPropertyMultiplier[i];
+
+            Creature2TierEntry tierEntry = GameTableManager.Instance.Creature2Tier.GetEntry(creatureEntry.Creature2TierId);
+            if (tierEntry == null)
+                return values;
+
+            for (uint i = 0u; i < tierEntry.UnitPropertyMultiplier.Length; i++)
+                values[i] *= archeTypeEntry.UnitPropertyMultiplier[i];
+
+            return values;
+        }
+
+        private void BuildProperties(float[] values)
+        {
             // TODO: research this some more
             List<Property> propertiesToBuild = new List<Property>
             {
                 Property.AssaultRating,
                 Property.SupportRating
             };
-
-            float[] values = new float[200];
-
-            CreatureLevelEntry levelEntry = GameTableManager.Instance.CreatureLevel.GetEntry(6);
-            for (uint i = 0u; i < levelEntry.UnitPropertyValue.Length; i++)
-                values[i] = levelEntry.UnitPropertyValue[i];
-
-            Creature2ArcheTypeEntry archeTypeEntry = GameTableManager.Instance.Creature2ArcheType.GetEntry(creatureEntry.Creature2ArcheTypeId);
-            for (uint i = 0u; i < archeTypeEntry.UnitPropertyMultiplier.Length; i++)
-                values[i] *= archeTypeEntry.UnitPropertyMultiplier[i];
-
-            Creature2DifficultyEntry difficultyEntry = GameTableManager.Instance.Creature2Difficulty.GetEntry(creatureEntry.Creature2DifficultyId);
-            for (uint i = 0u; i < difficultyEntry.UnitPropertyMultiplier.Length; i++)
-                values[i] *= archeTypeEntry.UnitPropertyMultiplier[i];
-
-            Creature2TierEntry tierEntry = GameTableManager.Instance.Creature2Tier.GetEntry(creatureEntry.Creature2TierId);
-            for (uint i = 0u; i < tierEntry.UnitPropertyMultiplier.Length; i++)
-                values[i] *= archeTypeEntry.UnitPropertyMultiplier[i];
 
             foreach (Property property in propertiesToBuild)
                 Properties[property] = new PropertyValue(property, values[(int)property], values[(int)property]);
