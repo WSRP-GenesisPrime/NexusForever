@@ -19,6 +19,20 @@ namespace NexusForever.WorldServer.Game.Entity
         {
         }
 
+        public Simple(uint creatureId)
+            : base(EntityType.Simple)
+        {
+            CreatureId = creatureId;
+
+            // temp
+            DisplayInfo = 24413;
+            SetBaseProperty(Property.BaseHealth, 800.0f);
+
+            SetStat(Stat.Health, 800u);
+            SetStat(Stat.Level, 3u);
+            SetStat(Stat.Sheathed, 800u);
+        }
+
         public override void Initialise(EntityModel model)
         {
             base.Initialise(model);

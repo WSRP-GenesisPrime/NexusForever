@@ -85,6 +85,16 @@ namespace NexusForever.Shared
         }
 
         /// <summary>
+        /// Returns a <see cref="Vector3"/> which has been offset by supplied angle and distance. Only for use in Telegraphs.
+        /// </summary>
+        public static Vector3 GetPointForTelegraph(this Vector3 v, float angle, float distance)
+        {
+            float x = v.X + MathF.Cos(angle) * distance;
+            float z = v.Z - MathF.Sin(angle) * distance;
+            return new Vector3(x, v.Y, z);
+        }
+
+        /// <summary>
         /// Returns a <see cref="Vector3"/> which has been offset by supplied angle and distance.
         /// </summary>
         public static Vector3 GetPoint2D(this Vector3 v, float angle, float distance)
@@ -108,6 +118,20 @@ namespace NexusForever.Shared
         public static Vector3 GetRotationTo(this Vector3 v, Vector3 targetVector)
         {
             return new Vector3(v.GetAngle(targetVector), 0f, 0f);
+        }
+
+        /// <summary>
+        /// Returns a value, in radians, that repesents rotation between PI & -PI
+        /// </summary>
+        public static float CondenseRadianIntoRotationRadian(this float radians)
+        {
+            if (radians > MathF.PI)
+                return -MathF.PI + (radians.NormaliseRadians());
+
+            if (radians < -MathF.PI)
+                return MathF.PI + (radians.NormaliseRadians());
+
+            return radians.NormaliseRadians();
         }
     }
 }

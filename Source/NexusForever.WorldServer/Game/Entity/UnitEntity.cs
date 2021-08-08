@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using NexusForever.Database.World.Model;
 using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
@@ -46,12 +47,22 @@ namespace NexusForever.WorldServer.Game.Entity
         }
         private bool inCombat;
 
+        public float HitRadius { get; protected set; } = 1f;
+
         protected UnitEntity(EntityType type)
             : base(type)
         {
             ThreatManager = new ThreatManager(this);
 
             InitialiseAI();
+            InitialiseHitRadius();
+        }
+
+        public override void Initialise(EntityModel model)
+        {
+            base.Initialise(model);
+
+            InitialiseHitRadius();
         }
 
         private void InitialiseAI()
@@ -353,6 +364,20 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             we.ApplyRangeTriggers(this);
+        }
+
+        private void InitialiseHitRadius()
+        {
+            if (CreatureId == 0u)
+                return;
+                
+            Creature2Entry creatureEntry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+            if (creatureEntry == null)
+                return;
+
+            Creature2ModelInfoEntry modelInfoEntry = GameTableManager.Instance.Creature2ModelInfo.GetEntry(creatureEntry.Creature2ModelInfoId);
+            if (modelInfoEntry != null)
+                HitRadius = modelInfoEntry.HitRadius * creatureEntry.ModelScale;
         }
     }
 }
