@@ -173,27 +173,30 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     return;
                 }
 
-                if(residence.Has18PlusLock)
+                if (residence.OwnerId != session.Player.CharacterId)
                 {
-                    if(!session.Player.IsAdult)
+                    if (residence.Has18PlusLock)
                     {
-                        session.Player.SendSystemMessage("This plot is currently unavailable.");
-                        return;
+                        if (!session.Player.IsAdult)
+                        {
+                            session.Player.SendSystemMessage("This plot is currently unavailable.");
+                            return;
+                        }
                     }
-                }
 
-                switch (residence.PrivacyLevel)
-                {
-                    case ResidencePrivacyLevel.Private:
+                    switch (residence.PrivacyLevel)
                     {
-                        session.Player.SendSystemMessage("This plot is currently unavailable.");
-                        return;
+                        case ResidencePrivacyLevel.Private:
+                            {
+                                session.Player.SendSystemMessage("This plot is currently unavailable.");
+                                return;
+                            }
+                        // TODO: check if player is either a neighbour or roommate
+                        case ResidencePrivacyLevel.NeighborsOnly:
+                            break;
+                        case ResidencePrivacyLevel.RoommatesOnly:
+                            break;
                     }
-                    // TODO: check if player is either a neighbour or roommate
-                    case ResidencePrivacyLevel.NeighborsOnly:
-                        break;
-                    case ResidencePrivacyLevel.RoommatesOnly:
-                        break;
                 }
 
                 // teleport player to correct residence instance

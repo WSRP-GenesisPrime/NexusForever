@@ -119,27 +119,30 @@ namespace NexusForever.WorldServer.Command.Handler
                     }
                 }
 
-                if (residence.Has18PlusLock)
+                if (residence.OwnerId != context.InvokingPlayer.CharacterId)
                 {
-                    if (!context.InvokingPlayer.IsAdult)
+                    if (residence.Has18PlusLock)
                     {
-                        context.InvokingPlayer.SendSystemMessage("This plot is currently unavailable.");
-                        return;
-                    }
-                }
-
-                switch (residence.PrivacyLevel)
-                {
-                    case ResidencePrivacyLevel.Private:
+                        if (!context.InvokingPlayer.IsAdult)
                         {
                             context.InvokingPlayer.SendSystemMessage("This plot is currently unavailable.");
                             return;
                         }
-                    // TODO: check if player is either a neighbour or roommate
-                    case ResidencePrivacyLevel.NeighborsOnly:
-                        break;
-                    case ResidencePrivacyLevel.RoommatesOnly:
-                        break;
+                    }
+
+                    switch (residence.PrivacyLevel)
+                    {
+                        case ResidencePrivacyLevel.Private:
+                            {
+                                context.InvokingPlayer.SendSystemMessage("This plot is currently unavailable.");
+                                return;
+                            }
+                        // TODO: check if player is either a neighbour or roommate
+                        case ResidencePrivacyLevel.NeighborsOnly:
+                            break;
+                        case ResidencePrivacyLevel.RoommatesOnly:
+                            break;
+                    }
                 }
 
                 ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
