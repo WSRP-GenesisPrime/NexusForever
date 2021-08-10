@@ -138,7 +138,7 @@
         QuestAchieveObjective       = 79,
         QuestObjective              = 80,
         QuestKill                   = 81,
-        QuestActivate               = 105,
+        QuestActivate               = 2002,
 
         // spell
         Spell                       = 83,
@@ -171,12 +171,19 @@
         GuildRegister               = 101,
         GuildJoin                   = 102,
 
+        // map
+        Map                         = 103,
+        MapUnload                   = 104,
+        MapPlayerRemove             = 105,
+        MapPlayerRemoveCancel       = 106,
+
         // reward tracks
-        RewardTrack                 = 100,
-        RewardTrackUpdate           = 101,
+        RewardTrack                 = 2000,
+        RewardTrackUpdate           = 2001,
 
         // non command permissions
         InstantLogout               = 10000,
-        Signature                   = 10001
+        Signature                   = 10001,
+        BypassInstanceLimits        = 10002
     }
 }

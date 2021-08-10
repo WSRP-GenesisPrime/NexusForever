@@ -19,7 +19,7 @@ namespace NexusForever.WorldServer.Script.Creature.City
             if (!(activator is Player player))
                 return;
             
-            player.Session.EnqueueEvent(new TaskGenericEvent<Residence>(ResidenceManager.Instance.GetResidence(player.Name),
+            player.Session.Events.EnqueueEvent(new TaskGenericEvent<Residence>(ResidenceManager.Instance.GetResidence(player.Name),
                 residence =>
             {
                 if (residence == null)
@@ -30,7 +30,7 @@ namespace NexusForever.WorldServer.Script.Creature.City
                         player.SpellManager.AddSpell(spellBaseId);
 
                 ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
-                player.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
+                player.TeleportTo(entrance.Entry, entrance.Position, residence.Id);
             }));
         }
     }

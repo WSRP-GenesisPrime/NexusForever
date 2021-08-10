@@ -97,7 +97,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             byte[] sessionKeyBytes  = RandomProvider.GetBytes(16u);
             string sessionKeyString = BitConverter.ToString(sessionKeyBytes).Replace("-", "");
-            session.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.AuthDatabase.UpdateAccountSessionKey(session.Account, sessionKeyString),
+            session.Events.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.AuthDatabase.UpdateAccountSessionKey(session.Account, sessionKeyString),
                 () =>
             {
                 session.EnqueueMessageEncrypted(new ServerNewRealm
@@ -117,7 +117,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientCharacterList)]
         public static void HandleCharacterList(WorldSession session, ClientCharacterList characterList)
         {
-            session.EnqueueEvent(new TaskGenericEvent<List<CharacterModel>>(DatabaseManager.Instance.CharacterDatabase.GetCharacters(session.Account.Id),
+            session.Events.EnqueueEvent(new TaskGenericEvent<List<CharacterModel>>(DatabaseManager.Instance.CharacterDatabase.GetCharacters(session.Account.Id),
                 characters =>
             {
                 byte maxCharacterLevelAchieved = 1;
@@ -406,7 +406,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 });
 
                 // TODO: actually error check this
-                session.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.CharacterDatabase.Save(c =>
+                session.Events.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.CharacterDatabase.Save(c =>
                     {
                         c.Character.Add(character);
                         foreach (Item item in items)
@@ -494,7 +494,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 entity.Property(e => e.Name).IsModified = true;
             }
 
-            session.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.CharacterDatabase.Save(Save),
+            session.Events.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.CharacterDatabase.Save(Save),
                 () =>
             {
                 session.CanProcessPackets = true;
@@ -522,7 +522,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return;
             }
 
-            if (CleanupManager.HasPendingCleanup(session.Account))
+            if (PlayerCleanupManager.HasPendingCleanup(session.Account))
             {
                 session.EnqueueMessageEncrypted(new ServerCharacterSelectFail
                 {
@@ -543,24 +543,36 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 case 5:
                 {
                     // characters logging in to a housing map are returned to their own residence
-                    session.EnqueueEvent(new TaskGenericEvent<Residence>(ResidenceManager.Instance.GetResidence(session.Player.Name),
+                    session.Events.EnqueueEvent(new TaskGenericEvent<Residence>(ResidenceManager.Instance.GetResidence(session.Player.Name),
                         residence =>
                     {
                         if (residence == null)
                             residence = ResidenceManager.Instance.CreateResidence(session.Player);
 
                         ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
-                        var mapInfo = new MapInfo(entrance.Entry, 0u, residence.Id);
-                        MapManager.Instance.AddToMap(session.Player, mapInfo, entrance.Position);
+                        MapManager.Instance.AddToMap(session.Player, new MapPosition
+                        {
+                            Info     = new MapInfo
+                            {
+                                Entry      = entrance.Entry,
+                                InstanceId = residence.Id
+                            },
+                            Position = entrance.Position
+                        });
                     }));
 
                     break;
                 }
                 default:
                 {
-                    var mapInfo = new MapInfo(entry);
-                    var vector3 = new Vector3(character.LocationX, character.LocationY, character.LocationZ);
-                    MapManager.Instance.AddToMap(session.Player, mapInfo, vector3);
+                    MapManager.Instance.AddToMap(session.Player, new MapPosition
+                    {
+                        Info     = new MapInfo
+                        {
+                            Entry = entry
+                        },
+                        Position = new Vector3(character.LocationX, character.LocationY, character.LocationZ)
+                    });
                     break;
                 }
             }

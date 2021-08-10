@@ -50,13 +50,19 @@ namespace NexusForever.WorldServer.Game.Entity
             SendCharacterFlagsUpdated();
 
             base.OnAddToMap(map, guid, vector);
-            map.OnAddToMap(this);
 
             // resummon vanity pet if it existed before teleport
             if (pendingTeleport?.VanityPetId != null)
             {
                 var vanityPet = new VanityPet(this, pendingTeleport.VanityPetId.Value);
-                map.EnqueueAdd(vanityPet, Position);
+
+                var position = new MapPosition
+                {
+                    Position = Position
+                };
+
+                if (map.CanEnter(vanityPet, position))
+                    map.EnqueueAdd(vanityPet, position);
             }
 
             pendingTeleport = null;
@@ -72,9 +78,6 @@ namespace NexusForever.WorldServer.Game.Entity
             DestroyDependents();
 
             base.OnRemoveFromMap();
-
-            if (pendingTeleport != null)
-                MapManager.Instance.AddToMap(this, pendingTeleport.Info, pendingTeleport.Vector);
         }
 
 

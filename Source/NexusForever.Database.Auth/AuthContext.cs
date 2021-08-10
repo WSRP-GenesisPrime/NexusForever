@@ -911,33 +911,78 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
+                        Id   = 100,
+                        Name = "Category: Guild"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 101,
+                        Name = "Command: GuildRegister"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 102,
+                        Name = "Command: GuildJoin"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 103,
+                        Name = "Category: Map"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 104,
+                        Name = "Command: MapUnload"
+                    },
+                    new PermissionModel
+                    {
                         Id   = 105,
-                        Name = "Command: QuestActivate"
+                        Name = "Command: MapPlayerRemove"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 106,
+                        Name = "Command: MapPlayerRemoveCancel"
                     },
                     new PermissionModel 
                     {
-                        Id   = 106,
+                        Id   = 115,
                         Name = "Category: EntityThreat"
                     },
                     new PermissionModel
                     {
-                        Id   = 107,
+                        Id   = 116,
                         Name = "Command: EntityThreatAdjust"
                     },
                     new PermissionModel
                     {
-                        Id = 108,
+                        Id   = 117,
                         Name = "Command: EntityThreatList"
                     },
                     new PermissionModel
                     {
-                        Id = 109,
+                        Id   = 118,
                         Name = "Command: EntityThreatClear"
                     },
                     new PermissionModel
                     {
-                        Id = 110,
+                        Id   = 119,
                         Name = "Command: EntityThreatRemove"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 2000,
+                        Name = "Category: RewardTrack"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 2001,
+                        Name = "Command: RewardTrackUpdate"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 2002,
+                        Name = "Command: QuestActivate"
                     },
                     new PermissionModel
                     {
@@ -948,6 +993,11 @@ namespace NexusForever.Database.Auth
                     {
                         Id   = 10001,
                         Name = "Other: Signature"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 10002,
+                        Name = "Other: BypassInstanceLimits"
                     });
             });
 

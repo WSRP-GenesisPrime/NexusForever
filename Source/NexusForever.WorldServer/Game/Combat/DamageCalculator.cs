@@ -164,6 +164,9 @@ namespace NexusForever.WorldServer.Game.Combat
         /// </summary>
         private uint CalculateShieldAmount(uint damage, UnitEntity victim)
         {
+            if (!victim.GetStatInteger(Stat.Shield).HasValue)
+                return 0u;
+
             uint maxShieldAmount = (uint)(damage * 0.625f); //GetPropertyValue(Property.ShieldMitigationMax).Value);
             uint shieldedAmount = maxShieldAmount >= victim.GetStatInteger(Stat.Shield).Value ? victim.GetStatInteger(Stat.Shield).Value : maxShieldAmount;
 

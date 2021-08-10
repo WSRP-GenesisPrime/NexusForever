@@ -9,6 +9,7 @@ using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Spell.Event;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -135,7 +136,13 @@ namespace NexusForever.WorldServer.Game.Spell
                 });
             }*/
 
-            player.Map.EnqueueAdd(mount, player.Position);
+            var position = new MapPosition
+            {
+                Position = player.Position
+            };
+
+            if (player.Map.CanEnter(mount, position))
+                player.Map.EnqueueAdd(mount, position);
 
             // FIXME: also cast 52539,Riding License - Riding Skill 1 - SWC - Tier 1,34464 -- upon further investigation, this appeared to only trigger for characters who were created earlier in the game's lifetime.
             // Expert - 52543
@@ -298,7 +305,14 @@ namespace NexusForever.WorldServer.Game.Spell
             }
 
             var vanityPet = new VanityPet(player, info.Entry.DataBits00);
-            player.Map.EnqueueAdd(vanityPet, player.Position);
+
+            var position = new MapPosition
+            {
+                Position = player.Position
+            };
+
+            if (player.Map.CanEnter(vanityPet, position))
+                player.Map.EnqueueAdd(vanityPet, position);
         }
 
         [SpellEffectHandler(SpellEffectType.TitleGrant)]
