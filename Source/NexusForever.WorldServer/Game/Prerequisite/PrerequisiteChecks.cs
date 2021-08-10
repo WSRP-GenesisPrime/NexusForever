@@ -297,7 +297,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             switch (comparison)
             {
                 case PrerequisiteComparison.NotEqual:
-                    return player.Health != player.MaxHealth;
+                    return !player.InCombat;
                 default:
                     log.Warn($"Unhandled {comparison} for {PrerequisiteType.Unhealthy}!");
                     return true;
