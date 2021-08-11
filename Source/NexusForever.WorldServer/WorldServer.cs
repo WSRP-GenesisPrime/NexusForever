@@ -84,18 +84,20 @@ namespace NexusForever.WorldServer
             EntityCacheManager.Instance.Initialise();
             FactionManager.Instance.Initialise();
             GlobalMovementManager.Instance.Initialise();
+
+            CharacterManager.Instance.Initialise(); // must be initialised before residences
             GlobalChatManager.Instance.Initialise(); // must be initialised before guilds
             GlobalAchievementManager.Instance.Initialise(); // must be initialised before guilds
-            GlobalGuildManager.Instance.Initialise();
+            GlobalGuildManager.Instance.Initialise(); // must be initialised before residences
             GlobalContactManager.Instance.Initialise();
+            GlobalResidenceManager.Instance.Initialise();
+            GlobalGuildManager.Instance.ValidateCommunityResidences();
 
             AssetManager.Instance.Initialise();
             PrerequisiteManager.Instance.Initialise();
             GlobalSpellManager.Instance.Initialise();
             GlobalQuestManager.Instance.Initialise();
 
-            CharacterManager.Instance.Initialise();
-            ResidenceManager.Instance.Initialise();
             GlobalStorefrontManager.Instance.Initialise();
             GlobalCinematicManager.Instance.Initialise();
 
@@ -115,10 +117,10 @@ namespace NexusForever.WorldServer
                 NetworkManager<WorldSession>.Instance.Update(lastTick);
                 MapManager.Instance.Update(lastTick);
 
-                ResidenceManager.Instance.Update(lastTick);
                 BuybackManager.Instance.Update(lastTick);
                 GlobalQuestManager.Instance.Update(lastTick);
                 GlobalGuildManager.Instance.Update(lastTick);
+                GlobalResidenceManager.Instance.Update(lastTick); // must be after guild update
                 GlobalChatManager.Instance.Update(lastTick);
                 GlobalContactManager.Instance.Update(lastTick);
 

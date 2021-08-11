@@ -1341,6 +1341,12 @@ namespace NexusForever.Database.Character.Migrations
                         .HasDefaultValue(0ul)
                         .HasColumnName("characterId");
 
+                    b.Property<int>("CommunityPlotReservation")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasDefaultValue(-1)
+                        .HasColumnName("communityPlotReservation");
+
                     b.Property<string>("Note")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("varchar(32)")
@@ -2360,6 +2366,10 @@ namespace NexusForever.Database.Character.Migrations
                         .HasDefaultValue((ushort)0)
                         .HasColumnName("groundWallpaperId");
 
+                    b.Property<ulong?>("GuildOwnerId")
+                        .HasColumnType("bigint(20) unsigned")
+                        .HasColumnName("guildOwnerId");
+
                     b.Property<ushort>("MusicId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint(5) unsigned")
@@ -2373,9 +2383,8 @@ namespace NexusForever.Database.Character.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("name");
 
-                    b.Property<ulong>("OwnerId")
+                    b.Property<ulong?>("OwnerId")
                         .HasColumnType("bigint(20) unsigned")
-                        .HasDefaultValue(0ul)
                         .HasColumnName("ownerId");
 
                     b.Property<byte>("PrivacyLevel")
@@ -2416,6 +2425,8 @@ namespace NexusForever.Database.Character.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GuildOwnerId");
+
                     b.HasIndex("OwnerId")
                         .IsUnique()
                         .HasDatabaseName("ownerId");
@@ -2431,7 +2442,6 @@ namespace NexusForever.Database.Character.Migrations
                         .HasColumnName("id");
 
                     b.Property<byte>("Index")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(3) unsigned")
                         .HasDefaultValue((byte)0)
                         .HasColumnName("index");
@@ -2890,14 +2900,19 @@ namespace NexusForever.Database.Character.Migrations
 
             modelBuilder.Entity("NexusForever.Database.Character.Model.ResidenceModel", b =>
                 {
+                    b.HasOne("NexusForever.Database.Character.Model.GuildModel", "Guild")
+                        .WithMany("Residence")
+                        .HasForeignKey("GuildOwnerId")
+                        .HasConstraintName("FK__residence_guildOwnerId__guild_id");
+
                     b.HasOne("NexusForever.Database.Character.Model.CharacterModel", "Character")
                         .WithOne("Residence")
                         .HasForeignKey("NexusForever.Database.Character.Model.ResidenceModel", "OwnerId")
-                        .HasConstraintName("FK__residence_ownerId__character_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasConstraintName("FK__residence_ownerId__character_id");
 
                     b.Navigation("Character");
+
+                    b.Navigation("Guild");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Character.Model.ResidencePlotModel", b =>
@@ -2992,6 +3007,8 @@ namespace NexusForever.Database.Character.Migrations
                     b.Navigation("GuildMember");
 
                     b.Navigation("GuildRank");
+
+                    b.Navigation("Residence");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Character.Model.ItemModel", b =>

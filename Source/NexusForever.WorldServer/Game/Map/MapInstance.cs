@@ -46,6 +46,8 @@ namespace NexusForever.WorldServer.Game.Map
         }
         private MapUnloadStatus? unloadStatus;
 
+        private MapPosition unloadPosition;
+
         private uint instanceLimit;
 
         private readonly UpdateTimer unloadTimer 
@@ -151,11 +153,12 @@ namespace NexusForever.WorldServer.Game.Map
                 Player player = GetEntity<Player>(guid);
                 if (player != null)
                 {
-                    MapPosition position = GetPlayerReturnLocation(player);
+                    MapPosition position = unloadPosition ?? GetPlayerReturnLocation(player);
                     player.TeleportTo(position, TeleportReason.Unload);
                 }
             }
 
+            unloadPosition = null;
             UnloadStatus = MapUnloadStatus.UnloadingPlayers;
         }
 
@@ -239,12 +242,20 @@ namespace NexusForever.WorldServer.Game.Map
         /// <remarks>
         /// Any <see cref="Player"/>'s still in the instance will be moved to return locations.
         /// </remarks>
-        public void Unload()
+        public void Unload(MapPosition unloadPosition = null)
         {
             if (UnloadStatus.HasValue)
                 throw new InvalidOperationException("Failed to start instance unload, a pending unload is already in progress!");
 
+            this.unloadPosition = unloadPosition;
+
             UnloadStatus = MapUnloadStatus.AwaitingGridActions;
+            OnUnload();
+        }
+
+        protected virtual void OnUnload()
+        {
+            // deliberately empty
         }
 
         protected abstract MapPosition GetPlayerReturnLocation(Player player);

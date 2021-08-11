@@ -1,4 +1,5 @@
-﻿using NexusForever.Shared.Game.Events;
+﻿using NexusForever.Shared;
+using NexusForever.Shared.Game.Events;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing;
 
@@ -18,20 +19,18 @@ namespace NexusForever.WorldServer.Script.Creature.City
 
             if (!(activator is Player player))
                 return;
-            
-            player.Session.Events.EnqueueEvent(new TaskGenericEvent<Residence>(ResidenceManager.Instance.GetResidence(player.Name),
-                residence =>
-            {
-                if (residence == null)
-                    residence = ResidenceManager.Instance.CreateResidence(player);
 
-                foreach (uint spellBaseId in CONST_SPELL_TRAINING)
-                    if (player.SpellManager.GetSpell(spellBaseId) == null)
-                        player.SpellManager.AddSpell(spellBaseId);
+            Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
+            if (residence == null)
+                residence = GlobalResidenceManager.Instance.CreateResidence(player);
 
-                ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
-                player.TeleportTo(entrance.Entry, entrance.Position, residence.Id);
-            }));
+            foreach (uint spellBaseId in CONST_SPELL_TRAINING)
+                if (player.SpellManager.GetSpell(spellBaseId) == null)
+                    player.SpellManager.AddSpell(spellBaseId);
+
+            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.TeleportTo(entrance.Entry, entrance.Position, residence.Id);
         }
     }
 }

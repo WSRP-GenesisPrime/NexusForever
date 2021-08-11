@@ -754,6 +754,10 @@ namespace NexusForever.WorldServer.Game.Spell
                 unitsCasting.Add(caster);
 
             foreach (UnitEntity unit in unitsCasting)
+            {
+                if (unit == null)
+                    continue;
+
                 spellStart.InitialPositionData.Add(new InitialPosition
                 {
                     UnitId = unit.Guid,
@@ -761,8 +765,13 @@ namespace NexusForever.WorldServer.Game.Spell
                     TargetFlags = 3,
                     Yaw = unit.Rotation.X
                 });
+            }
 
             foreach (UnitEntity unit in unitsCasting)
+            {
+                if (unit == null)
+                    continue;
+
                 foreach (Telegraph telegraph in telegraphs)
                     spellStart.TelegraphPositionData.Add(new TelegraphPosition
                     {
@@ -772,6 +781,7 @@ namespace NexusForever.WorldServer.Game.Spell
                         Position = new Position(telegraph.Position),
                         Yaw = telegraph.Rotation.X
                     });
+            }
 
 
             caster.EnqueueToVisible(spellStart, true);
