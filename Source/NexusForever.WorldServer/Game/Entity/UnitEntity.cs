@@ -86,7 +86,7 @@ namespace NexusForever.WorldServer.Game.Entity
             pendingSpells.RemoveAll(s => s.IsFinished);
 
             regenTimer.Update(lastTick);
-            if (regenTimer.HasElapsed)
+            if (IsAlive && regenTimer.HasElapsed)
             {
                 OnTickRegeneration();
 
@@ -140,6 +140,9 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public void CastSpell(SpellParameters parameters)
         {
+            if (!IsAlive)
+                return;
+
             if (parameters == null)
                 throw new ArgumentNullException();
 
@@ -161,6 +164,9 @@ namespace NexusForever.WorldServer.Game.Entity
             // TODO: Improve this with certain rules, as there will be abilities that can be cast while stealthed, etc.
             if (parameters.UserInitiatedSpellCast)
             {
+                if (!IsAlive)
+                    return;
+
                 if (this is Player player)
                     player.Dismount();
                     
@@ -277,14 +283,18 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
-        /// 
+        /// Returns whether or not this <see cref="UnitEntity"/> can be attacked.
         /// </summary>
-        protected bool CanAttack(UnitEntity target)
+        public bool CanAttack(UnitEntity target)
         {
             if (!target.IsValidAttackTarget() || !IsValidAttackTarget())
                 return false;
 
-            return true;
+            // TODO: Support PvP. For now, don't let this entity count as attackable
+            if (this is Player && target is Player)
+                return false;
+
+            return GetDispositionTo(target.Faction1) < Reputation.Static.Disposition.Friendly;
         }
 
         /// <summary>
@@ -293,7 +303,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public bool IsValidAttackTarget()
         {
             // TODO: Expand on this. There's bound to be flags or states that should prevent an entity from being attacked.
-            return (this is Player || this is NonPlayer);
+            return (this is Player || this is NonPlayer) && this is not Ghost;
         }
 
         private void CheckCombatStateChange(IEnumerable<HostileEntity> hostiles = null)
@@ -378,6 +388,64 @@ namespace NexusForever.WorldServer.Game.Entity
             Creature2ModelInfoEntry modelInfoEntry = GameTableManager.Instance.Creature2ModelInfo.GetEntry(creatureEntry.Creature2ModelInfoId);
             if (modelInfoEntry != null)
                 HitRadius = modelInfoEntry.HitRadius * creatureEntry.ModelScale;
+        }
+
+        /// <summary>
+        /// Deal damage to this <see cref="UnitEntity"/>
+        /// </summary>
+        public void TakeDamage(UnitEntity attacker, SpellTargetInfo.SpellTargetEffectInfo.DamageDescription damageDescription)
+        {
+            if (!IsAlive || !attacker.IsAlive)
+                return;
+
+            // TODO: Calculate Threat properly
+            ThreatManager.AddThreat(attacker, (int)damageDescription.RawDamage);
+
+            Shield -= damageDescription.ShieldAbsorbAmount;
+            ModifyHealth(-damageDescription.AdjustedDamage);
+
+            if (Health == 0u && attacker != null)
+                Kill(attacker);
+        }
+
+        private void Kill(UnitEntity attacker)
+        {
+            if (Health > 0)
+                throw new InvalidOperationException("Trying to kill entity that has more than 0hp");
+
+            if (DeathState is DeathState.JustSpawned or DeathState.Alive)
+                throw new InvalidOperationException($"DeathState is incorrect! Current DeathState is {DeathState}");
+
+            // Fire Events (OnKill, OnDeath)
+            OnDeath(attacker);
+
+            // Reward XP
+            // Reward Loot
+            // Handle Achievements
+            // Schedule Respawn
+        }
+
+        protected override void OnDeathStateChange(DeathState newState)
+        {
+            switch (newState)
+            {
+                case DeathState.JustDied:
+                    // Clear Threat
+                    ThreatManager.ClearThreatList();
+
+                    foreach (Spell.Spell spell in pendingSpells)
+                    {
+                        if (spell.IsCasting)
+                            spell.CancelCast(CastResult.CasterCannotBeDead);
+                        else
+                            spell.Finish();
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            base.OnDeathStateChange(newState);
         }
     }
 }

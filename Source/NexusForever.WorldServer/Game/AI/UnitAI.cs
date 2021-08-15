@@ -144,7 +144,7 @@ namespace NexusForever.WorldServer.Game.AI
         private void Reset()
         {
             me.MovementManager?.SetRotation(me.LeashRotation, true);
-            me.Health = me.MaxHealth;
+            me.ModifyHealth(me.MaxHealth);
             resettingFromCombat = false;
         }
 
@@ -156,6 +156,20 @@ namespace NexusForever.WorldServer.Game.AI
         public virtual void OnExitCombat()
         {
             ExitCombat();
+        }
+
+        public virtual void OnDeath(UnitEntity killer)
+        {
+            me.MovementManager?.StopSpline();
+            me.MovementManager?.BroadcastCommands();
+
+            Vector3 rotation = Vector3.Zero;
+            if (me.GetCurrentVictim(out UnitEntity victim))
+                rotation = me.Position.GetRotationTo(victim.Position);
+            else
+                rotation = me.Rotation;
+
+            me.MovementManager?.SetRotation(rotation);
         }
 
         protected void DoAutoAttack()

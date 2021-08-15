@@ -116,5 +116,10 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             // deliberately empty
         }
+
+        protected virtual void OnDeath(UnitEntity killer)
+        {
+            
+        }
     }
 }

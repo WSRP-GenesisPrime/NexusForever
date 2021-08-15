@@ -78,25 +78,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public uint Health
         {
             get => GetStatInteger(Stat.Health) ?? 0u;
-            set
-            {
-                if (value == GetStatInteger(Stat.Health))
-                    return;
-
-                SetStat(Stat.Health, Math.Clamp(value, 0u, MaxHealth)); // TODO: Confirm MaxHealth is actually the maximum health would be at.
-                EnqueueToVisible(new ServerEntityHealthUpdate
-                {
-                    UnitId = Guid,
-                    Health = Health
-                });
-                if (this is Player player)
-                    player.Session.EnqueueMessageEncrypted(new ServerPlayerHealthUpdate
-                    {
-                        UnitId = Guid,
-                        Health = Health,
-                        Mask = (UpdateHealthMask)4
-                    });
-            }
+            private set => SetStat(Stat.Health, Math.Clamp(value, 0u, MaxHealth));
         }
 
         public uint MaxHealth
@@ -177,7 +159,8 @@ namespace NexusForever.WorldServer.Game.Entity
             get => (float)(GetStatInteger(Stat.InterruptArmour) ?? 0f);
             set => SetStat(Stat.InterruptArmour, (uint)value);
         }
-        public bool IsAlive => GetStatInteger(Stat.Health) > 0u;
+
+        public bool IsAlive => Health > 0u && DeathState is not DeathState.JustDied or DeathState.Corpse or DeathState.Dead;
 
         public uint Level
         {
@@ -225,6 +208,17 @@ namespace NexusForever.WorldServer.Game.Entity
         protected readonly Dictionary<Stat, StatValue> stats = new();
 
         private readonly Dictionary<ItemSlot, ItemVisual> itemVisuals = new();
+
+        protected DeathState DeathState 
+        {
+            get => deathState;
+            private set
+            {
+                deathState = value;
+                OnDeathStateChange(value);
+            }
+        }
+        private DeathState deathState = DeathState.JustSpawned;
 
         /// <summary>
         /// Create a new <see cref="WorldEntity"/> with supplied <see cref="EntityType"/>.
@@ -916,6 +910,96 @@ namespace NexusForever.WorldServer.Game.Entity
         protected bool HasEnteredRange(WorldEntity target)
         {
             return inRangeEntities.Keys.Contains(target.Guid);
+        }
+
+        /// <summary>
+        /// Modify this Entity's Health by the given value (Negative for Damage, Positive for Healing).
+        /// </summary>
+        public void ModifyHealth(long health)
+        {
+            int currentHealth = (int)Health;
+            int newHealth = (int)(Health + health);
+
+            if (newHealth <= 0)
+                Health = 0;
+            else if (newHealth > MaxHealth)
+                Health = MaxHealth;
+            else
+                Health = (uint)newHealth;
+
+            UpdateHealthMask mask = (UpdateHealthMask)4;
+            if (Health <= 0 && health < 0)
+                mask = (UpdateHealthMask)128;
+
+            EnqueueToVisible(new ServerEntityHealthUpdate
+            {
+                UnitId = Guid,
+                Health = Health
+            });
+
+            if (this is Player)
+                EnqueueToVisible(new ServerPlayerHealthUpdate
+                {
+                    UnitId = Guid,
+                    Health = Health,
+                    Mask = mask
+                }, true);
+
+            if (currentHealth == 0u && newHealth > 0) // Resurrecting
+            {
+                SendDeathPacket(false, 2);
+                SetDeathState(DeathState.JustSpawned);
+            }
+            else if (currentHealth > 0u && newHealth <= 0u) // Dying
+            {
+                SendDeathPacket(true, 7);
+                SetDeathState(DeathState.JustDied);
+            }
+        }
+
+        private void SendDeathPacket(bool isDead, byte deathReason)
+        {
+            EnqueueToVisible(new ServerEntityDeath
+            {
+                UnitId = Guid,
+                Dead = isDead,
+                Reason = deathReason,
+                RezHealth = isDead ? 0u : Health
+            }, true);
+        }
+
+        protected void SetDeathState(DeathState newState)
+        {
+            DeathState = newState;
+
+            switch (newState)
+            {
+                case DeathState.JustSpawned:
+                    // Do stuff on spawn
+                    SetDeathState(DeathState.Alive);
+                    break;
+                case DeathState.Alive:
+                    // Do stuff on alive
+                    break;
+                case DeathState.JustDied:
+                    SetDeathState(DeathState.Corpse);
+                    break;
+                case DeathState.Corpse:
+                    // Do stuff on corpse
+                    break;
+                case DeathState.Dead:
+                    // Do stuff when entering dead state
+                    if (this is Player)
+                        throw new InvalidOperationException("Invalid Death State for a Player!");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        protected virtual void OnDeathStateChange(DeathState newState)
+        {
+            // Deliberately empty
         }
     }
 }

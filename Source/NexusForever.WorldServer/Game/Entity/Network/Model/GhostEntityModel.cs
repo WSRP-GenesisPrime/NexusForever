@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Guild.Static;
 
 namespace NexusForever.WorldServer.Game.Entity.Network.Model
 {
@@ -14,31 +15,31 @@ namespace NexusForever.WorldServer.Game.Entity.Network.Model
         public Sex Sex { get; set; }
         public ulong GroupId { get; set; }
         public string GuildName { get; set; }
-        public byte GuildType { get; set; }
-        public List<ulong> GuildIds { get; } = new List<ulong>();
+        public GuildType GuildType { get; set; }
+        public List<ulong> GuildIds { get; set; } = new List<ulong>();
         public List<float> Bones { get; set; } = new List<float>();
         public ushort Title { get; set; }
 
         public void Write(GamePacketWriter writer)
         {
             writer.Write(Id);
-            writer.Write(RealmId, 14);
+            writer.Write(RealmId, 14u);
             writer.WriteStringWide(Name);
-            writer.Write(Race, 5);
-            writer.Write(Class, 5);
-            writer.Write(Sex, 2);
+            writer.Write(Race, 5u);
+            writer.Write(Class, 5u);
+            writer.Write(Sex, 2u);
             writer.Write(GroupId);
 
             writer.WriteStringWide(GuildName);
-            writer.Write(GuildType, 4);
+            writer.Write(GuildType, 4u);
 
-            writer.Write((byte)GuildIds.Count, 5);
+            writer.Write((byte)GuildIds.Count, 5u);
             GuildIds.ForEach(e => writer.Write(e));
             
-            writer.Write(Bones.Count, 6);
+            writer.Write(Bones.Count, 6u);
             Bones.ForEach(e => writer.Write(e));
 
-            writer.Write(Title, 14);
+            writer.Write(Title, 14u);
         }
     }
 }

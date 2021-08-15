@@ -8,6 +8,7 @@ using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map.Static;
 using NexusForever.WorldServer.Game.Static;
 using NLog;
@@ -179,6 +180,24 @@ namespace NexusForever.WorldServer.Game.Map
                 return;
 
             instanceCounts.AddOrUpdate(player.CharacterId, 1, (k, v) => v + 1);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="RezType"/> mask allowed for the <see cref="Player"/>'s Map.
+        /// </summary>
+        public RezType GetRezTypeForMap(Player player)
+        {
+            if (player.Map == null)
+                return RezType.None;
+
+            switch ((MapType)player.Map.Entry.Type)
+            {
+                case MapType.Residence:
+                case MapType.Community:
+                    return RezType.OpenWorld;
+                default:
+                    return RezType.OpenWorld;
+            }
         }
     }
 }

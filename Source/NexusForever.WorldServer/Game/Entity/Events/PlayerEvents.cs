@@ -1,4 +1,5 @@
-﻿using NexusForever.Shared.GameTable;
+﻿using NexusForever.Shared.Game.Events;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Static;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
@@ -69,6 +70,11 @@ namespace NexusForever.WorldServer.Game.Entity
             pendingTeleport = null;
 
             SendPacketsAfterAddToMap();
+
+            if (Health == 0u)
+                SetDeathState(DeathState.JustDied);
+            else
+                SetDeathState(DeathState.JustSpawned);
 
             if (PreviousMap == null)
                 OnLogin();
@@ -194,6 +200,11 @@ namespace NexusForever.WorldServer.Game.Entity
                         warriorBuilderTimer = 0f;
                     break;
             }
+        }
+
+        protected override void OnDeath(UnitEntity killer)
+        {
+            base.OnDeath(killer);
         }
     }
 }

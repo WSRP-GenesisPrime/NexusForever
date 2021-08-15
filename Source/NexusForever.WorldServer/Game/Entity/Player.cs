@@ -143,6 +143,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public bool IsSitting => currentChairGuid != null;
         private uint? currentChairGuid;
+
+        public uint? GhostGuid { get; set; }
         
         /// <summary>
         /// Whether or not this <see cref="Player"/> is currently in a state after using an emote. Setting this to false will let all nearby entities know that the state has been reset.
@@ -1190,6 +1192,13 @@ namespace NexusForever.WorldServer.Game.Entity
                 VanityPetGuid = null;
             }
 
+            if (GhostGuid != null)
+            {
+                Ghost ghost = GetVisible<Ghost>(GhostGuid.Value);
+                ghost?.RemoveFromMap();
+                GhostGuid = null;
+            }
+
             // TODO: Remove pets, scanbots
         }
         
@@ -1279,6 +1288,65 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 UserInitiatedSpellCast = false
             });
+        }
+
+        /// <summary>
+        /// Used to create a <see cref="Ghost"/> for this <see cref="Player"/> to control.
+        /// </summary>
+        private void CreateGhost()
+        {
+            Ghost ghost = new Ghost(this);
+            var position = new MapPosition
+            {
+                Position = Position
+            };
+
+            if (Map.CanEnter(ghost, position))
+                Session.Events.EnqueueEvent(new DelayEvent(TimeSpan.FromSeconds(2d), () =>
+                {
+                    Map.EnqueueAdd(ghost, position);
+                }));
+        }
+
+        /// <summary>
+        /// Applies resurrection mechanics based on client selection.
+        /// </summary>
+        public void DoResurrect(RezType rezType)
+        {
+            WorldEntity controlEntity = GetVisible<WorldEntity>(ControlGuid);
+            if (controlEntity is not Ghost ghost)
+                throw new InvalidOperationException($"Control Entity is not of type Ghost");
+
+            switch (rezType)
+            {
+                case RezType.WakeHere:
+                    uint cost = ghost.GetCostForRez();
+                    CurrencyManager.CurrencySubtractAmount(CurrencyType.Credits, cost);
+                    break;
+                default:
+                    break;
+            }
+
+            ModifyHealth((uint)(MaxHealth * 0.5f));
+            Shield = 0;
+            SetControl(this);
+            Map.EnqueueRemove(ghost);
+
+            SetDeathState(DeathState.JustSpawned);
+        }
+
+        protected override void OnDeathStateChange(DeathState newState)
+        {
+            switch (newState)
+            {
+                case DeathState.JustDied:
+                    CreateGhost();
+                    break;
+                default:
+                    break;
+            }
+
+            base.OnDeathStateChange(newState);
         }
     }
 }

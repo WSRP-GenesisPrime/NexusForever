@@ -15,13 +15,13 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         protected virtual void OnTickRegeneration()
         {
-            if (!IsAlive)
+            if (!IsAlive || InCombat)
                 return;
             // TODO: This should probably get moved to a Calculation Library/Manager at some point. There will be different timers on Stat refreshes, but right now the timer is hardcoded to every 0.25s.
             // Probably worth considering an Attribute-grouped Class that allows us to run differentt regeneration methods & calculations for each stat.
 
             if (Health < MaxHealth)
-                Health += (uint)(MaxHealth / 200f);
+                ModifyHealth((uint)(MaxHealth / 200f));
 
             if (Shield < MaxShieldCapacity)
                 Shield += (uint)(MaxShieldCapacity * GetPropertyValue(Property.ShieldRegenPct) * regenTimer.Duration);
@@ -90,6 +90,21 @@ namespace NexusForever.WorldServer.Game.Entity
 
             foreach (GridEntity entity in visibleEntities.Values)
                 CheckEntityRange(entity);
+        }
+
+        protected override void OnDeath(UnitEntity killer)
+        {
+            if (killer is Player player && this is not Player)
+            {
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillCreature, CreatureId, 1u);
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillCreature2, CreatureId, 1u);
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillTargetGroup, CreatureId, 1u);
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillTargetGroups, CreatureId, 1u);
+            }
+            
+            AI?.OnDeath(killer);
+
+            base.OnDeath(killer);
         }
     }
 }

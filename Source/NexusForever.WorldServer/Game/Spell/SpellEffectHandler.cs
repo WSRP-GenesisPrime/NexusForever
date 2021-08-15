@@ -23,6 +23,9 @@ namespace NexusForever.WorldServer.Game.Spell
         [SpellEffectHandler(SpellEffectType.Damage)]
         private void HandleEffectDamage(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
+            if (!target.CanAttack(caster))
+                return;
+
             uint damage = 0;
             damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType00, info.Entry.ParameterValue00);
             damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType01, info.Entry.ParameterValue01);
@@ -31,6 +34,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
             DamageCalculator.Instance.CalculateDamage(caster, target, this, info, (DamageType)info.Entry.DamageType, damage);
             // TODO: Deal damage
+            target.TakeDamage(caster, info.Damage);
         }
 
         [SpellEffectHandler(SpellEffectType.UnitPropertyModifier)]
