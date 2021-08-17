@@ -144,6 +144,9 @@ namespace NexusForever.WorldServer.Game.Spell
             CastResult result = CheckCast();
             if (result != CastResult.Ok)
             {
+                if (caster is Player)
+                    (caster as Player).SpellManager.SetAsContinuousCast(null);
+
                 SendSpellCastResult(result);
                 status = SpellStatus.Failed;
                 return;
@@ -318,6 +321,7 @@ namespace NexusForever.WorldServer.Game.Spell
         private void InitialiseTelegraphs()
         {
             telegraphs.Clear();
+
             foreach (TelegraphDamageEntry telegraphDamageEntry in parameters.SpellInfo.Telegraphs)
                 telegraphs.Add(new Telegraph(telegraphDamageEntry, caster, caster.Position, caster.Rotation));
         }
@@ -382,6 +386,9 @@ namespace NexusForever.WorldServer.Game.Spell
             {
                 if (CastMethod == CastMethod.RapidTap && result != CastResult.PrereqCasterCast)
                 {
+                    if (caster is Player player)
+                        player.SpellManager.SetAsContinuousCast(null);
+
                     SendSpellCastResult(result);
                     return;
                 }
@@ -430,6 +437,8 @@ namespace NexusForever.WorldServer.Game.Spell
                 if (result == CastResult.CasterMovement)
                     player?.SpellManager.SetGlobalSpellCooldown(0d);
 
+                player?.SpellManager.SetAsContinuousCast(null);
+
                 SendSpellCastResult(result);
             }
 
@@ -456,6 +465,9 @@ namespace NexusForever.WorldServer.Game.Spell
             ExecuteEffects();
             // TODO: Below is not working properly. Investigate.
             //HandleVisual();
+
+            if (caster is Player player && HasEsperCost())
+                caster.ModifyVital(Vital.Resource1, -caster.GetVitalValue(Vital.Resource1));
 
             SendSpellGo();
 
@@ -550,7 +562,7 @@ namespace NexusForever.WorldServer.Game.Spell
                         continue;
                 }
 
-                foreach (UnitEntity entity in telegraph.GetTargets())
+                foreach (UnitEntity entity in telegraph.GetTargets(this))
                     targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Telegraph, entity));
             }
         }        
@@ -566,6 +578,15 @@ namespace NexusForever.WorldServer.Game.Spell
                 {
                     // Ensure caster can apply this effect
                     if (spell4EffectsEntry.PrerequisiteIdCasterApply > 0 && !PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdCasterApply))
+                        continue;
+                }
+
+                // Check if Spell uses Psi Points, Confirm Effect is the right damage spell for the remaining Psi Points
+                if (HasEsperCost() && caster is Player esperPlayer && esperPlayer.Class == Class.Esper)
+                {
+                    uint remainingPsiPoints = (uint)esperPlayer.Resource1;
+                    if ((SpellEffectType)spell4EffectsEntry.EffectType == SpellEffectType.Damage &&
+                        !CanUseEsperEffect(spell4EffectsEntry, remainingPsiPoints))
                         continue;
                 }
 
@@ -645,6 +666,38 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             // TODO: implement correctly
             return parameters.UserInitiatedSpellCast && parameters.SpellInfo.BaseInfo.SpellType.Id != 5 && parameters.SpellInfo.Entry.CastTime > 0;
+        }
+
+        private bool HasEsperCost()
+        {
+            if (caster is not Player player)
+                return false;
+
+            if (player.Class != Class.Esper)
+                return false;
+
+            if (!parameters.SpellInfo.Entry.InnateCostTypes.Contains((uint)Vital.Resource1))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns if the Caster is able to use this Spell Effect with their current Psi Points.
+        /// </summary>
+        /// <returns>True if Esper Caster can use Effect</returns>
+        /// <remarks>It is assumed that this will not be called unless this Spell is a Psi Point spender.</remarks>
+        private bool CanUseEsperEffect(Spell4EffectsEntry entry, uint currentEmm)
+        {
+            switch (entry.EmmComparison)
+            {
+                case 0:
+                    return currentEmm == entry.EmmValue;
+                case 1:
+                    return currentEmm >= entry.EmmValue;
+                default:
+                    return true;
+            }
         }
 
         /// <summary>
@@ -756,6 +809,9 @@ namespace NexusForever.WorldServer.Game.Spell
             foreach (UnitEntity unit in unitsCasting)
             {
                 if (unit == null)
+                    continue;
+
+                if (unit is Player)
                     continue;
 
                 spellStart.InitialPositionData.Add(new InitialPosition
