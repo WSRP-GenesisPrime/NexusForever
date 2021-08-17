@@ -65,7 +65,7 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 GhostId = Guid,
                 RezCost = GetCostForRez(),
-                TimeUntilRezMs = 0,
+                TimeUntilRezMs = 5000,
                 ShowRezFlags = MapManager.Instance.GetRezTypeForMap(Owner),
                 Dead = true,
                 Unknown0 = false,
