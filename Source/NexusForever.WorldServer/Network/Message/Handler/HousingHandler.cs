@@ -175,7 +175,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
                 if (residence.OwnerId != session.Player.CharacterId)
                 {
-                    if (residence.Has18PlusLock)
+                    if (residence.Has18PlusLock())
                     {
                         if (!session.Player.IsAdult)
                         {
