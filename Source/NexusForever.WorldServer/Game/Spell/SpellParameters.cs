@@ -20,5 +20,6 @@ namespace NexusForever.WorldServer.Game.Spell
         public ClientSideInteraction ClientSideInteraction { get; set; }
         public Action<SpellParameters> CompleteAction { get; set; }
         public int CastTimeOverride { get; set; } = -1;
+        public double CooldownOverride { get; set; } = 0d;
     }
 }

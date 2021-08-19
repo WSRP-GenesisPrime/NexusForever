@@ -47,6 +47,7 @@ namespace NexusForever.WorldServer.Game.Spell
         private readonly List<Telegraph> telegraphs = new();
 
         private readonly SpellEventManager events = new();
+        private Dictionary<uint /*effectId*/, uint/*count*/> effectTriggerCount = new();
 
         public Spell(UnitEntity caster, SpellParameters parameters)
         {
@@ -144,6 +145,10 @@ namespace NexusForever.WorldServer.Game.Spell
             CastResult result = CheckCast();
             if (result != CastResult.Ok)
             {
+                // Swallow Proxy CastResults
+                if (parameters.IsProxy)
+                    return;
+
                 if (caster is Player)
                     (caster as Player).SpellManager.SetAsContinuousCast(null);
 
@@ -154,8 +159,12 @@ namespace NexusForever.WorldServer.Game.Spell
 
             // TODO: Handle all GlobalCooldownEnums. It looks like it's just a "Type" that the GCD is stored against. Each spell checks the GCD for its type.
             if (caster is Player player)
+            {
                 if (parameters.SpellInfo.GlobalCooldown != null && parameters.SpellInfo.Entry.GlobalCooldownEnum == 0 && !parameters.IsProxy)
                     player.SpellManager.SetGlobalSpellCooldown(parameters.SpellInfo.GlobalCooldown.CooldownTime / 1000d);
+                else if (parameters.IsProxy)
+                    player.SpellManager.SetSpellCooldown(Spell4Id, parameters.CooldownOverride / 1000d);
+            }
 
             // It's assumed that non-player entities will be stood still to cast (most do). 
             // TODO: There are a handful of telegraphs that are attached to moving units (specifically rotating units) which this needs to be updated to account for.
@@ -218,9 +227,10 @@ namespace NexusForever.WorldServer.Game.Spell
                 CastResult resourceConditions = CheckResourceConditions();
                 if (resourceConditions != CastResult.Ok)
                 {
+                    if (parameters.UserInitiatedSpellCast)
+                        player.SpellManager.SetAsContinuousCast(null);
+
                     return resourceConditions;
-                    if (parameters.UserInitiatedSpellCast && caster is Player playerCaster)
-                        playerCaster.SpellManager.SetAsContinuousCast(null);
                 }
             }
 
@@ -435,9 +445,9 @@ namespace NexusForever.WorldServer.Game.Spell
                 });
 
                 if (result == CastResult.CasterMovement)
-                    player?.SpellManager.SetGlobalSpellCooldown(0d);
+                    player.SpellManager.SetGlobalSpellCooldown(0d);
 
-                player?.SpellManager.SetAsContinuousCast(null);
+                player.SpellManager.SetAsContinuousCast(null);
 
                 SendSpellCastResult(result);
             }
@@ -468,6 +478,10 @@ namespace NexusForever.WorldServer.Game.Spell
 
             if (caster is Player player && HasEsperCost())
                 caster.ModifyVital(Vital.Resource1, -caster.GetVitalValue(Vital.Resource1));
+
+            // TODO: Add back in with Vitals
+            //if (caster is Player player && HasEsperCost())
+            //    caster.ModifyVital(Vital.Resource1, -caster.GetVitalValue(Vital.Resource1));
 
             SendSpellGo();
 
@@ -537,6 +551,7 @@ namespace NexusForever.WorldServer.Game.Spell
             }
         }
 
+        List<uint> uniqueTargets = new();
         private void SelectTargets()
         {
             targets.Clear();
@@ -555,6 +570,8 @@ namespace NexusForever.WorldServer.Game.Spell
 
             foreach (Telegraph telegraph in telegraphs)
             {
+                List<uint> targetGuids = new();
+
                 if (CastMethod == CastMethod.Multiphase && currentPhase < 255)
                 {
                     int phaseMask = 1 << currentPhase;
@@ -562,10 +579,30 @@ namespace NexusForever.WorldServer.Game.Spell
                         continue;
                 }
 
+                log.Trace($"Getting targets for Telegraph ID {telegraph.TelegraphDamage.Id}");
+
                 foreach (UnitEntity entity in telegraph.GetTargets(this))
+                {
+                    if (parameters.SpellInfo.AoeTargetConstraints != null &&
+                        parameters.SpellInfo.AoeTargetConstraints.TargetCount > 0u &&
+                        targets.Count > parameters.SpellInfo.AoeTargetConstraints.TargetCount)
+                        break;
+
+                    if (targetGuids.Contains(entity.Guid))
+                        continue;
+
+                    if ((parameters.SpellInfo.BaseInfo.Entry.TargetingFlags & 32) != 0 &&
+                        uniqueTargets.Contains(entity.Guid))
+                        continue;
+
                     targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Telegraph, entity));
+                    targetGuids.Add(entity.Guid);
+                    uniqueTargets.Add(entity.Guid);
+                }
+
+                log.Trace($"Got {targets.Count} for Telegraph ID {telegraph.TelegraphDamage.Id}");
             }
-        }        
+        }
 
         private void ExecuteEffects()
         {
@@ -582,9 +619,9 @@ namespace NexusForever.WorldServer.Game.Spell
                 }
 
                 // Check if Spell uses Psi Points, Confirm Effect is the right damage spell for the remaining Psi Points
-                if (HasEsperCost() && caster is Player esperPlayer && esperPlayer.Class == Class.Esper)
+                if (HasEsperCost())
                 {
-                    uint remainingPsiPoints = (uint)esperPlayer.Resource1;
+                    uint remainingPsiPoints = (uint)caster.Resource1;
                     if ((SpellEffectType)spell4EffectsEntry.EffectType == SpellEffectType.Damage &&
                         !CanUseEsperEffect(spell4EffectsEntry, remainingPsiPoints))
                         continue;
@@ -596,6 +633,8 @@ namespace NexusForever.WorldServer.Game.Spell
                     if (spell4EffectsEntry.PhaseFlags != 1 && (phaseMask & spell4EffectsEntry.PhaseFlags) == 0)
                         continue;
                 }
+
+                log.Trace($"Executing SpellEffect ID {spell4EffectsEntry.Id} ({1 << currentPhase})");
 
                 // select targets for effect
                 List<SpellTargetInfo> effectTargets = targets
@@ -617,10 +656,12 @@ namespace NexusForever.WorldServer.Game.Spell
                         effectTarget.Effects.Add(info);
 
                         // TODO: if there is an unhandled exception in the handler, there will be an infinite loop on Execute()
-                        //events.EnqueueEvent(new SpellEvent(spell4EffectsEntry.DelayTime / 1000d, () =>
-                        //{
-                            handler.Invoke(this, effectTarget.Entity, info);
-                        //}));
+                        handler.Invoke(this, effectTarget.Entity, info);
+
+                        if (effectTriggerCount.TryGetValue(spell4EffectsEntry.Id, out uint count))
+                            effectTriggerCount[spell4EffectsEntry.Id]++;
+                        else
+                            effectTriggerCount.TryAdd(spell4EffectsEntry.Id, 1);
                     }
 
                     // Add durations for each effect so that when the Effect timer runs out, the Spell can Finish.
@@ -638,8 +679,10 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private bool CheckEffectApplyPrerequisites(Spell4EffectsEntry spell4EffectsEntry, UnitEntity unit, SpellEffectTargetFlags targetFlags)
         {
+            bool effectCanApply = true;
+
             // TODO: Possibly update Prereq Manager to handle other Units
-            if (!(unit is Player player))
+            if (unit is not Player player)
                 return true;
 
             if ((targetFlags & SpellEffectTargetFlags.Caster) != 0)
@@ -647,19 +690,19 @@ namespace NexusForever.WorldServer.Game.Spell
                 // TODO
                 if (spell4EffectsEntry.PrerequisiteIdCasterApply > 0)
                 {
-                    return PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdCasterApply);
+                    effectCanApply = PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdCasterApply);
                 }
             }
 
-            if ((targetFlags & SpellEffectTargetFlags.Caster) == 0)
+            if (effectCanApply && (targetFlags & SpellEffectTargetFlags.Caster) == 0)
             {
                 if (spell4EffectsEntry.PrerequisiteIdTargetApply > 0)
                 {
-                    return PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdTargetApply);
+                    effectCanApply = PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdTargetApply);
                 }
             }
 
-            return true;
+            return effectCanApply;
         }
 
         public bool IsMovingInterrupted()
@@ -800,11 +843,9 @@ namespace NexusForever.WorldServer.Game.Spell
                 TelegraphPositionData = new List<TelegraphPosition>()
             };
 
+            // TODO: Add Proxy Units
             List<UnitEntity> unitsCasting = new List<UnitEntity>();
-            if (parameters.PrimaryTargetId > 0)
-                unitsCasting.Add(caster.GetVisible<UnitEntity>(parameters.PrimaryTargetId));
-            else
-                unitsCasting.Add(caster);
+            unitsCasting.Add(caster);
 
             foreach (UnitEntity unit in unitsCasting)
             {

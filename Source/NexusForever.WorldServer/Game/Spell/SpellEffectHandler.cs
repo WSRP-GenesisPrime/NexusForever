@@ -67,13 +67,18 @@ namespace NexusForever.WorldServer.Game.Spell
                 }));
             }
 
+            if (effectTriggerCount.TryGetValue(info.Entry.Id, out uint count))
+                if (count >= info.Entry.DataBits04)
+                    return;
+
             SpellParameters proxyParameters = new SpellParameters
             {
                 ParentSpellInfo = parameters.SpellInfo,
                 RootSpellInfo = parameters.RootSpellInfo,
                 PrimaryTargetId = target.Guid,
                 UserInitiatedSpellCast = parameters.UserInitiatedSpellCast,
-                IsProxy = true
+                IsProxy = true,
+                CooldownOverride = info.Entry.DataBits05
             };
 
             events.EnqueueEvent(new SpellEvent(info.Entry.DelayTime / 1000d, () =>

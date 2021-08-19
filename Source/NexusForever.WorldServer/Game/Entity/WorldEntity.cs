@@ -352,16 +352,17 @@ namespace NexusForever.WorldServer.Game.Entity
 
             foreach (PropertyModifier spellModifier in GetSpellPropertyModifiers(property).OrderBy(e => e.Priority))
             {
-                // TODO: Investigated this a lot, and this was the best algorithm I could etermine from looking at a bunch of spell effects. 
+                // TODO: Investigated this a lot, and this was the best algorithm I could determine from looking at a bunch of spell effects. 
                 // Should probably be checked in the client. But, the client didn't show up anything that was super obvious as the calculations came from server.
                 if (spellModifier.BaseValue != 0 && spellModifier.Value != 0)
                 {
                     // 1 + 0.15 = 1.15 * Amount
                     // 1 + -0.15 = 0.85 * Amount
                     // (dataBits02 + dataBits03) * Amount
+                    value = (value * spellModifier.BaseValue) + spellModifier.Value;
                     
                     // TODO: Investigate how the client handles this, if it does at all. 1 _may_ be spellModifier.BaseValue, but unsure.
-                    value *= (1 + spellModifier.Value);
+                    //value *= (1 + spellModifier.Value);
                     continue;
                 }
 
@@ -569,7 +570,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Return the <see cref="float"/> value of the supplied <see cref="Stat"/>.
         /// </summary>
-        protected float? GetStatFloat(Stat stat)
+        public float? GetStatFloat(Stat stat)
         {
             StatAttribute attribute = EntityManager.Instance.GetStatAttribute(stat);
             if (attribute?.Type != StatType.Float)
@@ -1000,6 +1001,15 @@ namespace NexusForever.WorldServer.Game.Entity
         protected virtual void OnDeathStateChange(DeathState newState)
         {
             // Deliberately empty
+        }
+
+        /// <summary>
+        /// Return the Angle in Radians between this and a Target <see cref="WorldEntity"/> from this entity's facing direction.
+        /// </summary>
+        /// <returns></returns>
+        public float GetAngleToEntity(WorldEntity entity)
+        {
+            return (Position.GetAngle(entity.Position) - Rotation.X).CondenseRadianIntoRotationRadian();
         }
     }
 }

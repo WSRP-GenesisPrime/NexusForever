@@ -93,19 +93,19 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             TelegraphDamageFlag damageFlag = (TelegraphDamageFlag)TelegraphDamage.TelegraphDamageFlags;
 
-            if ((damageFlag & TelegraphDamageFlag.SpellMustBeMultiPhase) != 0u)
+            if (damageFlag.HasFlag(TelegraphDamageFlag.SpellMustBeMultiPhase))
                 if (spell.CastMethod != CastMethod.Multiphase)
                     return false;
 
-            if ((damageFlag & TelegraphDamageFlag.CasterMustBeNPC) != 0)
+            if (damageFlag.HasFlag(TelegraphDamageFlag.CasterMustBeNPC))
                 if (Caster is Player)
                     return false;
 
-            if ((damageFlag & TelegraphDamageFlag.CasterMustBePlayer) != 0)
+            if (damageFlag.HasFlag(TelegraphDamageFlag.CasterMustBePlayer))
                 if (Caster is not Player)
                     return false;
 
-            if ((damageFlag & TelegraphDamageFlag.TargetMustBeUnit) != 0)
+            if (damageFlag.HasFlag(TelegraphDamageFlag.TargetMustBeUnit))
                 if (target is not UnitEntity)
                     return false;
 
