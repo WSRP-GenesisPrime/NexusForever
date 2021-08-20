@@ -14,11 +14,13 @@ namespace NexusForever.WorldServer.Game.Entity
 {
     public partial class Player
     {
+        private float perSecondTick;
         private double medicTickTimer;
         private float medicRefillRate = 4f;
         private float spellPowerRefillRate = 4f;
         private double warriorBuilderTimer;
         private float warriorDecayRate = 150f;
+        private float esperResetTimer;
 
         private void OnLogin()
         {
@@ -128,6 +130,8 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             base.OnTickRegeneration();
 
+            perSecondTick += 0.5f;
+
             float resource3Remaining = GetStatFloat(Stat.Resource3) ?? 0f;
             if (Class == Class.Stalker && resource3Remaining < GetPropertyValue(Property.ResourceMax3))
             {
@@ -147,6 +151,13 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 float dashRegenAmount = GetPropertyValue(Property.ResourceMax7) * GetPropertyValue(Property.ResourceRegenMultiplier7);
                 SetStat(Stat.Dash, (float)Math.Min(dashRemaining + dashRegenAmount, (float)GetPropertyValue(Property.ResourceMax7)));
+            }
+
+            float focusRemaining = GetStatFloat(Stat.Focus) ?? 0f;
+            if (perSecondTick >= 1f && focusRemaining < GetPropertyValue(Property.BaseFocusPool))
+            {
+                float focusRegenAmount = GetPropertyValue(Property.BaseFocusPool) * (InCombat ? GetPropertyValue(Property.BaseFocusRecoveryInCombat) : GetPropertyValue(Property.BaseFocusRecoveryOutofCombat));
+                Focus += focusRegenAmount;
             }
 
             switch (Class)
@@ -186,7 +197,26 @@ namespace NexusForever.WorldServer.Game.Entity
                         }
                     }
                     break;
+                case Class.Esper:
+                    if (!InCombat)
+                    {
+                        esperResetTimer += 0.5f;
+                        if (esperResetTimer >= 10d)
+                        {
+                            Resource1 = 0f;
+                            esperResetTimer = 0f;
+                        }
+                    }
+                    else
+                    {
+                        if (esperResetTimer > 0f)
+                            esperResetTimer = 0f;
+                    }
+                    break;
             }
+
+            if (perSecondTick >= 1f)
+                perSecondTick = 0f;
         }
 
         protected override void OnStatChange(Stat stat, float newVal, float previousVal)

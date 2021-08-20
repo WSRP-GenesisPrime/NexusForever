@@ -26,6 +26,9 @@ namespace NexusForever.WorldServer.Game.Entity
 
             if (Type != EntityType.Plug && Type != EntityType.Player)
                 ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnAddToMap(this);
+
+            CreateFlags &= ~EntityCreateFlag.SpawnAnimation;
+            CreateFlags |= EntityCreateFlag.NoSpawnAnimation;
         }
 
         public override void OnRemoveFromMap()

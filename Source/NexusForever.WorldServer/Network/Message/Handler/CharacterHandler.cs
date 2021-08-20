@@ -370,6 +370,13 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     Stat  = (byte)Stat.Health,
                     Value = 800
                 });
+                if ((Class)creationEntry.ClassId is Class.Esper or Class.Medic or Class.Spellslinger)
+                    character.Stat.Add(new CharacterStatModel
+                    {
+                        Id = character.Id,
+                        Stat = (byte)Stat.Focus,
+                        Value = 1000
+                    });
                 character.Stat.Add(new CharacterStatModel
                 {
                     Id    = character.Id,

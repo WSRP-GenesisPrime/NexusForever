@@ -24,6 +24,7 @@ using NexusForever.WorldServer.Network.Message;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NexusForever.WorldServer.Script;
+using NexusForever.Shared.Game.Events;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -75,6 +76,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public float RangeCheck { get; private set; } = 15f;
         protected readonly Dictionary<uint, WorldEntity> inRangeEntities = new Dictionary<uint, WorldEntity>();
 
+        private EventQueue events = new();
+
         public uint Health
         {
             get => GetStatInteger(Stat.Health) ?? 0u;
@@ -97,6 +100,17 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             get => (uint)GetPropertyValue(Property.ShieldCapacityMax);
             set => SetBaseProperty(Property.ShieldCapacityMax, value);
+        }
+
+        [Vital(Vital.Focus)]
+        public float Focus
+        {
+            get => GetStatFloat(Stat.Focus) ?? 0u;
+            set 
+            {
+                float newVal = Math.Clamp(value, 0f, GetPropertyValue(Property.BaseFocusPool));
+                SetStat(Stat.Focus, newVal);
+            }
         }
         
         [Vital(Vital.Dash)]
@@ -248,6 +262,8 @@ namespace NexusForever.WorldServer.Game.Entity
                 stats.Add((Stat)statModel.Stat, new StatValue(statModel));
 
             BuildBaseProperties();
+
+            CreateFlags |= EntityCreateFlag.SpawnAnimation;
         }
 
         /// <summary>
@@ -257,6 +273,7 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             MovementManager.Update(lastTick);
 
+            events.Update(lastTick);
 
             var propertyUpdatePacket = BuildPropertyUpdates();
             if (propertyUpdatePacket == null)
@@ -992,6 +1009,8 @@ namespace NexusForever.WorldServer.Game.Entity
                     // Do stuff when entering dead state
                     if (this is Player)
                         throw new InvalidOperationException("Invalid Death State for a Player!");
+
+                    Map.EnqueueRemove(this);
                     break;
                 default:
                     break;
@@ -1001,6 +1020,17 @@ namespace NexusForever.WorldServer.Game.Entity
         protected virtual void OnDeathStateChange(DeathState newState)
         {
             // Deliberately empty
+            if (EntityId == 0u)
+                return;
+
+            if (newState == DeathState.Corpse)
+            {
+                Map.EnqueueRespawn(this, DateTime.UtcNow.AddSeconds(30d));
+                events.EnqueueEvent(new DelayEvent(TimeSpan.FromSeconds(15d), () =>
+                {
+                    SetDeathState(DeathState.Dead);
+                }));
+            }
         }
 
         /// <summary>

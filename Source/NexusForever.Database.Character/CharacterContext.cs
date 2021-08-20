@@ -1962,6 +1962,87 @@ namespace NexusForever.Database.Character
                     },
                     new PropertyBaseModel
                     {
+                        Type = 1,
+                        Subtype = 4,
+                        Property = 5,
+                        ModType = 2,
+                        Value = 1000,
+                        Note = "Class - Medic - Base Focus Pool"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 7,
+                        Property = 5,
+                        ModType = 2,
+                        Value = 1000,
+                        Note = "Class - Spellslinger - Base Focus Pool"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 3,
+                        Property = 5,
+                        ModType = 2,
+                        Value = 1000,
+                        Note = "Class - Esper - Base Focus Pool"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 4,
+                        Property = 107,
+                        ModType = 2,
+                        Value = 0.005f,
+                        Note = "Class - Medic - Base Focus Recovery Rate In Combat"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 7,
+                        Property = 107,
+                        ModType = 2,
+                        Value = 0.005f,
+                        Note = "Class - Spellslinger - Focus Recovery Rate In Combat"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 3,
+                        Property = 107,
+                        ModType = 2,
+                        Value = 0.005f,
+                        Note = "Class - Esper - Focus Recovery Rate In Combat"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 4,
+                        Property = 108,
+                        ModType = 2,
+                        Value = 0.02f,
+                        Note = "Class - Medic - Base Focus Recovery Rate Out of Combat"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 7,
+                        Property = 108,
+                        ModType = 2,
+                        Value = 0.02f,
+                        Note = "Class - Spellslinger - Focus Recovery Rate Out of Combat"
+                    },
+                    new PropertyBaseModel
+                    {
+                        Type = 1,
+                        Subtype = 3,
+                        Property = 108,
+                        ModType = 2,
+                        Value = 0.02f,
+                        Note = "Class - Esper - Focus Recovery Rate Out of Combat"
+                    },
+                    new PropertyBaseModel
+                    {
                         Type = 2,
                         Subtype = 1,
                         Property = 7,

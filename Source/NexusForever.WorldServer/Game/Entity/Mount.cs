@@ -66,9 +66,6 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
             base.OnAddToMap(map, guid, vector);
-
-            CreateFlags &= ~EntityCreateFlag.SpawnAnimation;
-            CreateFlags |= EntityCreateFlag.NoSpawnAnimation;
         }
 
         protected override void OnPassengerAdd(Player player, VehicleSeatType seatType, byte seatPosition)
