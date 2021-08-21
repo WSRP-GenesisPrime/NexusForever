@@ -20,21 +20,116 @@ namespace NexusForever.WorldServer.Game.Spell
 
     public partial class Spell
     {
+        private void TickingEvent(double tickTime, Action action)
+        {
+            events.EnqueueEvent(new SpellEvent(tickTime / 1000d, () =>
+            {
+                action.Invoke();
+                TickingEvent(tickTime, action);
+            }));
+        }
+
+        private uint CalculateDamageOrHealingFromParameters(SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            uint damage = 0;
+            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType00, info.Entry.ParameterValue00);
+            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType01, info.Entry.ParameterValue01);
+            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType02, info.Entry.ParameterValue02);
+            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType03, info.Entry.ParameterValue03);
+            return damage;
+        }
+
         [SpellEffectHandler(SpellEffectType.Damage)]
         private void HandleEffectDamage(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
             if (!target.CanAttack(caster))
                 return;
 
-            uint damage = 0;
-            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType00, info.Entry.ParameterValue00);
-            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType01, info.Entry.ParameterValue01);
-            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType02, info.Entry.ParameterValue02);
-            damage += DamageCalculator.Instance.GetBaseDamageForSpell(caster, info.Entry.ParameterType03, info.Entry.ParameterValue03);
+            void DealDamage(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+            {
+                uint damage = CalculateDamageOrHealingFromParameters(info);
 
-            DamageCalculator.Instance.CalculateDamage(caster, target, this, info, (DamageType)info.Entry.DamageType, damage);
-            // TODO: Deal damage
-            target.TakeDamage(caster, info.Damage);
+                DamageCalculator.Instance.CalculateDamage(caster, target, this, info, (DamageType)info.Entry.DamageType, damage);
+
+                target.TakeDamage(caster, info.Damage);
+            }
+
+            if (info.Entry.TickTime > 0)
+            {
+                double tickTime = info.Entry.TickTime;
+                if (info.Entry.DurationTime > 0)
+                {
+                    for (int i = 1; i <= info.Entry.DurationTime / tickTime; i++)
+                        events.EnqueueEvent(new SpellEvent(tickTime * i / 1000d, () =>
+                        {
+                            target.EnqueueToVisible(new ServerSpellGoEffect
+                            {
+                                ServerUniqueId = CastingId,
+                                Spell4EffectId = info.Entry.Id,
+                                TargetId = target.Guid,
+                                DamageDescriptionData = {
+                                    new Network.Message.Model.Shared.DamageDescription
+                                    {
+                                        ShieldAbsorbAmount = info.Damage.ShieldAbsorbAmount,
+                                        RawScaledDamage = info.Damage.RawScaledDamage,
+                                        AbsorbedAmount = info.Damage.AbsorbedAmount,
+                                        AdjustedDamage = info.Damage.AdjustedDamage,
+                                        CombatResult = info.Damage.CombatResult,
+                                        DamageType = info.Damage.DamageType,
+                                        KilledTarget = info.Damage.KilledTarget,
+                                        OverkillAmount = info.Damage.OverkillAmount,
+                                        RawDamage = info.Damage.RawDamage
+                                    }
+                                }
+                            }, true);
+                            DealDamage(target, info);
+                        }));
+                }
+                else
+                    TickingEvent(tickTime, () =>
+                    {
+                        target.EnqueueToVisible(new ServerSpellGoEffect
+                        {
+                            ServerUniqueId = CastingId,
+                            Spell4EffectId = info.Entry.Id,
+                            TargetId = target.Guid,
+                            DamageDescriptionData = {
+                                    new Network.Message.Model.Shared.DamageDescription
+                                    {
+                                        ShieldAbsorbAmount = info.Damage.ShieldAbsorbAmount,
+                                        RawScaledDamage = info.Damage.RawScaledDamage,
+                                        AbsorbedAmount = info.Damage.AbsorbedAmount,
+                                        AdjustedDamage = info.Damage.AdjustedDamage,
+                                        CombatResult = info.Damage.CombatResult,
+                                        DamageType = info.Damage.DamageType,
+                                        KilledTarget = info.Damage.KilledTarget,
+                                        OverkillAmount = info.Damage.OverkillAmount,
+                                        RawDamage = info.Damage.RawDamage
+                                    }
+                                }
+                        }, true);
+                        DealDamage(target, info);
+                    });
+            }
+            else
+                DealDamage(target, info);
+        }
+
+        [SpellEffectHandler(SpellEffectType.Heal)]
+        private void HandleEffectHeal(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (target.CanAttack(caster))
+                return;
+
+            uint healing = CalculateDamageOrHealingFromParameters(info);
+            info.AddDamage(new SpellTargetInfo.SpellTargetEffectInfo.DamageDescription
+            {
+                CombatResult = CombatResult.Hit,
+                DamageType = DamageType.Heal,
+                RawDamage = healing,
+                AdjustedDamage = healing
+            });
+            target.ModifyHealth(healing);
         }
 
         [SpellEffectHandler(SpellEffectType.UnitPropertyModifier)]
@@ -58,15 +153,6 @@ namespace NexusForever.WorldServer.Game.Spell
         [SpellEffectHandler(SpellEffectType.Proxy)]
         private void HandleEffectProxy(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
-            void TickingProxyEvent(double tickTime, Action action)
-            {
-                events.EnqueueEvent(new SpellEvent(tickTime / 1000d, () =>
-                {
-                    action.Invoke();
-                    TickingProxyEvent(tickTime, action);
-                }));
-            }
-
             if (effectTriggerCount.TryGetValue(info.Entry.Id, out uint count))
                 if (count >= info.Entry.DataBits04)
                     return;
@@ -77,8 +163,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 RootSpellInfo = parameters.RootSpellInfo,
                 PrimaryTargetId = target.Guid,
                 UserInitiatedSpellCast = parameters.UserInitiatedSpellCast,
-                IsProxy = true,
-                CooldownOverride = info.Entry.DataBits05
+                IsProxy = true
             };
 
             events.EnqueueEvent(new SpellEvent(info.Entry.DelayTime / 1000d, () =>
@@ -88,14 +173,14 @@ namespace NexusForever.WorldServer.Game.Spell
                     double tickTime = info.Entry.TickTime;
                     if (info.Entry.DurationTime > 0)
                     {
-                        for (int i = 1; i == info.Entry.DurationTime / tickTime; i++)
+                        for (int i = 1; i >= info.Entry.DurationTime / tickTime; i++)
                             events.EnqueueEvent(new SpellEvent(tickTime * i / 1000d, () =>
                             {
                                 caster.CastSpell(info.Entry.DataBits01, proxyParameters);
                             }));
                     }
                     else
-                        TickingProxyEvent(tickTime, () =>
+                        TickingEvent(tickTime, () =>
                         {
                             caster.CastSpell(info.Entry.DataBits01, proxyParameters);
                         });
@@ -134,16 +219,6 @@ namespace NexusForever.WorldServer.Game.Spell
 
             var mount = new Mount(player, parameters.SpellInfo.Entry.Id, info.Entry.DataBits00, info.Entry.DataBits01, info.Entry.DataBits04);
             mount.EnqueuePassengerAdd(player, VehicleSeatType.Pilot, 0);
-
-            // usually for hover boards
-            /*if (info.Entry.DataBits04 > 0u)
-            {
-                mount.SetAppearance(new ItemVisual
-                {
-                    Slot      = ItemSlot.Mount,
-                    DisplayId = (ushort)info.Entry.DataBits04
-                });
-            }*/
 
             var position = new MapPosition
             {

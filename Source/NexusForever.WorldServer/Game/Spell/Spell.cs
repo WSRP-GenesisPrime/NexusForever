@@ -201,14 +201,16 @@ namespace NexusForever.WorldServer.Game.Spell
 
             if (caster is Player player)
             {
-                if (IsCasting)
+                if (IsCasting && parameters.UserInitiatedSpellCast && !parameters.IsProxy)
                     return CastResult.SpellAlreadyCasting;
 
                 // TODO: Some spells can be cast during other spell casts. Reflect that in this check
-                if (caster.IsCasting() && !parameters.IsProxy)
+                if (caster.IsCasting() && parameters.UserInitiatedSpellCast && !parameters.IsProxy)
                     return CastResult.SpellAlreadyCasting;
 
-                if (player.SpellManager.GetSpellCooldown(parameters.SpellInfo.Entry.Id) > 0d)
+                if (player.SpellManager.GetSpellCooldown(parameters.SpellInfo.Entry.Id) > 0d && 
+                    parameters.UserInitiatedSpellCast && 
+                    !parameters.IsProxy)
                     return CastResult.SpellCooldown;
 
                 // this isn't entirely correct, research GlobalCooldownEnum
@@ -227,7 +229,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 CastResult resourceConditions = CheckResourceConditions();
                 if (resourceConditions != CastResult.Ok)
                 {
-                    if (parameters.UserInitiatedSpellCast)
+                    if (parameters.UserInitiatedSpellCast && !parameters.IsProxy)
                         player.SpellManager.SetAsContinuousCast(null);
 
                     return resourceConditions;
@@ -562,7 +564,7 @@ namespace NexusForever.WorldServer.Game.Spell
             {
                 UnitEntity primaryTargetEntity = caster.GetVisible<UnitEntity>(parameters.PrimaryTargetId);
                 if (primaryTargetEntity != null)
-                    targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Target, primaryTargetEntity));
+                    targets.Add(new SpellTargetInfo((SpellEffectTargetFlags.Target), primaryTargetEntity));
             }
 
             if (caster is Player)
@@ -622,8 +624,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 if (HasEsperCost())
                 {
                     uint remainingPsiPoints = (uint)caster.Resource1;
-                    if ((SpellEffectType)spell4EffectsEntry.EffectType == SpellEffectType.Damage &&
-                        !CanUseEsperEffect(spell4EffectsEntry, remainingPsiPoints))
+                    if (!CanUseEsperEffect(spell4EffectsEntry, remainingPsiPoints))
                         continue;
                 }
 
@@ -951,7 +952,7 @@ namespace NexusForever.WorldServer.Game.Spell
                     if ((SpellEffectType)targetEffectInfo.Entry.EffectType == SpellEffectType.Proxy)
                         continue;
 
-                    var networkTargetEffectInfo = new TargetInfo.EffectInfo
+                    var networkTargetEffectInfo = new EffectInfo
                     {
                         Spell4EffectId = targetEffectInfo.Entry.Id,
                         EffectUniqueId = targetEffectInfo.EffectId,
@@ -962,7 +963,7 @@ namespace NexusForever.WorldServer.Game.Spell
                     if (targetEffectInfo.Damage != null)
                     {
                         networkTargetEffectInfo.InfoType = 1;
-                        networkTargetEffectInfo.DamageDescriptionData = new TargetInfo.EffectInfo.DamageDescription
+                        networkTargetEffectInfo.DamageDescriptionData = new DamageDescription
                         {
                             RawDamage          = targetEffectInfo.Damage.RawDamage,
                             RawScaledDamage    = targetEffectInfo.Damage.RawScaledDamage,

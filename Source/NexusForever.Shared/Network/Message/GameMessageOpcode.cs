@@ -329,7 +329,7 @@ namespace NexusForever.Shared.Network.Message
         Server07F5                      = 0x07F5, // spell related
         Server07F6                      = 0x07F6, // spell related
         Server07F7                      = 0x07F7, // spell related
-        Server07F8                      = 0x07F8, // spell related
+        ServerSpellGoEffect             = 0x07F8, // spell related
         Server07F9                      = 0x07F9, // spell related
         Server07FA                      = 0x07FA, // spell related
         Server07FB                      = 0x07FB, // spell miss info?
