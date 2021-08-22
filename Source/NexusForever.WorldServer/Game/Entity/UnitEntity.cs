@@ -420,6 +420,21 @@ namespace NexusForever.WorldServer.Game.Entity
             OnDeath(attacker);
 
             // Reward XP
+            if (attacker is Player player)
+            {
+                if (CreatureId > 0u)
+                {
+                    uint groupValue = 0u;
+
+                    Creature2Entry creature2Entry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+                    if (creature2Entry != null)
+                        groupValue = GameTableManager.Instance.Creature2Difficulty.GetEntry(creature2Entry.Creature2DifficultyId)?.GroupValue ?? 0u;
+
+                    player.XpManager.GrantXpForCreatureKill(Level, groupValue, GetPropertyValue(Property.XpMultiplier));
+                }
+                
+                // TODO: Reward XP for PvP Kills
+            }
             // Reward Loot
             // Handle Achievements
             // Schedule Respawn
