@@ -1,4 +1,5 @@
 using NexusForever.Database.World.Model;
+using NexusForever.Shared.Game.Events;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.CSI;
@@ -7,12 +8,16 @@ using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game.Spell;
+using System;
+using System.Linq;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
     [DatabaseEntity(EntityType.CollectableUnit)]
     public class CollectableUnit : UnitEntity
     {
+        private uint collectorGuid = 0u;
+
         public CollectableUnit()
             : base(EntityType.CollectableUnit)
         {
@@ -22,6 +27,9 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             base.Initialise(model);
             QuestChecklistIdx = model.QuestChecklistIdx;
+
+            if (Health == 0u)
+                SetStat(Stat.Health, 101u);
         }
 
         protected override IEntityModel BuildEntityModel()
@@ -40,8 +48,57 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public override void OnActivateSuccess(Player activator)
         {
+            Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+            if (entry == null)
+                throw new ArgumentException($"Entity {EntityId} does not have matching Creature2 entry for CreatureId {CreatureId}.");
+
             activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, CreatureId, 1u);
             activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.SucceedCSI, CreatureId, 1u);
+            
+            foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(CreatureId) ?? Enumerable.Empty<uint>())
+                activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.VirtualCollect, targetGroupId, 1u);
+
+            collectorGuid = activator.Guid;
+            ModifyHealth(-Health);
+        }
+
+        protected override void OnDeathStateChange(DeathState newState)
+        {
+            switch (newState)
+            {
+                case DeathState.JustDied:
+                    uint virtualItemId = 0u;
+                    // Deliver Virtual Items
+                    Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+                    if (entry.QuestAnimStateId > 0u)
+                    {
+                        Player player = Map.GetEntity<Player>(collectorGuid);
+                        if (player.QuestManager.GetQuestState((ushort)entry.QuestAnimStateId) == QuestState.Accepted)
+                        {
+                            uint objectiveId = GameTableManager.Instance.Quest2.GetEntry(entry.QuestAnimStateId)?.Objectives[entry.QuestAnimObjectiveIndex] ?? 0u;
+                            if (objectiveId == 0u)
+                                throw new ArgumentException();
+
+                            QuestObjectiveEntry objectiveEntry = GameTableManager.Instance.QuestObjective.GetEntry(objectiveId);
+                            if (objectiveEntry == null)
+                                throw new ArgumentException();
+
+                             virtualItemId = objectiveEntry.Data;
+                            
+                            player.QuestManager.ObjectiveUpdate(QuestObjectiveType.VirtualCollect, virtualItemId, 1u);
+                        }
+                    }
+
+                    // Reward Virtual Item
+                    break;
+                case DeathState.Corpse:
+                    Map.EnqueueRespawn(this, DateTime.UtcNow.AddSeconds(30d));
+                    SetDeathState(DeathState.Dead);
+                    break;
+                default:
+                    base.OnDeathStateChange(newState);
+                    break;
+            }   
         }
     }
 }

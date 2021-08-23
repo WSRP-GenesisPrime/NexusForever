@@ -181,7 +181,8 @@ namespace NexusForever.WorldServer.Game.Quest
                Type == QuestObjectiveType.KillTargetGroup ||
                Type == QuestObjectiveType.KillTargetGroups ||
                Type == QuestObjectiveType.TalkToTargetGroup ||
-               Type == QuestObjectiveType.ActivateEntity && Entry.TargetGroupIdRewardPane != 0u);
+               Type == QuestObjectiveType.ActivateEntity && Entry.TargetGroupIdRewardPane != 0u ||
+               Type == QuestObjectiveType.VirtualCollect && Entry.TargetGroupIdRewardPane != 0u);
         }
 
         /// <summary>
