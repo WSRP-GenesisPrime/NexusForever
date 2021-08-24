@@ -12,6 +12,7 @@ using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game;
 using NLog;
 using System;
+using NexusForever.WorldServer.Game.Loot;
 
 namespace NexusForever.WorldServer.Network.Message.Handler
 {
@@ -209,6 +210,18 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
 
             throw new NotImplementedException($"Targeted Entity not found. Can players choose what type of resurrection other players get?");
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientLootVacuum)]
+        public static void HandleClientLootVacuum(WorldSession session, ClientLootVacuum clientLootVacuum)
+        {
+            GlobalLootManager.Instance.GiveAllLootInRange(session);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientLootItem)]
+        public static void HandleClientLootItem(WorldSession session, ClientLootItem clientLootItem)
+        {
+            GlobalLootManager.Instance.GiveLoot(session, (int)clientLootItem.LootId);
         }
     }
 }

@@ -23,6 +23,7 @@ using NexusForever.WorldServer.Game.Entity.Movement;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Quest;
@@ -97,6 +98,7 @@ namespace NexusForever.WorldServer
             PrerequisiteManager.Instance.Initialise();
             GlobalSpellManager.Instance.Initialise();
             GlobalQuestManager.Instance.Initialise();
+            GlobalLootManager.Instance.Initialise();
 
             GlobalStorefrontManager.Instance.Initialise();
             GlobalCinematicManager.Instance.Initialise();
@@ -119,6 +121,7 @@ namespace NexusForever.WorldServer
 
                 BuybackManager.Instance.Update(lastTick);
                 GlobalQuestManager.Instance.Update(lastTick);
+                GlobalLootManager.Instance.Update(lastTick);
                 GlobalGuildManager.Instance.Update(lastTick);
                 GlobalResidenceManager.Instance.Update(lastTick); // must be after guild update
                 GlobalChatManager.Instance.Update(lastTick);

@@ -1,9 +1,15 @@
-﻿using NexusForever.Shared.GameTable;
+using System;
+using System.Threading.Tasks;
+using NexusForever.Shared.Game.Events;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Loot;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -108,6 +114,23 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         public static void HandleClientItemMoveFromSupplySatchel(WorldSession session, ClientItemMoveFromSupplySatchel request)
         {
             session.Player.SupplySatchelManager.MoveToInventory(request.MaterialId, request.Amount);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientItemUseLootBag)]
+        public static void HandleClientItemUseLootBag(WorldSession session, ClientItemUseLootBag useLootBag)
+        {
+            Item item = session.Player.Inventory.GetItem(useLootBag.ItemLocation);
+            if (item == null)
+                throw new ArgumentException($"Item missing at Inventory Location {useLootBag.ItemLocation.Location} and Index {useLootBag.ItemLocation.BagIndex}.");
+
+            if (useLootBag.Guid != item.Guid)
+                throw new InvalidOperationException($"Guid {useLootBag.Guid} received does not match the Item found at Inventory Location {useLootBag.ItemLocation.Location} and Index {useLootBag.ItemLocation.BagIndex}.");
+
+            if (item.Entry.Item2CategoryId != 138)
+                throw new NotImplementedException();
+
+            if (session.Player.Inventory.ItemUse(item))
+                GlobalLootManager.Instance.DropLoot(session, item);
         }
     }
 }

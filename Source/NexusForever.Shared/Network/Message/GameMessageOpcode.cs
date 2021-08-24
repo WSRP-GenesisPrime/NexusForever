@@ -62,6 +62,7 @@ namespace NexusForever.Shared.Network.Message
         ServerItemDelete                = 0x0148,
         ClientItemDelete                = 0x0149,
         ClientEntityInteractChair       = 0x014E,
+        ClientLootItem                  = 0x014F,
         ClientRequestAmpReset           = 0x0151,
         ClientResurrectRequest          = 0x015A,
         ClientItemUseLootBag            = 0x015E,
@@ -97,6 +98,7 @@ namespace NexusForever.Shared.Network.Message
         ServerPathUpdateXP              = 0x01AA,
         ServerResurrectionUpdate        = 0x01AB,
         ServerExperienceGained          = 0x01AC,
+        ClientLootVacuum                = 0x01AD,
         ServerUnlockVanityPet           = 0x01AE,
         ClientVehicleDisembark          = 0x01AF,
         ServerResurrectionShow          = 0x01B3,
@@ -120,6 +122,7 @@ namespace NexusForever.Shared.Network.Message
         ClientChatList                  = 0x01D2,
         ServerChatResult                = 0x01D3,
         ClientChatWhisper               = 0x01D4,
+        ServerChatWhisperFail           = 0x01D9,
         ServerChatZoneChange            = 0x01DA,
         ServerCinematicComplete         = 0x0210,
         ServerCinematic0211             = 0x0211,
@@ -325,6 +328,7 @@ namespace NexusForever.Shared.Network.Message
         ClientEntityInteract            = 0x07EA,
         ClientPetCustomisation          = 0x07ED,
         ClientSelectRealm               = 0x07DF,
+        ServerLootNotify                = 0x07F2,
         ServerSpellGo                   = 0x07F4,
         Server07F5                      = 0x07F5, // spell related
         Server07F6                      = 0x07F6, // spell related
@@ -362,6 +366,7 @@ namespace NexusForever.Shared.Network.Message
         ServerEntityDeath               = 0x088C,
         ServerUnitEnteredCombat         = 0x089A,
         Server089B                      = 0x089B, // mount related
+        ServerLootGrant                 = 0x08A5,
         Server08B3                      = 0x08B3,
         ServerSetUnitPathType           = 0x08B8,
         ServerVehiclePassengerRemove    = 0x08C7,

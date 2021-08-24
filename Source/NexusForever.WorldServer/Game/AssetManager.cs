@@ -10,6 +10,7 @@ using NexusForever.Shared;
 using NexusForever.Shared.Database;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.Shared.GameTable.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Quest.Static;
@@ -339,33 +340,34 @@ namespace NexusForever.WorldServer.Game
                     .ToImmutableList());
         }
 
+        private void AddToTargets(TargetGroupEntry entry, ref List<uint> targetIds, ref List<TargetGroupType> unhandledTargetGroups)
+        {
+            switch ((TargetGroupType)entry.Type)
+            {
+                case TargetGroupType.CreatureIdGroup:
+                    targetIds.AddRange(entry.DataEntries.Where(d => d != 0u));
+                    break;
+                case TargetGroupType.OtherTargetGroup:
+                case TargetGroupType.OtherTargetGroupCreatures:
+                    foreach (uint targetGroupId in entry.DataEntries.Where(d => d != 0u))
+                    {
+                        TargetGroupEntry targetGroup = GameTableManager.Instance.TargetGroup.GetEntry(targetGroupId);
+                        if (targetGroup == null)
+                            continue;
+
+                        AddToTargets(targetGroup, ref targetIds, ref unhandledTargetGroups);
+                    }
+                    break;
+                default:
+                    if (!(unhandledTargetGroups.Contains((TargetGroupType)entry.Type)))
+                        unhandledTargetGroups.Add((TargetGroupType)entry.Type);
+                    break;
+            }
+        }
+
         private void CacheQuestObjectiveTargetGroups()
         {
             List<TargetGroupType> unhandledTargetGroups = new List<TargetGroupType>();
-
-            void AddToTargets(TargetGroupEntry entry, ref List<uint> targetIds)
-            {
-                switch ((TargetGroupType)entry.Type)
-                {
-                    case TargetGroupType.CreatureIdGroup:
-                        targetIds.AddRange(entry.DataEntries.Where(d => d != 0u));
-                        break;
-                    case TargetGroupType.OtherTargetGroup:
-                        foreach (uint targetGroupId in entry.DataEntries.Where(d => d != 0u))
-                        {
-                            TargetGroupEntry targetGroup = GameTableManager.Instance.TargetGroup.GetEntry(targetGroupId);
-                            if (targetGroup == null)
-                                throw new InvalidOperationException();
-
-                            AddToTargets(targetGroup, ref targetIds);
-                        }
-                        break;
-                    default:
-                        if (!(unhandledTargetGroups.Contains((TargetGroupType)entry.Type)))
-                            unhandledTargetGroups.Add((TargetGroupType)entry.Type);
-                        break;
-                }
-            }
 
             var entries = ImmutableDictionary.CreateBuilder<uint, List<uint>>();
             foreach (QuestObjectiveEntry questObjectiveEntry in GameTableManager.Instance.QuestObjective.Entries
@@ -374,8 +376,7 @@ namespace NexusForever.WorldServer.Game
                     (QuestObjectiveType)o.Type == QuestObjectiveType.ActivateTargetGroupChecklist ||
                     (QuestObjectiveType)o.Type == QuestObjectiveType.KillTargetGroup ||
                     (QuestObjectiveType)o.Type == QuestObjectiveType.KillTargetGroups ||
-                    (QuestObjectiveType)o.Type == QuestObjectiveType.TalkToTargetGroup ||
-                    (QuestObjectiveType)o.Type == QuestObjectiveType.VirtualCollect))
+                    (QuestObjectiveType)o.Type == QuestObjectiveType.TalkToTargetGroup))
             {
                 uint targetGroupId = questObjectiveEntry.Data > 0 ? questObjectiveEntry.Data : questObjectiveEntry.TargetGroupIdRewardPane;
                 if (targetGroupId == 0u)
@@ -386,7 +387,7 @@ namespace NexusForever.WorldServer.Game
                     continue;
 
                 List<uint> targetIds = new List<uint>();
-                AddToTargets(targetGroup, ref targetIds);
+                AddToTargets(targetGroup, ref targetIds, ref unhandledTargetGroups);
                 entries.Add(questObjectiveEntry.Id, targetIds);
             }
 

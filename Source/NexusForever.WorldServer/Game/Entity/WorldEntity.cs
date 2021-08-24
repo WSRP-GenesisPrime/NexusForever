@@ -25,6 +25,7 @@ using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NexusForever.WorldServer.Script;
 using NexusForever.Shared.Game.Events;
+using NexusForever.WorldServer.Game.Loot;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -74,9 +75,11 @@ namespace NexusForever.WorldServer.Game.Entity
         public MovementManager MovementManager { get; private set; }
 
         public float RangeCheck { get; private set; } = 15f;
-        protected readonly Dictionary<uint, WorldEntity> inRangeEntities = new Dictionary<uint, WorldEntity>();
+        protected readonly Dictionary<uint, WorldEntity> inRangeEntities = new();
 
         private EventQueue events = new();
+
+        public List<LootInstance> Loot { get; protected set; } = new();
 
         public uint Health
         {
@@ -228,6 +231,9 @@ namespace NexusForever.WorldServer.Game.Entity
             get => deathState;
             private set
             {
+                if (deathState == value)
+                    return;
+
                 deathState = value;
                 OnDeathStateChange(value);
             }
@@ -1005,6 +1011,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 case DeathState.Corpse:
                     // Do stuff on corpse
                     break;
+                case DeathState.CorpseLooted:
+                    // Do stuff on corpse looted
+                    break;
                 case DeathState.Dead:
                     // Do stuff when entering dead state
                     if (this is Player)
@@ -1019,17 +1028,29 @@ namespace NexusForever.WorldServer.Game.Entity
 
         protected virtual void OnDeathStateChange(DeathState newState)
         {
-            // Deliberately empty
+            // This will only run through method if this is not a Player and  is a Database Entity
             if (EntityId == 0u)
                 return;
 
-            if (newState == DeathState.Corpse)
+            switch (newState)
             {
-                Map.EnqueueRespawn(this, DateTime.UtcNow.AddSeconds(30d));
-                events.EnqueueEvent(new DelayEvent(TimeSpan.FromSeconds(15d), () =>
-                {
-                    SetDeathState(DeathState.Dead);
-                }));
+                case DeathState.Corpse:
+                    Map.EnqueueRespawn(this, DateTime.UtcNow.AddSeconds(30d));
+                    events.EnqueueEvent(new DelayEvent(TimeSpan.FromSeconds(600d), () =>
+                    {
+                        SetDeathState(DeathState.Dead);
+                    }));
+
+                    if (Loot.Count == 0u)
+                        SetDeathState(DeathState.CorpseLooted);
+                    break;
+                case DeathState.CorpseLooted:
+                    events.Clear();
+                    events.EnqueueEvent(new DelayEvent(TimeSpan.FromSeconds(5d), () =>
+                    {
+                        SetDeathState(DeathState.Dead);
+                    }));
+                    break;
             }
         }
 
@@ -1040,6 +1061,17 @@ namespace NexusForever.WorldServer.Game.Entity
         public float GetAngleToEntity(WorldEntity entity)
         {
             return (Position.GetAngle(entity.Position) - Rotation.X).CondenseRadianIntoRotationRadian();
+        }
+
+        public void RemoveLoot(LootInstance lootInstance)
+        {
+            if (lootInstance == null)
+                throw new ArgumentNullException(nameof(lootInstance));
+
+            Loot.Remove(lootInstance);
+
+            if (Loot.Count == 0u)
+                SetDeathState(DeathState.CorpseLooted);
         }
     }
 }
