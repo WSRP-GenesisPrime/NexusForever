@@ -340,7 +340,9 @@ namespace NexusForever.WorldServer.Game.Quest
 
             foreach (QuestObjective objective in objectives)
             {
-                if ((objective.Entry.Flags & 0x02) != 0 || (objective.Entry.Flags & 0x04) != 0)
+                if (objective.Entry.Flags == 0u ||
+                    (objective.Entry.Flags & 0x02) != 0 || 
+                    (objective.Entry.Flags & 0x04) != 0)
                     if (!objective.IsComplete())
                         return false;
             }

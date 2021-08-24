@@ -41,6 +41,7 @@ using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NLog;
+using NexusForever.WorldServer.Game.Loot;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -686,6 +687,12 @@ namespace NexusForever.WorldServer.Game.Entity
                     UnitId = unitEntity.Guid,
                     InCombat = unitEntity.InCombat
                 });
+            }
+
+            if (entity is WorldEntity worldEntity && worldEntity.Loot.Count > 0)
+            {
+                foreach (LootInstance loot in worldEntity.Loot)
+                    loot.SendLootNotify(Session);
             }
         }
 

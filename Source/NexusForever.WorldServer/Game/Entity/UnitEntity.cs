@@ -9,6 +9,7 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.AI;
 using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
@@ -445,6 +446,19 @@ namespace NexusForever.WorldServer.Game.Entity
             switch (newState)
             {
                 case DeathState.JustDied:
+                    foreach (HostileEntity hostileEntity in ThreatManager.GetThreatList())
+                    {
+                        UnitEntity target = hostileEntity.GetEntity(this);
+                        if (target != null && target is Player player)
+                        {
+                            LootInstance loot = GlobalLootManager.Instance.DropLoot(player.Session, this);
+                            if (loot == null)
+                                continue;
+
+                            Loot.Add(loot);
+                        }
+                    }
+
                     // Clear Threat
                     ThreatManager.ClearThreatList();
 
@@ -455,6 +469,7 @@ namespace NexusForever.WorldServer.Game.Entity
                         else
                             spell.Finish();
                     }
+
                     break;
                 default:
                     break;

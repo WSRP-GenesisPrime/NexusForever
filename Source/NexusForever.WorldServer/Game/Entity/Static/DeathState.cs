@@ -12,6 +12,7 @@ namespace NexusForever.WorldServer.Game.Entity.Static
         Alive,
         JustDied,
         Corpse,
+        CorpseLooted,
         Dead
     }
 }

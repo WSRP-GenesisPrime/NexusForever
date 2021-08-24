@@ -6,6 +6,7 @@ using NexusForever.WorldServer.Game.CSI;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game.Spell;
 using System;
@@ -54,9 +55,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
             activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, CreatureId, 1u);
             activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.SucceedCSI, CreatureId, 1u);
-            
-            foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(CreatureId) ?? Enumerable.Empty<uint>())
-                activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.VirtualCollect, targetGroupId, 1u);
 
             collectorGuid = activator.Guid;
             ModifyHealth(-Health);
@@ -68,11 +66,14 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 case DeathState.JustDied:
                     uint virtualItemId = 0u;
-                    // Deliver Virtual Items
+                    
+                    Player player = Map.GetEntity<Player>(collectorGuid);
+                    if (player == null)
+                        throw new ArgumentException();
+
                     Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
                     if (entry.QuestAnimStateId > 0u)
                     {
-                        Player player = Map.GetEntity<Player>(collectorGuid);
                         if (player.QuestManager.GetQuestState((ushort)entry.QuestAnimStateId) == QuestState.Accepted)
                         {
                             uint objectiveId = GameTableManager.Instance.Quest2.GetEntry(entry.QuestAnimStateId)?.Objectives[entry.QuestAnimObjectiveIndex] ?? 0u;
@@ -84,12 +85,12 @@ namespace NexusForever.WorldServer.Game.Entity
                                 throw new ArgumentException();
 
                              virtualItemId = objectiveEntry.Data;
-                            
-                            player.QuestManager.ObjectiveUpdate(QuestObjectiveType.VirtualCollect, virtualItemId, 1u);
                         }
                     }
 
                     // Reward Virtual Item
+                    if (virtualItemId > 0u)
+                        GlobalLootManager.Instance.GiveLoot(player.Session, GameTableManager.Instance.VirtualItem.GetEntry(virtualItemId), 1u, Guid);
                     break;
                 case DeathState.Corpse:
                     Map.EnqueueRespawn(this, DateTime.UtcNow.AddSeconds(30d));
