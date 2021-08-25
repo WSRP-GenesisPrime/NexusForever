@@ -35,7 +35,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement.Spline
 
             ISplineMode splineMode = GlobalMovementManager.Instance.NewSplineMode(mode);
             if (splineMode == null)
-                throw new ArgumentOutOfRangeException();
+                return;
 
             spline = new Spline();
             spline.Initialise(splineId, splineType, splineMode);

@@ -35,9 +35,9 @@ namespace NexusForever.WorldServer.Game.Entity.Movement.Spline
                 .Where(s => s.SplineId == splineId)
                 .OrderBy(s => s.Ordinal))
             {
-                // TODO
-                if (node.Delay > 0f)
-                    throw new NotImplementedException();
+                // TODO: Add node delays
+                //if (node.Delay > 0f)
+                //    throw new NotImplementedException();
 
                 var position = new Vector3(node.Position0, node.Position1, node.Position2);
                 points.Add(new SplinePoint(position)

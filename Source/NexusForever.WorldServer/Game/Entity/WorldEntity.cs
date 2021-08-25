@@ -81,6 +81,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public List<LootInstance> Loot { get; protected set; } = new();
 
+        private EntitySplineModel splineInfo;
+
         public uint Health
         {
             get => GetStatInteger(Stat.Health) ?? 0u;
@@ -263,6 +265,8 @@ namespace NexusForever.WorldServer.Game.Entity
             QuestChecklistIdx = model.QuestChecklistIdx;
             ActivePropId      = model.ActivePropId;
             WorldSocketId     = model.WorldSocketId;
+
+            splineInfo = model.EntitySpline;
 
             foreach (EntityStatModel statModel in model.EntityStat)
                 stats.Add((Stat)statModel.Stat, new StatValue(statModel));
