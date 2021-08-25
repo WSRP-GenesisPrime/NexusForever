@@ -445,8 +445,11 @@ namespace NexusForever.WorldServer.Game.Entity
                     model.WorldId = (ushort)Map.Entry.Id;
                     entity.Property(p => p.WorldId).IsModified = true;
 
-                    model.WorldZoneId = (ushort)Zone.Id;
-                    entity.Property(p => p.WorldZoneId).IsModified = true;
+                    if (Zone != null)
+                    {
+                        model.WorldZoneId = (ushort)Zone.Id;
+                        entity.Property(p => p.WorldZoneId).IsModified = true;
+                    }
                 }
 
                 if ((saveMask & PlayerSaveMask.Path) != 0)
