@@ -31,8 +31,9 @@ namespace NexusForever.WorldServer.Game.Quest
             if (entry.WorldId != 0u && entry.WorldId != player.Map.Entry.Id)
                 return false;
 
-            if (entry.WorldZoneId != 0u && entry.WorldZoneId != player.Zone.Id)
-                return false;
+            // TODO: Skip this check until we have better WorldZoneId tracking
+            //if (entry.WorldZoneId != 0u && entry.WorldZoneId != player.Zone.Id)
+            //    return false;
 
             if (entry.MinLevel != 0u && player.Level < entry.MaxLevel)
                 return false;

@@ -47,7 +47,7 @@ namespace NexusForever.WorldServer.Game.Quest
         /// </summary>
         public bool IsCommunicatorReceived()
         {
-            return (Entry.Flags & 0x08) != 0;
+            return (Entry.Flags & 0x08) != 0 || (Entry.Flags & 0x04) != 0;
         }
 
         public bool CannotAbandon()

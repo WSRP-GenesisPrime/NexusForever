@@ -310,7 +310,7 @@ namespace NexusForever.WorldServer.Game.Quest
 
             SendQuestObjectiveUpdate(objective);
 
-            if (objectives.All(o => o.IsComplete()))
+            if (objectives.All(o => o.IsComplete()) && State != QuestState.Achieved)
                 State = QuestState.Achieved;
         }
 
@@ -368,7 +368,11 @@ namespace NexusForever.WorldServer.Game.Quest
                 throw new QuestException($"Objective {objective.Entry.Id} is not part of Quest {Info.Entry.Id}.");
 
             objective.Complete();
+
             SendQuestObjectiveUpdate(objective);
+
+            if (objectives.All(o => o.IsComplete()) && State != QuestState.Achieved)
+                State = QuestState.Achieved;
         }
 
         private void SendQuestObjectiveUpdate(QuestObjective objective)
