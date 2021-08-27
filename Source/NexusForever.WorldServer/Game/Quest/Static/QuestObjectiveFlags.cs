@@ -10,6 +10,7 @@ namespace NexusForever.WorldServer.Game.Quest.Static
     public enum QuestObjectiveFlags
     {
         None                = 0x0000,
+        Optional            = 0x0002,
         Hidden              = 0x0008
     }
 }

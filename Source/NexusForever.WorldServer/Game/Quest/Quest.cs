@@ -278,6 +278,7 @@ namespace NexusForever.WorldServer.Game.Quest
             if (PendingDelete)
                 return;
 
+            // Store incomplete objective progress so we can calculate and send updates after
             Dictionary<byte /*index*/, uint/*progress*/> incompleteObjectivesPreUpdate = objectives.Where(o => !o.IsComplete())
                 .ToDictionary(o => o.Index, o => o.Progress);
 
@@ -286,18 +287,10 @@ namespace NexusForever.WorldServer.Game.Quest
                 .Where(o => o.Entry.Type == (uint)type && o.IsTarget(data))
                 .OrderByDescending(o => o.Index))
             {
-                if (objective.IsComplete())
-                    continue;
-
-                if (!CanUpdateObjective(objective, progress))
-                    continue;
-
-                objective.ObjectiveUpdate(progress);
-
-                if (AreAllRequiredObjectivesCompleted())
-                    CompleteAllOptionalObjectives();
+                ObjectiveUpdate(objective, progress);
             }
 
+            // Send objective progress in index order
             foreach (KeyValuePair<byte, uint> incompleteObjective in incompleteObjectivesPreUpdate)
             {
                 QuestObjective objective = objectives[incompleteObjective.Key];
@@ -317,24 +310,28 @@ namespace NexusForever.WorldServer.Game.Quest
             if (PendingDelete)
                 return;
 
+            if (State == QuestState.Achieved)
+                return;
+
             QuestObjective objective = objectives.SingleOrDefault(i => i.Entry.Id == id);
             if (objective == null)
                 return;
 
-            if (objective.IsComplete())
-                return;
+            // Store incomplete objective progress so we can calculate and send updates after
+            Dictionary<byte /*index*/, uint/*progress*/> incompleteObjectivesPreUpdate = objectives.Where(o => !o.IsComplete())
+                .ToDictionary(o => o.Index, o => o.Progress);
 
-            if (!CanUpdateObjective(objective, progress))
-                return;
+            ObjectiveUpdate(objective, progress);
 
-            objective.ObjectiveUpdate(progress);
+            // Send objective progress in index order
+            foreach (KeyValuePair<byte, uint> incompleteObjective in incompleteObjectivesPreUpdate)
+            {
+                QuestObjective o = objectives[incompleteObjective.Key];
+                if (o.Progress != incompleteObjective.Value)
+                    SendQuestObjectiveUpdate(o);
+            }
 
-            if (AreAllRequiredObjectivesCompleted())
-                CompleteAllOptionalObjectives();
-
-            SendQuestObjectiveUpdate(objective);
-
-            if (objectives.All(o => o.IsComplete()) && State != QuestState.Achieved)
+            if (objectives.All(o => o.IsComplete()))
                 State = QuestState.Achieved;
         }
 
@@ -379,25 +376,25 @@ namespace NexusForever.WorldServer.Game.Quest
             foreach (QuestObjective objective in objectives)
             {
                 if ((objective.Entry.Flags & 0x02) == 0 && !objective.IsComplete())
-                    CompleteObjective(objective, false);
+                    objective.Complete();
             }
         }
 
-        /// <summary>
-        /// Complete a given <see cref="QuestObjective"/> and update the <see cref="Player"/>.
-        /// </summary>
-        public void CompleteObjective(QuestObjective objective, bool update = true)
+        private void ObjectiveUpdate(QuestObjective objective, uint progress)
         {
-            if (!objectives.Contains(objective))
-                throw new QuestException($"Objective {objective.Entry.Id} is not part of Quest {Info.Entry.Id}.");
+            if (objective == null)
+                throw new ArgumentNullException(nameof(objective));
 
-            objective.Complete();
+            if (objective.IsComplete())
+                return;
 
-            if (update)
-                SendQuestObjectiveUpdate(objective);
+            if (!CanUpdateObjective(objective, progress))
+                return;
 
-            if (objectives.All(o => o.IsComplete()) && State != QuestState.Achieved)
-                State = QuestState.Achieved;
+            objective.ObjectiveUpdate(progress);
+
+            if (AreAllRequiredObjectivesCompleted())
+                CompleteAllOptionalObjectives();
         }
 
         private void SendQuestObjectiveUpdate(QuestObjective objective)

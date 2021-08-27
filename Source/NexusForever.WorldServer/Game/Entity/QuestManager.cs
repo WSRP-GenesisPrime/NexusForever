@@ -311,25 +311,17 @@ namespace NexusForever.WorldServer.Game.Entity
             if (player.Level < info.Entry.PrerequisiteLevel)
                 return false;
 
-            bool preReqQuestsOrCheck = (info.Entry.PrerequisiteFlags & 1) != 0u;
-            bool preReqQuestsCompleted = info.Entry.PrerequisiteQuests.Where(q => q != 0).Count() == 0u;
-            // ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
-            foreach (ushort questId in info.Entry.PrerequisiteQuests.Where(q => q != 0u))
+            if (!info.PrerequisiteQuests.IsEmpty)
             {
-                if (GetQuestState(questId) == QuestState.Completed)
-                    preReqQuestsCompleted = true;
+                bool preReqQuestsCompleted;
+                if ((info.Entry.PrerequisiteFlags & 1) != 0u)
+                    preReqQuestsCompleted = info.PrerequisiteQuests.Any(q => GetQuestState((ushort)q.Id) == QuestState.Completed);
                 else
-                {
-                    if (!preReqQuestsOrCheck)
-                        return false;
-                }
+                    preReqQuestsCompleted = info.PrerequisiteQuests.All(q => GetQuestState((ushort)q.Id) == QuestState.Completed);
 
-                if (preReqQuestsCompleted)
-                    break;
+                if (!preReqQuestsCompleted)
+                    return false;
             }
-
-            if (!preReqQuestsCompleted)
-                return false;
 
             if (info.Entry.PrerequisiteId != 0u && !PrerequisiteManager.Instance.Meets(player, info.Entry.PrerequisiteId))
                 return false;
@@ -488,8 +480,8 @@ namespace NexusForever.WorldServer.Game.Entity
             if (quest.State != QuestState.Accepted)
                 throw new QuestException($"Player {player.CharacterId} tried to achieve quest {questId} with invalid state!");
 
-            foreach (QuestObjective objective in quest)
-                quest.CompleteObjective(objective);
+            foreach (QuestObjectiveEntry entry in quest.Info.Objectives)
+                quest.ObjectiveUpdate((QuestObjectiveType)entry.Type, entry.Data, entry.Count);
         }
 
         /// <summary>
@@ -511,7 +503,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (objective == null)
                 throw new QuestException();
 
-            quest.CompleteObjective(objective);
+            quest.ObjectiveUpdate((QuestObjectiveType)objective.Entry.Type, objective.Entry.Data, objective.Entry.Count);
         }
 
         /// <summary>
