@@ -331,3 +331,5 @@ ASALocalRun/
 
 # Visual Studio profiling session file
 *.diagsession
+
+Source/MainSite/AuthServer.json

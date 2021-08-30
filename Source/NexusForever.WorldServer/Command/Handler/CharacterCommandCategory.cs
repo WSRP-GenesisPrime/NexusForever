@@ -168,7 +168,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.SetProperty(Property.JumpHeight, 5f, 5f);
         }
 
-        [Command(Permission.None, "grow your character", "grow")]
+        [Command(Permission.GMFlag, "grow your character", "grow")]
         public void HandleGrow(ICommandContext context,
            [Parameter("Amount of stacks.", Static.ParameterFlags.Optional)]
             uint? stacks)
@@ -190,7 +190,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.None, "shrink your character", "shrink")]
+        [Command(Permission.GMFlag, "shrink your character", "shrink")]
         public void HandleShrink(ICommandContext context,
            [Parameter("Amount of stacks.", Static.ParameterFlags.Optional)]
             uint? stacks)

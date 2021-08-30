@@ -815,6 +815,14 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public override void OnRemoveFromMap()
         {
+            if (Guid <= 0)
+            {
+                log.Warn($"Removing player {Name} from map {Map.Entry.Id} with guid 0!");
+            }
+            else
+            {
+                log.Info($"Removing player {Name} from map {Map.Entry.Id} with guid {Guid}.");
+            }
             DestroyDependents();
 
             base.OnRemoveFromMap();
