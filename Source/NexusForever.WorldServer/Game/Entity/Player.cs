@@ -268,6 +268,8 @@ namespace NexusForever.WorldServer.Game.Entity
             TimePlayedTotal = model.TimePlayedTotal;
             TimePlayedLevel = model.TimePlayedLevel;
 
+            firstTimeLoggingIn = model.TimePlayedTotal == 0;
+
             Session.EntitlementManager.Initialise(model);
             Session.RewardTrackManager.OnNewCharacter(this, model);
 
@@ -321,13 +323,10 @@ namespace NexusForever.WorldServer.Game.Entity
                 Bones.Add(bone.Bone);
                 characterBones.Add(new Bone(bone));
             }
-                
-
 
             BuildBaseProperties();
 
             CharacterManager.Instance.RegisterPlayer(this);
-            firstTimeLoggingIn = model.TimePlayedTotal == 0;
         }
 
         public override void BuildBaseProperties()
@@ -352,6 +351,17 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             base.BuildBaseProperties();
+
+            if (firstTimeLoggingIn)
+            {
+                ModifyHealth(MaxHealth);
+                Shield = MaxShieldCapacity;
+            }
+        }
+
+        public void FillStats()
+        {
+
         }
 
         public override void Update(double lastTick)
@@ -665,6 +675,13 @@ namespace NexusForever.WorldServer.Game.Entity
 
             if (entity is Player player)
                 player.PathManager.SendSetUnitPathTypePacket();
+            else
+                Session.EnqueueMessageEncrypted(new Server08B3
+                {
+                    UnitId = Guid,
+                    Unknown0 = 0,
+                    Unknown1 = true
+                });
 
             if (entity == this)
             {
@@ -676,7 +693,7 @@ namespace NexusForever.WorldServer.Game.Entity
             } 
             else
             {
-                EnqueueToVisible(new ServerEmote
+                Session.EnqueueMessageEncrypted(new ServerEmote
                 {
                     Guid = Guid,
                     StandState = (entity as WorldEntity).StandState
@@ -707,8 +724,7 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 Session.EnqueueMessageEncrypted(new ServerEntityDestroy
                 {
-                    Guid     = entity.Guid,
-                    Unknown0 = true
+                    Guid     = entity.Guid
                 });
             }
         }

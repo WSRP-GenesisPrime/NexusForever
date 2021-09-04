@@ -65,13 +65,6 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             owner.VanityPetGuid = Guid;
-
-            owner.EnqueueToVisible(new Server08B3
-            {
-                MountGuid = Guid,
-                Unknown0  = 0,
-                Unknown1  = true
-            }, true);
         }
 
         public override void OnEnqueueRemoveFromMap()

@@ -147,14 +147,6 @@ namespace NexusForever.WorldServer.Game.Entity
             if (player == null)
                 return;
 
-            // TODO: research this...
-            player.Session.EnqueueMessageEncrypted(new Server08B3
-            {
-                MountGuid = Guid,
-                Unknown0  = 0,
-                Unknown1  = true
-            });
-
             // TODO: research this, something UI related
             player.Session.EnqueueMessageEncrypted(new Server0237
             {
