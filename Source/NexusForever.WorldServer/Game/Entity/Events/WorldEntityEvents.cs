@@ -32,13 +32,13 @@ namespace NexusForever.WorldServer.Game.Entity
             CreateFlags &= ~EntityCreateFlag.SpawnAnimation;
             CreateFlags |= EntityCreateFlag.NoSpawnAnimation;
 
-            if (splineInfo != null && splineInfo.SplineId > 0u)
-            {
-                if (splineInfo.Mode > 5)
-                    return;
+            //if (splineInfo != null && splineInfo.SplineId > 0u)
+            //{
+            //    if (splineInfo.Mode > 5)
+            //        return;
 
-                MovementManager.LaunchSpline(splineInfo.SplineId, (SplineMode)splineInfo.Mode, splineInfo.Speed);
-            }
+            //    MovementManager.LaunchSpline(splineInfo.SplineId, (SplineMode)splineInfo.Mode, splineInfo.Speed);
+            //}
         }
 
         public override void OnRemoveFromMap()
