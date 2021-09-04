@@ -25,7 +25,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 uint amount)
             {
                 AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
-                if (entry == null || currencyId == AccountCurrencyType.MaxLevelToken) // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
+                if (entry == null)
                 {
                     context.SendMessage("Invalid currencyId. Please try again.");
                     return;

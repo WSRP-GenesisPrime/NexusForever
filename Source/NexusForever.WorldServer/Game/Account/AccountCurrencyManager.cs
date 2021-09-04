@@ -21,13 +21,7 @@ namespace NexusForever.WorldServer.Game.Account
             this.session = session;
 
             foreach (AccountCurrencyModel currencyModel in model.AccountCurrency)
-            {
-                // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
-                if ((AccountCurrencyType)currencyModel.CurrencyId == AccountCurrencyType.MaxLevelToken)
-                    continue;
-
                 currencies.Add((AccountCurrencyType)currencyModel.CurrencyId, new AccountCurrency(currencyModel));
-            }
         }
 
         public void Save(AuthContext context)

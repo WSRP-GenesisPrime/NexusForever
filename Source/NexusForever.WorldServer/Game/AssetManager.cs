@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Database.World.Model;
 using NexusForever.Shared;
@@ -14,6 +15,7 @@ using NexusForever.Shared.GameTable.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Quest.Static;
+using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Game.Static;
 using NLog;
 
@@ -50,6 +52,7 @@ namespace NexusForever.WorldServer.Game
         private ulong nextMailId;
         private ulong nextAccountItemId;
 
+        private ImmutableDictionary<(Race, Faction, CharacterCreationStart), Location> characterCreationData;
         private ImmutableDictionary<uint, ImmutableList<CharacterCustomizationEntry>> characterCustomisations;
         private ImmutableList<PropertyValue> characterBaseProperties;
         private ImmutableDictionary<Class, ImmutableList<PropertyValue>> characterClassBaseProperties;
@@ -85,6 +88,7 @@ namespace NexusForever.WorldServer.Game
             nextMailId        = DatabaseManager.Instance.CharacterDatabase.GetNextMailId() + 1ul;
             nextAccountItemId = DatabaseManager.Instance.AuthDatabase.GetNextAccountItemId() + 1ul;
 
+            CacheCharacterCreate();
             CacheCharacterCustomisations();
             CacheCharacterBaseProperties();
             CacheCharacterClassBaseProperties();
@@ -98,6 +102,32 @@ namespace NexusForever.WorldServer.Game
             CacheRewardPropertiesByTier();
             CacheBindPointPositions();
             CacheQuestObjectiveTargetGroups();
+        }
+
+        private void CacheCharacterCreate()
+        {
+            var entries = ImmutableDictionary.CreateBuilder<(Race, Faction, CharacterCreationStart), Location>();
+            foreach (CharacterCreateModel model in DatabaseManager.Instance.CharacterDatabase.GetCharacterCreationData())
+            {
+                entries.Add(((Race)model.Race, (Faction)model.Faction, (CharacterCreationStart)model.CreationStart), new Location
+                (
+                    GameTableManager.Instance.World.GetEntry(model.WorldId),
+                    new Vector3
+                    {
+                        X = model.X,
+                        Y = model.Y,
+                        Z = model.Z
+                    },
+                    new Vector3
+                    {
+                        X = model.Rx,
+                        Y = model.Ry,
+                        Z = model.Rz
+                    }
+                ));
+            }
+
+            characterCreationData = entries.ToImmutable();
         }
 
         private void CacheCharacterCustomisations()
@@ -592,6 +622,14 @@ namespace NexusForever.WorldServer.Game
         public uint GetDashSpell(DashDirection direction)
         {
             return dashSpells.TryGetValue(direction, out uint spellId) ? spellId : 25295;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="Location"/> describing the starting location for a given <see cref="Race"/>, <see cref="Faction"/> and Creation Type combination.
+        /// </summary>
+        public Location GetStartingLocation(Race race, Faction faction, CharacterCreationStart creationStart)
+        {
+            return characterCreationData.TryGetValue((race, faction, creationStart), out Location location) ? location : null;
         }
     }
 }
