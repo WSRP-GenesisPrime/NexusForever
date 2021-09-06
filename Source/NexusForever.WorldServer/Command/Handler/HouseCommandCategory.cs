@@ -7,6 +7,7 @@ using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -118,6 +119,32 @@ namespace NexusForever.WorldServer.Command.Handler
                     }
                 }
 
+                if (residence.OwnerId != context.InvokingPlayer.CharacterId)
+                {
+                    if (residence.Has18PlusLock())
+                    {
+                        if (!context.InvokingPlayer.IsAdult)
+                        {
+                            context.InvokingPlayer.SendSystemMessage("This plot is currently unavailable.");
+                            return;
+                        }
+                    }
+
+                    switch (residence.PrivacyLevel)
+                    {
+                        case ResidencePrivacyLevel.Private:
+                            {
+                                context.InvokingPlayer.SendSystemMessage("This plot is currently unavailable.");
+                                return;
+                            }
+                        // TODO: check if player is either a neighbour or roommate
+                        case ResidencePrivacyLevel.NeighborsOnly:
+                            break;
+                        case ResidencePrivacyLevel.RoommatesOnly:
+                            break;
+                    }
+                }
+
                 ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
                 target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
             }
@@ -128,31 +155,103 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.GMFlag, "Unload a residence", "unload")]
-        public void HandleHouseUnload(ICommandContext context,
-            [Parameter("", ParameterFlags.Optional)]
-            string firstName,
-            [Parameter("", ParameterFlags.Optional)]
-            string lastName)
+        [Command(Permission.AdultPlotLockOwner, "Toggle the 18+ lock on your plot.", "nsfwlock")]
+        public void HandleHouseNSFWLock(ICommandContext context,
+            [Parameter("On or off")]
+            string setting)
         {
-            try
+            bool setLock;
+            if(setting.Equals("on", StringComparison.InvariantCultureIgnoreCase))
             {
-                Player target = context.InvokingPlayer;
-
-                log.Trace($"{target.Name} requesting to unload plot {firstName} {lastName}.");
-
-                string name = $"{firstName} {lastName}".Trim();
-                if (firstName == null && lastName == null)
-                {
-                    name = target.Name;
-                }
-
-                ResidenceManager.Instance.UnloadResidence(name);
+                setLock = true;
             }
-            catch (Exception e)
+            else if(setting.Equals("off", StringComparison.InvariantCultureIgnoreCase))
             {
-                log.Error($"Exception caught in HouseCommandCategory.HandleHouseUnload!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                setLock = false;
+            }
+            else
+            {
+                context.SendError("Setting was not 'on' or 'off'.");
+                return;
+            }
+            Residence res = ResidenceManager.Instance.GetResidence(context.InvokingPlayer.Name).GetAwaiter().GetResult();
+            if(res != null)
+            {
+                bool result = res.Set18PlusLock(setLock);
+                if(!result)
+                {
+                    context.SendError("Could not enable lock. Is there anyone on the plot that is not 18+?");
+                }
+            }
+        }
+
+        [Command(Permission.AdultPlotLockOwner, "Set the time limit on the 18+ lock on your plot.", "nsfwtimelock")]
+        public void HandleHouseNSFWTimeLock(ICommandContext context,
+           [Parameter("How long?")]
+            string time,
+           [Parameter("Time unit (minute, hour, day, week, month)")]
+            string timeUnit)
+        {
+            DateTime lockTime = DateTime.Now;
+            string timeAmount = "";
+            if (!string.IsNullOrWhiteSpace(timeUnit))
+            {
+                if(uint.TryParse(time, out uint timeNum))
+                {
+                    switch(timeUnit.ToLowerInvariant())
+                    {
+                        case "minute":
+                        case "min":
+                        case "minutes":
+                        case "mins":
+                            lockTime = lockTime.AddMinutes(timeNum);
+                            timeAmount = $"{timeNum} {(timeNum != 1 ? "minutes" : "minute")}";
+                            break;
+                        case "hour":
+                        case "hours":
+                            lockTime = lockTime.AddHours(timeNum);
+                            timeAmount = $"{timeNum} {(timeNum != 1 ? "hours" : "hour")}";
+                            break;
+                        case "day":
+                        case "days":
+                            lockTime = lockTime.AddDays(timeNum);
+                            timeAmount = $"{timeNum} {(timeNum != 1 ? "days" : "day")}";
+                            break;
+                        case "week":
+                        case "weeks":
+                            lockTime = lockTime.AddDays(timeNum * 7);
+                            timeAmount = $"{timeNum} {(timeNum != 1 ? "weeks" : "week")}";
+                            break;
+                        case "month":
+                        case "months":
+                            lockTime = lockTime.AddMonths((int) timeNum);
+                            timeAmount = $"{timeNum} {(timeNum != 1 ? "months" : "month")}";
+                            break;
+                        default:
+                            context.SendError("Time unit not recognized, should be minute/hour/day/week/month");
+                            return;
+                    }
+                }
+                else
+                {
+                    context.SendError("Could not parse the first parameter.");
+                    return;
+                }
+            }
+            else
+            {
+                context.SendError("Time unit not defined.");
+            }
+
+
+            Residence res = ResidenceManager.Instance.GetResidence(context.InvokingPlayer.Name).GetAwaiter().GetResult();
+            if (res != null)
+            {
+                bool result = res.Set18PlusLock(true, lockTime, timeAmount);
+                if (!result)
+                {
+                    context.SendError("Could not enable lock. Is there anyone on the plot that is not 18+?");
+                }
             }
         }
 

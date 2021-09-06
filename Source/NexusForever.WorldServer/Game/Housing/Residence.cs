@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
@@ -8,6 +9,11 @@ using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
+using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Game.Map.Search;
+using NexusForever.WorldServer.Game.Social.Static;
+using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Network.Message.Model.Shared;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
@@ -18,6 +24,10 @@ namespace NexusForever.WorldServer.Game.Housing
         public string OwnerName { get; }
         public string OwnerOriginalName { get; }
         public byte PropertyInfoId { get; }
+
+        private bool has18PlusLock = false;
+        private DateTime unlockTime18Plus = DateTime.MinValue;
+        private bool waitForEmptyPlot18Plus = false;
 
         public string Name
         {
@@ -228,6 +238,7 @@ namespace NexusForever.WorldServer.Game.Housing
             flags               = (ResidenceFlags)model.Flags;
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
+            has18PlusLock       = model.NSFWLock;
 
             if (model.ResidenceInfoId > 0)
                 ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
@@ -376,6 +387,11 @@ namespace NexusForever.WorldServer.Game.Housing
                         model.GardenSharing = GardenSharing;
                         entity.Property(p => p.GardenSharing).IsModified = true;
                     }
+                    if ((saveMask & ResidenceSaveMask.NSFWLock) != 0)
+                    {
+                        model.NSFWLock = has18PlusLock;
+                        entity.Property(p => p.NSFWLock).IsModified = true;
+                    }
                 }
 
                 saveMask = ResidenceSaveMask.None;
@@ -390,6 +406,154 @@ namespace NexusForever.WorldServer.Game.Housing
 
             foreach (Plot plot in plots)
                 plot.Save(context);
+        }
+        public bool Has18PlusLock()
+        {
+            if (has18PlusLock)
+            {
+                if (unlockTime18Plus < DateTime.Now)
+                {
+                    /*if (waitForEmptyPlot18Plus)
+                    {
+                        return true; // will trigger when last person leaves
+                    }
+                    else
+                    {*/
+                        Set18PlusLockInternal(false);
+                        return false;
+                    //}
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private void Set18PlusLockInternal(bool value)
+        {
+            if (has18PlusLock != value)
+            {
+                saveMask |= ResidenceSaveMask.NSFWLock;
+                has18PlusLock = value;
+            }
+        }
+
+        private bool Can18PlusLock(ResidenceMap map)
+        {
+            if(map == null)
+            {
+                return true;
+            }
+            map.Search(Vector3.Zero, -1, new SearchCheckRangePlayerOnly(Vector3.Zero, -1), out List<GridEntity> entities);
+            foreach (GridEntity entity in entities)
+            {
+                Player player = entity as Player;
+                if (player != null && !player.IsAdult)
+                {
+                    return false; // can't lock, kiddies on the plot.
+                }
+            }
+            return true;
+        }
+
+        private ResidenceMap getMap()
+        {
+            ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(this);
+            MapInfo mi = new MapInfo(entrance.Entry, 0, Id);
+            ResidenceMap map = MapManager.Instance.GetMap(mi) as ResidenceMap;
+            return map;
+        }
+
+        public bool Set18PlusLock(bool doLock, DateTime? limit = null, string timeText = null)
+        {
+            if(doLock == has18PlusLock && limit == null)
+            {
+                return true;
+            }
+            ResidenceMap map = getMap();
+            if(map == null)
+            {
+                Set18PlusLockInternal(doLock);
+                return true;
+            }
+            if (doLock && Can18PlusLock(map))
+            {
+                string text = "18+ lock created.";
+                if (!string.IsNullOrWhiteSpace(timeText))
+                {
+                    text = $"18+ lock created, and will last for {timeText}.";
+                }
+                map.EnqueueToAll(new ServerChat
+                {
+                    Channel = new Channel
+                    {
+                        Type = ChatChannelType.System
+                    },
+                    Text = text
+                });
+                Set18PlusLockInternal(doLock);
+                if(limit != null)
+                {
+                    set18PlusTimeLimit(limit);
+                }
+                else
+                {
+                    set18PlusTimeLimit(DateTime.MaxValue);
+                }
+                return true;
+            }
+            if (!doLock)
+            {
+                map.EnqueueToAll(new ServerChat
+                {
+                    Channel = new Channel
+                    {
+                        Type = ChatChannelType.System
+                    },
+                    Text = "18+ lock dropped."
+                });
+                Set18PlusLockInternal(doLock);
+                return true;
+            }
+            return false;
+        }
+
+        public void set18PlusTimeLimit(DateTime? limit)
+        {
+            if (!has18PlusLock)
+            {
+                throw new InvalidOperationException();
+            }
+            DateTime val = unlockTime18Plus;
+            if (limit == null)
+            {
+                unlockTime18Plus = DateTime.MinValue;
+            }
+            else
+            {
+                unlockTime18Plus = (DateTime) limit;
+            }
+            if(unlockTime18Plus != val)
+            {
+                saveMask |= ResidenceSaveMask.NSFWLock;
+            }
+        }
+
+        public void set18PlusWaitForEmpty(bool wait)
+        {
+            if(!has18PlusLock)
+            {
+                throw new InvalidOperationException();
+            }
+            if (waitForEmptyPlot18Plus != wait)
+            {
+                waitForEmptyPlot18Plus = wait;
+                saveMask |= ResidenceSaveMask.NSFWLock;
+            }
         }
 
         /// <summary>

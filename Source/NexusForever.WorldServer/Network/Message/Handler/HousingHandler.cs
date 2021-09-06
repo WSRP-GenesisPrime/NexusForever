@@ -173,18 +173,30 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     return;
                 }
 
-                switch (residence.PrivacyLevel)
+                if (residence.OwnerId != session.Player.CharacterId)
                 {
-                    case ResidencePrivacyLevel.Private:
+                    if (residence.Has18PlusLock())
                     {
-                        // TODO: show error
-                        return;
+                        if (!session.Player.IsAdult)
+                        {
+                            session.Player.SendSystemMessage("This plot is currently unavailable.");
+                            return;
+                        }
                     }
-                    // TODO: check if player is either a neighbour or roommate
-                    case ResidencePrivacyLevel.NeighborsOnly:
-                        break;
-                    case ResidencePrivacyLevel.RoommatesOnly:
-                        break;
+
+                    switch (residence.PrivacyLevel)
+                    {
+                        case ResidencePrivacyLevel.Private:
+                            {
+                                session.Player.SendSystemMessage("This plot is currently unavailable.");
+                                return;
+                            }
+                        // TODO: check if player is either a neighbour or roommate
+                        case ResidencePrivacyLevel.NeighborsOnly:
+                            break;
+                        case ResidencePrivacyLevel.RoommatesOnly:
+                            break;
+                    }
                 }
 
                 // teleport player to correct residence instance

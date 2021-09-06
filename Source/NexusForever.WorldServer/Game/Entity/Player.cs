@@ -51,6 +51,12 @@ namespace NexusForever.WorldServer.Game.Entity
         public Class Class { get; }
         public Faction Faction { get; }
         public List<float> Bones { get; } = new();
+        public bool IsAdult {
+            get
+            {
+                return Session.AccountRbacManager.HasPermission(RBAC.Static.Permission.Adult);
+            }
+        }
 
         public CharacterFlag Flags
         {
@@ -809,6 +815,14 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public override void OnRemoveFromMap()
         {
+            if (Guid <= 0)
+            {
+                log.Warn($"Removing player {Name} from map {Map.Entry.Id} with guid 0!");
+            }
+            else
+            {
+                log.Info($"Removing player {Name} from map {Map.Entry.Id} with guid {Guid}.");
+            }
             DestroyDependents();
 
             base.OnRemoveFromMap();
