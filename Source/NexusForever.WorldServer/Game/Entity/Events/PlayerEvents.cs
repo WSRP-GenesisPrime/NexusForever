@@ -46,7 +46,8 @@ namespace NexusForever.WorldServer.Game.Entity
             Session.EnqueueMessageEncrypted(new ServerChangeWorld
             {
                 WorldId  = (ushort)map.Entry.Id,
-                Position = new Position(vector)
+                Position = new Position(vector),
+                Yaw      = Rotation.X
             });
 
             // this must come before OnAddToMap

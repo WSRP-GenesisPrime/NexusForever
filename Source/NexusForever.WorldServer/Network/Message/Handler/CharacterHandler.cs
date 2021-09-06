@@ -333,6 +333,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 character.LocationX = startingLocation.Position.X;
                 character.LocationY = startingLocation.Position.Y;
                 character.LocationZ = startingLocation.Position.Z;
+                character.RotationX = startingLocation.Rotation.X;
+                character.RotationY = startingLocation.Rotation.Y;
+                character.RotationZ = startingLocation.Rotation.Z;
                 character.WorldId = (ushort)startingLocation.World.Id;
 
                 character.ActiveSpec = 0;
@@ -572,6 +575,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 }
                 default:
                 {
+                    session.Player.Rotation = new Vector3(character.RotationX, character.RotationY, character.RotationZ);
                     MapManager.Instance.AddToMap(session.Player, new MapPosition
                     {
                         Info     = new MapInfo
