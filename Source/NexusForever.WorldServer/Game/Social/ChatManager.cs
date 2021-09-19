@@ -3,11 +3,13 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Game.TextFilter.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Social
 {
     public class ChatManager
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         private readonly Player owner;
         private readonly Dictionary<ulong, ChatChannel> channels = new();
 
@@ -44,6 +46,7 @@ namespace NexusForever.WorldServer.Game.Social
         /// </summary>
         public ChatResult CanJoin(string name, string password)
         {
+            log.Info($"{owner.Name} trying to join chat channel: {name}, password= {password}");
             if (!TextFilterManager.Instance.IsTextValid(name)
                 || !TextFilterManager.Instance.IsTextValid(name, UserText.ChatCustomChannelName))
                 return ChatResult.InvalidPasswordText;

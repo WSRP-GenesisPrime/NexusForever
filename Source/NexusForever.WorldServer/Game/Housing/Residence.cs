@@ -24,18 +24,10 @@ namespace NexusForever.WorldServer.Game.Housing
         public string OwnerName { get; }
         public string OwnerOriginalName { get; }
         public byte PropertyInfoId { get; }
-        public bool Has18PlusLock {
-            get => has18PlusLock;
-            private set
-            {
-                if(has18PlusLock != value)
-                {
-                    saveMask |= ResidenceSaveMask.NSFWLock;
-                }
-                has18PlusLock = value;
-            }
-        }
+
         private bool has18PlusLock = false;
+        private DateTime unlockTime18Plus = DateTime.MinValue;
+        private bool waitForEmptyPlot18Plus = false;
 
         public string Name
         {
@@ -246,7 +238,7 @@ namespace NexusForever.WorldServer.Game.Housing
             flags               = (ResidenceFlags)model.Flags;
             resourceSharing     = model.ResourceSharing;
             gardenSharing       = model.GardenSharing;
-            Has18PlusLock       = model.NSFWLock;
+            has18PlusLock       = model.NSFWLock;
 
             if (model.ResidenceInfoId > 0)
                 ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
@@ -397,7 +389,7 @@ namespace NexusForever.WorldServer.Game.Housing
                     }
                     if ((saveMask & ResidenceSaveMask.NSFWLock) != 0)
                     {
-                        model.NSFWLock = Has18PlusLock;
+                        model.NSFWLock = has18PlusLock;
                         entity.Property(p => p.NSFWLock).IsModified = true;
                     }
                 }
@@ -414,6 +406,40 @@ namespace NexusForever.WorldServer.Game.Housing
 
             foreach (Plot plot in plots)
                 plot.Save(context);
+        }
+        public bool Has18PlusLock()
+        {
+            if (has18PlusLock)
+            {
+                if (unlockTime18Plus < DateTime.Now)
+                {
+                    /*if (waitForEmptyPlot18Plus)
+                    {
+                        return true; // will trigger when last person leaves
+                    }
+                    else
+                    {*/
+                        Set18PlusLockInternal(false);
+                        return false;
+                    //}
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private void Set18PlusLockInternal(bool value)
+        {
+            if (has18PlusLock != value)
+            {
+                saveMask |= ResidenceSaveMask.NSFWLock;
+                has18PlusLock = value;
+            }
         }
 
         private bool Can18PlusLock(ResidenceMap map)
@@ -442,25 +468,42 @@ namespace NexusForever.WorldServer.Game.Housing
             return map;
         }
 
-        public bool Set18PlusLock(bool doLock)
+        public bool Set18PlusLock(bool doLock, DateTime? limit = null, string timeText = null)
         {
+            if(doLock == has18PlusLock && limit == null)
+            {
+                return true;
+            }
             ResidenceMap map = getMap();
             if(map == null)
             {
-                Has18PlusLock = doLock;
+                Set18PlusLockInternal(doLock);
                 return true;
             }
             if (doLock && Can18PlusLock(map))
             {
+                string text = "18+ lock created.";
+                if (!string.IsNullOrWhiteSpace(timeText))
+                {
+                    text = $"18+ lock created, and will last for {timeText}.";
+                }
                 map.EnqueueToAll(new ServerChat
                 {
                     Channel = new Channel
                     {
                         Type = ChatChannelType.System
                     },
-                    Text = "18+ lock created."
+                    Text = text
                 });
-                Has18PlusLock = doLock;
+                Set18PlusLockInternal(doLock);
+                if(limit != null)
+                {
+                    set18PlusTimeLimit(limit);
+                }
+                else
+                {
+                    set18PlusTimeLimit(DateTime.MaxValue);
+                }
                 return true;
             }
             if (!doLock)
@@ -473,10 +516,44 @@ namespace NexusForever.WorldServer.Game.Housing
                     },
                     Text = "18+ lock dropped."
                 });
-                Has18PlusLock = doLock;
+                Set18PlusLockInternal(doLock);
                 return true;
             }
             return false;
+        }
+
+        public void set18PlusTimeLimit(DateTime? limit)
+        {
+            if (!has18PlusLock)
+            {
+                throw new InvalidOperationException();
+            }
+            DateTime val = unlockTime18Plus;
+            if (limit == null)
+            {
+                unlockTime18Plus = DateTime.MinValue;
+            }
+            else
+            {
+                unlockTime18Plus = (DateTime) limit;
+            }
+            if(unlockTime18Plus != val)
+            {
+                saveMask |= ResidenceSaveMask.NSFWLock;
+            }
+        }
+
+        public void set18PlusWaitForEmpty(bool wait)
+        {
+            if(!has18PlusLock)
+            {
+                throw new InvalidOperationException();
+            }
+            if (waitForEmptyPlot18Plus != wait)
+            {
+                waitForEmptyPlot18Plus = wait;
+                saveMask |= ResidenceSaveMask.NSFWLock;
+            }
         }
 
         /// <summary>
