@@ -257,7 +257,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
         [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
         public void HandleRemodelCommand(ICommandContext context,
-            [Parameter("Ground, sky, or music?")]
+            [Parameter("Ground, sky, music, or house plug?")]
             string option,
             [Parameter("ID")]
             ushort id)
@@ -290,9 +290,41 @@ namespace NexusForever.WorldServer.Command.Handler
                     residence.Music = id;
                     log.Trace($"{target.Name} requesting to remodel: music ID {id}.");
                 }
+                else if (option.ToLower() == "house")
+                {
+                    var plugItem = GameTableManager.Instance.HousingPlugItem.GetEntry(id);
+                    if(plugItem != null)
+                    {
+                        ClientHousingPlugUpdate pu = new ClientHousingPlugUpdate
+                        {
+                            Operation = PlugUpdateOperation.Place,
+                            PlotInfo = residence.GetPlot(0).PlotEntry.Id,
+                            PlugFacing = (uint)residence.GetPlot(0).PlugFacing,
+                            PlugItem = id,
+                            ResidenceId = residence.Id,
+                        };
+                        residence.getMap().SetPlug(target, pu);
+                        /*if (residence.SetHouse(plugItem))
+                        {
+                            residence.getMap().HandleHouseChange(target, residence.GetPlot(0));
+                        }
+                        else
+                        {
+                            context.SendError("Unknown error.");
+                            return;
+                        }*/
+                    }
+                    else
+                    {
+                        context.SendError("Invalid housingPlugItem ID.");
+                        return;
+                    }
+                    log.Trace($"{target.Name} requesting to remodel: house plug ID {id}.");
+                    return; // not a normal remodel.
+                }
                 else
                 {
-                    context.SendError("You can only change the ground, sky, or music with this command.");
+                    context.SendError("You can only change the ground, sky, music, or house plug with this command.");
                 }
                 residenceMap.Remodel(target, clientRemod);
             }

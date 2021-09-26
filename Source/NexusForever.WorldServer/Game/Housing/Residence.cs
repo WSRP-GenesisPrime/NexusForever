@@ -460,7 +460,7 @@ namespace NexusForever.WorldServer.Game.Housing
             return true;
         }
 
-        private ResidenceMap getMap()
+        public ResidenceMap getMap()
         {
             ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(this);
             MapInfo mi = new MapInfo(entrance.Entry, 0, Id);
@@ -663,8 +663,18 @@ namespace NexusForever.WorldServer.Game.Housing
                 { 299, 21 },    // Spacious Draken House
                 { 86, 17 },     // Spacious Exile Human House
                 { 291, 27 },    // Spacious Granok House
-                { 530, 32 }     // Underground Bunker
-            };
+                { 530, 32 },    // Underground Bunker
+                { 534, 34 },    // Blackhole House
+                { 543, 35 },    // Osun House
+                { 18, 1 },      // Worksite? (No remodeling options)
+                { 367, 25 },    // Spaceship ([Jumbo] Cockpit, [Jumbo] Wings)
+                { 554, 37 },    // Aviary/Bird House (Feathered Falkrin, Mossy Hoogle) Birdhouse
+                { 557, 27 },    // Royal Piglet (Entryway Large/Medium/Small, Peaked/Western Roof)
+                { 37, 24 },     // Simple worksite? (No remodeling options)
+                { 38, 1 },     // Simple worksite, again. (No remodeling options)
+                { 19, 1 },     // Simple rocks and trees
+                { 79, 1 }      // Nothing
+            };// 38 has no remodel menu at all, 24 and 30 offer no remodel options.
 
             return residenceLookup.TryGetValue(plugItemId, out uint residenceId) ? residenceId : 0u;
         }

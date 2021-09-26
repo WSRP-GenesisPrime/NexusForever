@@ -598,7 +598,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// <summary>
         /// Handles updating the client with changes following a 2x2 Plot change
         /// </summary>
-        private void HandleHouseChange(Player player, Plot plot, ClientHousingPlugUpdate housingPlugUpdate = null)
+        public void HandleHouseChange(Player player, Plot plot, ClientHousingPlugUpdate housingPlugUpdate = null)
         {
             Vector3 houseLocation = new Vector3(1471f, -715f, 1443f);
             // TODO: Crate all decor stored inside the house?
