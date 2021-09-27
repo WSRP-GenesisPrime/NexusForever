@@ -442,7 +442,7 @@ namespace NexusForever.WorldServer.Game.Housing
             }
         }
 
-        private bool Can18PlusLock(ResidenceMap map)
+        private bool Can18PlusLock(ResidenceMapInstance map)
         {
             if(map == null)
             {
@@ -460,11 +460,15 @@ namespace NexusForever.WorldServer.Game.Housing
             return true;
         }
 
-        public ResidenceMap getMap()
+        public ResidenceMapInstance getMap()
         {
             ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(this);
-            MapInfo mi = new MapInfo(entrance.Entry, 0, Id);
-            ResidenceMap map = MapManager.Instance.GetMap(mi) as ResidenceMap;
+            MapInfo mi = new MapInfo
+            {
+                Entry = entrance.Entry,
+                InstanceId = Id
+            };
+            ResidenceMapInstance map = MapManager.Instance.GetMap(mi) as ResidenceMapInstance;
             return map;
         }
 
@@ -474,7 +478,7 @@ namespace NexusForever.WorldServer.Game.Housing
             {
                 return true;
             }
-            ResidenceMap map = getMap();
+            ResidenceMapInstance map = getMap();
             if(map == null)
             {
                 Set18PlusLockInternal(doLock);

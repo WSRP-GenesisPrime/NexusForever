@@ -19,7 +19,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingResidencePrivacyLevel)]
         public static void HandleHousingSetPrivacyLevel(WorldSession session, ClientHousingSetPrivacyLevel housingSetPrivacyLevel)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.SetPrivacyLevel(session.Player, housingSetPrivacyLevel);
@@ -28,7 +28,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingCrateAllDecor)]
         public static void HandleHousingCrateAllDecor(WorldSession session, ClientHousingCrateAllDecor housingCrateAllDecor)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.CrateAllDecor(session.Player);
@@ -37,7 +37,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingRemodel)]
         public static void HandleHousingRemodel(WorldSession session, ClientHousingRemodel housingRemodel)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.Remodel(session.Player, housingRemodel);
@@ -46,7 +46,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingDecorUpdate)]
         public static void HandleHousingDecorUpdate(WorldSession session, ClientHousingDecorUpdate housingDecorUpdate)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.DecorUpdate(session.Player, housingDecorUpdate);
@@ -55,7 +55,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingFlagsUpdate)]
         public static void HandleHousingFlagsUpdate(WorldSession session, ClientHousingFlagsUpdate flagsUpdate)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.UpdateResidenceFlags(session.Player, flagsUpdate);
@@ -64,7 +64,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingPlugUpdate)]
         public static void HandleHousingPlugUpdate(WorldSession session, ClientHousingPlugUpdate housingPlugUpdate)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             switch (housingPlugUpdate.Operation)
@@ -104,7 +104,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingRenameProperty)]
         public static void HandleHousingRenameProperty(WorldSession session, ClientHousingRenameProperty housingRenameProperty)
         {
-            if (!(session.Player.Map is ResidenceMap residenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             // TODO: validate name
@@ -150,7 +150,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingVisit)]
         public static void HandleHousingVisit(WorldSession session, ClientHousingVisit housingVisit)
         {
-            if (!(session.Player.Map is ResidenceMap))
+            if (!(session.Player.Map is ResidenceMapInstance))
                 throw new InvalidPacketValueException();
 
             if (!session.Player.CanTeleport())
@@ -164,7 +164,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             else
                 throw new NotImplementedException();
 
-            session.EnqueueEvent(new TaskGenericEvent<Residence>(residenceTask,
+            session.Events.EnqueueEvent(new TaskGenericEvent<Residence>(residenceTask,
                 residence =>
             {
                 if (residence == null)
@@ -201,7 +201,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
                 // teleport player to correct residence instance
                 ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
-                session.Player.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
+                session.Player.TeleportTo(entrance.Entry, entrance.Position, residence.Id);
             }));
         }
 

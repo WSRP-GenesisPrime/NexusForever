@@ -847,103 +847,23 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
-                        Id = 50000,
-                        Name = "Category: Morph"
+                        Id   = 103,
+                        Name = "Category: Map"
                     },
                     new PermissionModel
                     {
-                        Id = 50001,
-                        Name = "Command: MorphStoryTeller"
+                        Id   = 104,
+                        Name = "Command: MapUnload"
                     },
                     new PermissionModel
                     {
-                        Id = 50100,
-                        Name = "Category: Emote"
+                        Id   = 105,
+                        Name = "Command: MapPlayerRemove"
                     },
                     new PermissionModel
                     {
-                        Id = 50200,
-                        Name = "Category: Chron"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50300,
-                        Name = "Category: XRoll"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50400,
-                        Name = "Command: CharacterProps"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50500,
-                        Name = "Category: Boost"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50600,
-                        Name = "Command: HouseRemodel"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50700,
-                        Name = "Command: RealmOnline"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50710,
-                        Name = "Command: RealmUptime"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50800,
-                        Name = "Command: AccountChangePass"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50810,
-                        Name = "Command: AccountChangeMyPass"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50900,
-                        Name = "Flag: GM"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 60000,
-                        Name = "Category: Costume"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 60010,
-                        Name = "Command: CostumeOverride"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 60020,
-                        Name = "Command: CostumeOverrideId"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 61000,
-                        Name = "Flag: Adult"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 61100,
-                        Name = "Command: AdultPlotLockSelf"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 61150,
-                        Name = "Command: AdultPlotLockNonOwner"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 61200,
-                        Name = "Command: AdultPlotAlert"
+                        Id   = 106,
+                        Name = "Command: MapPlayerRemoveCancel"
                     },
                     new PermissionModel
                     {
@@ -954,6 +874,11 @@ namespace NexusForever.Database.Auth
                     {
                         Id   = 10001,
                         Name = "Other: Signature"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 10002,
+                        Name = "Other: BypassInstanceLimits"
                     });
             });
 

@@ -279,11 +279,21 @@ namespace NexusForever.WorldServer.Game.Social
 
         private void SendChatAccept(WorldSession session)
         {
+
             session.EnqueueMessageEncrypted(new ServerChatAccept
             {
                 Name = session.Player.Name,
                 Guid = session.Player.Guid,
                 GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
+            });
+        }
+
+        private void SendChatAccept(WorldSession session, string targetName)
+        {
+            session.EnqueueMessageEncrypted(new ServerChatAccept
+            {
+                Name = targetName,
+                Guid = session.Player.Guid
             });
         }
 
@@ -438,22 +448,30 @@ namespace NexusForever.WorldServer.Game.Social
         public void HandleWhisperChat(WorldSession session, ClientChatWhisper whisper)
         {
             Player target = CharacterManager.Instance.GetPlayer(whisper.PlayerName);
-            if (target == null)
+
+            bool CanWhisper()
             {
-                SendMessage(session, $"Player \"{whisper.PlayerName}\" not found.");
-                return;
+                if (target == null)
+                    return false;
+
+                if (session.Player.Name == target.Name)
+                    return false;
+
+                bool crossFactionChat = ConfigurationManager<WorldServerConfiguration>.Instance.Config.CrossFactionChat;
+                if (session.Player.Faction1 != target.Faction1 && !crossFactionChat)
+                    return false;
+
+                return true;
             }
 
-            if (session.Player.Name == target.Name)
+            if (!CanWhisper())
             {
-                SendMessage(session, "You cannot send a message to yourself.");
-                return;
-            }
-
-            bool crossFactionChat = ConfigurationManager<WorldServerConfiguration>.Instance.Config.CrossFactionChat;
-            if (session.Player.Faction1 != target.Faction1 && !crossFactionChat)
-            {
-                SendMessage(session, $"Player \"{whisper.PlayerName}\" not found.");
+                session.EnqueueMessageEncrypted(new ServerChatWhisperFail
+                {
+                    CharacterTo = whisper.PlayerName,
+                    IsAccountWhisper = false,
+                    Unknown1 = 1
+                });
                 return;
             }
 

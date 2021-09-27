@@ -113,6 +113,7 @@ namespace NexusForever.Shared.Network.Message
         ClientChatList                  = 0x01D2,
         ServerChatResult                = 0x01D3,
         ClientChatWhisper               = 0x01D4,
+        ServerChatWhisperFail           = 0x01D9,
         ServerChatZoneChange            = 0x01DA,
         Server0237                      = 0x0237, // UI related, opens or closes different UI windows (bank, barber, ect...)
         ClientPing                      = 0x0241,
@@ -241,6 +242,8 @@ namespace NexusForever.Shared.Network.Message
         ServerAuthDenied                = 0x063D,
         ServerOwnedCommodityOrders      = 0x064C,
         ServerOwnedItemAuctions         = 0x064D,
+        ServerPendingWorldRemovalCancel = 0x0688,
+        ServerPendingWorldRemoval       = 0x0689,
         ClientRequestPlayed             = 0x0693,
         ServerPlayerPlayed              = 0x0694,
         ClientPathActivate              = 0x06B2,
