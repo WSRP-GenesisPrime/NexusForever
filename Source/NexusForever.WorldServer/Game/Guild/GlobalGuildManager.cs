@@ -313,7 +313,6 @@ namespace NexusForever.WorldServer.Game.Guild
                 case GuildType.Community:
                 {
                     var community = new Community(name, leaderRankName, councilRankName, memberRankName);
-                    community.Residence = GlobalResidenceManager.Instance.CreateCommunity(community);
                     guild = community;
                     break;
                 }

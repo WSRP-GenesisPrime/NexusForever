@@ -8,11 +8,11 @@ using NexusForever.WorldServer.Game.RBAC.Static;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
-    [Command(Permission.Guild, "A collection of commands to manage a guilds.", "guild")]
+    [Command(Permission.None, "A collection of commands to manage a guilds.", "guild")]
     [CommandTarget(typeof(Player))]
     public class GuildCommandCategory : CommandCategory
     {
-        [Command(Permission.GuildRegister, "Register a new guild.", "register")]
+        [Command(Permission.None, "Register a new guild.", "register")]
         public void HandleGuildRegister(ICommandContext context,
             [Parameter("Guild type to create.", ParameterFlags.None, typeof(EnumParameterConverter<GuildType>))]
             GuildType type,
@@ -47,7 +47,7 @@ namespace NexusForever.WorldServer.Command.Handler
             player.GuildManager.RegisterGuild(type, name, leaderRank, councilRank, memberRank, standard);
         }
 
-        [Command(Permission.GuildJoin, "Join an existing guild.", "join")]
+        [Command(Permission.None, "Join an existing guild.", "join")]
         public void HandleGuildJoin(ICommandContext context,
             [Parameter("Name of guild to join.")]
             string name)

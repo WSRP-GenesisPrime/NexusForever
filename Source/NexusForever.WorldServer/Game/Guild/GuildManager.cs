@@ -9,6 +9,7 @@ using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Guild.Static;
+using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Game.TextFilter.Static;
 using NexusForever.WorldServer.Network;
@@ -285,6 +286,9 @@ namespace NexusForever.WorldServer.Game.Guild
         {
             GuildBase guild = GlobalGuildManager.Instance.RegisterGuild(type, name, leaderRankName, councilRankName, memberRankName, standard);
             JoinGuild(guild);
+
+            if (guild is Community community)
+                community.Residence = GlobalResidenceManager.Instance.CreateCommunity(community);
         }
 
         /// <summary>
