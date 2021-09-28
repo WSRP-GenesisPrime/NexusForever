@@ -178,7 +178,7 @@ namespace NexusForever.Database.Character
                 .Include(r => r.Character)
                 .Include(r => r.Guild)
                 // only load residences where the owner character or guild hasn't been deleted
-                .Where(r => (r.OwnerId.HasValue && !r.Character.DeleteTime.HasValue) || (r.GuildOwnerId.HasValue && !r.Guild.DeleteTime.HasValue))
+                .Where(r => (r.OwnerId.HasValue && !r.Character.DeleteTime.HasValue) || (r.GuildOwnerId.HasValue && !r.Guild.DeleteTime.HasValue)).AsSplitQuery()
                 .ToList();
         }
 
@@ -243,6 +243,13 @@ namespace NexusForever.Database.Character
             return await context.CharacterContact
                 .Where(c => c.ContactId == characterId && c.Accepted == 0 && contactTypes.Contains(c.Type))
                 .ToListAsync();
+        }
+
+        public List<CharacterCreateModel> GetCharacterCreationData()
+        {
+            using var context = new CharacterContext(config);
+
+            return context.CharacterCreate.ToList();
         }
     }
 }

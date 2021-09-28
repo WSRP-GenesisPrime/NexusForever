@@ -302,11 +302,11 @@ namespace NexusForever.WorldServer.Game.Housing
             foreach (ResidenceDecor decorModel in model.Decor)
             {
                 HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorModel.DecorInfoId);
-                if (entry == null)
-                    throw new DatabaseDataException($"Decor {decorModel.Id} has invalid decor entry {decorModel.DecorInfoId}!");
-
-                var decor = new Decor(this, decorModel, entry);
-                decors.Add(decor.DecorId, decor);
+                if (entry != null)
+                {
+                    var decor = new Decor(this, decorModel, entry);
+                    decors.Add(decor.DecorId, decor);
+                }
             }
 
             foreach (ResidencePlotModel plotModel in model.Plot
@@ -507,10 +507,6 @@ namespace NexusForever.WorldServer.Game.Housing
 
             foreach (Decor decor in decorToRemove)
                 decors.Remove(decor.DecorId);
-
-            foreach (Decor decor in deletedDecors.ToList())
-                decor.Save(context);
-            deletedDecors.Clear();
 
             foreach (Plot plot in plots)
                 plot.Save(context);
