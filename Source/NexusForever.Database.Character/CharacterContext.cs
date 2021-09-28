@@ -1467,6 +1467,11 @@ namespace NexusForever.Database.Character
                     .HasColumnType("varchar(32)")
                     .HasDefaultValue("");
 
+                entity.Property(e => e.CommunityPlotReservation)
+                    .HasColumnName("communityPlotReservation")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValue(-1);
+
                 entity.HasOne(d => d.Guild)
                     .WithMany(p => p.GuildMember)
                     .HasForeignKey(d => d.Id)
@@ -1584,7 +1589,12 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.OwnerId)
                     .HasColumnName("ownerId")
                     .HasColumnType("bigint(20) unsigned")
-                    .HasDefaultValue(0);
+                    .HasDefaultValue(null);
+
+                entity.Property(e => e.GuildOwnerId)
+                    .HasColumnName("guildOwnerId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(null);
 
                 entity.Property(e => e.PrivacyLevel)
                     .HasColumnName("privacyLevel")
@@ -1625,6 +1635,11 @@ namespace NexusForever.Database.Character
                     .WithOne(p => p.Residence)
                     .HasForeignKey<ResidenceModel>(d => d.OwnerId)
                     .HasConstraintName("FK__residence_ownerId__character_id");
+
+                entity.HasOne(d => d.Guild)
+                    .WithMany(p => p.Residence)
+                    .HasForeignKey(d => d.GuildOwnerId)
+                    .HasConstraintName("FK__residence_guildOwnerId__guild_id");
             });
 
             modelBuilder.Entity<ResidenceDecor>(entity =>

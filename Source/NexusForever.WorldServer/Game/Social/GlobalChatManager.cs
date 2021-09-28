@@ -178,25 +178,24 @@ namespace NexusForever.WorldServer.Game.Social
         /// <summary>
         /// Create a new <see cref="ChatChannel"/> with supplied <see cref="ChatChannelType"/> and id.
         /// </summary>
-        public ChatChannel CreateChatChannel(ChatChannelType type, ulong id, string name, string password = null)
+        public ChatChannel CreateChatChannel(ChatChannelType type, ulong chatId, string name, string password = null)
         {
-            log.Info($"Trying to create chat channel: (id {id}) {name}, password= {password}");
-            if (chatChannelNames[type].TryGetValue(name, out ulong chatId))
+            if (chatChannels[type].TryGetValue(chatId, out ChatChannel channel))
             {
-                if (!chatChannels[type].TryGetValue(chatId, out ChatChannel channel) || !channel.PendingDelete)
+                if (!channel.PendingDelete)
                     throw new InvalidOperationException($"Chat channel {type},{name} already exists!");
 
                 channel.EnqueueDelete(false);
-                channel.Password = password;
-                return channel;
+                channel.Password = password;   
             }
             else
             {
-                var channel = new ChatChannel(type, id, name, password);
-                chatChannels[type].Add(id, channel);
-                chatChannelNames[type].Add(name, id);
-                return channel;
+                channel = new ChatChannel(type, chatId, name, password);
+                chatChannels[type].Add(chatId, channel);
+                chatChannelNames[type].Add(name, chatId);
             }
+
+            return channel;
         }
 
         /// <summary>
