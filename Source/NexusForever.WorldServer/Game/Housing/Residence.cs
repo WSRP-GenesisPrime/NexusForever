@@ -676,6 +676,7 @@ namespace NexusForever.WorldServer.Game.Housing
                 Type              = Type,
                 Name              = Name,
                 PropertyInfoId    = PropertyInfoId,
+                ResidenceInfoId   = ResidenceInfoEntry?.Id ?? 0u,
                 WallpaperExterior = Wallpaper,
                 Entryway          = Entryway,
                 Roof              = Roof,
