@@ -22,7 +22,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public bool IsFinished => status == SpellStatus.Finished;
 
         private readonly UnitEntity caster;
-        private readonly SpellParameters parameters;
+        public readonly SpellParameters parameters;
         private SpellStatus status;
 
         private readonly List<SpellTargetInfo> targets = new();

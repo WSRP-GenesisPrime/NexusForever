@@ -8,6 +8,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
+using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -153,6 +154,24 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             Spell.Spell spell = pendingSpells.SingleOrDefault(s => s.CastingId == castingId);
             spell?.CancelCast(CastResult.SpellCancelled);
+            pendingSpells.Remove(spell);
+        }
+
+        public void CancelEffect(uint castingId)
+        {
+            EnqueueToVisible(new ServerSpellFinish
+            {
+                ServerUniqueId = castingId
+            }, true);
+            pendingSpells.RemoveAll(s => s.CastingId == castingId);
+        }
+
+        public void WipeEffectsByID(uint spell4Id)
+        {
+            foreach(var spell in pendingSpells.Where(s => s.parameters.SpellInfo.BaseInfo.Entry.Id == spell4Id).ToList())
+            {
+                CancelEffect(spell.CastingId);
+            }
         }
     }
 }
