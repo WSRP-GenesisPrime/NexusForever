@@ -162,7 +162,7 @@ namespace NexusForever.WorldServer.Game.Guild
         /// </summary>
         public void OnLogin()
         {
-            SendInitialPackets(owner.Session);
+            SendGuildInitialise(owner.Session);
             if (Guild != null)
                 UpdateHolomark();
 
@@ -173,7 +173,7 @@ namespace NexusForever.WorldServer.Game.Guild
         /// <summary>
         /// Used to send initial packets to the <see cref="Player"/> containing associated guilds
         /// </summary>
-        public static void SendInitialPackets(WorldSession session)
+        public static void SendGuildInitialise(WorldSession session)
         {
             List<GuildData> playerGuilds = new List<GuildData>();
             List<NetworkGuildMember> playerMemberInfo = new List<NetworkGuildMember>();

@@ -477,9 +477,9 @@ namespace NexusForever.WorldServer.Game.Social
             // target player message
             var builder = new ChatMessageBuilder
             {
-                Type = ChatChannelType.Whisper,
-                Self = false,
-                FromName = session.Player.Name,
+                Type         = ChatChannelType.Whisper,
+                Self         = false,
+                FromName     = session.Player.Name,
                 FromCharacterId = session.Player.CharacterId,
                 FromCharacterRealmId = 0,
                 Text = whisper.Message,

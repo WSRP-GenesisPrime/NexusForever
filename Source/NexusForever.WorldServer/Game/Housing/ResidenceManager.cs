@@ -3,14 +3,12 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Network.Message.Model;
-using NLog;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
     public class ResidenceManager
     {
         public Residence Residence { get; private set; }
-        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
 
         private readonly Player owner;
 

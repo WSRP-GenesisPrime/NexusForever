@@ -53,7 +53,6 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 Position = Vector3.Zero
             });
-            plot.SetPlugEntity(plug);
         }
 
         private void RemoveResidence(Residence residence)
@@ -97,9 +96,9 @@ namespace NexusForever.WorldServer.Game.Map
             // this shows the housing toolbar, might need to move this to a more generic place in the future
             player.Session.EnqueueMessageEncrypted(new ServerShowActionBar
             {
-                ShortcutSet = ShortcutSet.FloatingSpellBar,
+                ShortcutSet            = ShortcutSet.FloatingSpellBar,
                 ActionBarShortcutSetId = 1553,
-                Guid = player.Guid
+                Guid                   = player.Guid
             });
         }
 
@@ -176,43 +175,6 @@ namespace NexusForever.WorldServer.Game.Map
                 player.Session.EnqueueMessageEncrypted(housingPlots);
             else
                 EnqueueToAll(housingPlots);
-        }
-
-        private void SendHousingProperties(Player player = null)
-        {
-            List<ServerHousingProperties.Residence> residenceList = new List<ServerHousingProperties.Residence>();
-            foreach(var residence in residences.Values)
-            {
-                residenceList.Add(new ServerHousingProperties.Residence
-                {
-                    RealmId = WorldServer.RealmId,
-                    ResidenceId = residence.Id,
-                    NeighbourhoodId = 0x190000000000000A,
-                    CharacterIdOwner = residence.OwnerId,
-                    Name = residence.Name,
-                    PropertyInfoId = residence.PropertyInfoId,
-                    ResidenceInfoId = residence.ResidenceInfoEntry?.Id ?? 0u,
-                    WallpaperExterior = residence.Wallpaper,
-                    Entryway = residence.Entryway,
-                    Roof = residence.Roof,
-                    Door = residence.Door,
-                    Ground = residence.Ground,
-                    Music = residence.Music,
-                    Sky = residence.Sky,
-                    Flags = residence.Flags,
-                    ResourceSharing = residence.ResourceSharing,
-                    GardenSharing = residence.GardenSharing
-                });
-            }
-            var housingProperties = new ServerHousingProperties
-            {
-                Residences = residenceList
-            };
-
-            if (player != null)
-                player.Session.EnqueueMessageEncrypted(housingProperties);
-            else
-                EnqueueToAll(housingProperties);
         }
 
         private void SendResidenceDecor(Player player = null)
@@ -616,35 +578,6 @@ namespace NexusForever.WorldServer.Game.Map
         }
 
         /// <summary>
-        /// Sends <see cref="ServerHousingPlots"/> to the player
-        /// </summary>
-        private void SendHousingPlots(Residence residence, Player player = null)
-        {
-            var housingPlots = new ServerHousingPlots
-            {
-                RealmId = WorldServer.RealmId,
-                ResidenceId = residence.Id,
-            };
-
-            foreach (Plot plot in residence.GetPlots())
-            {
-                housingPlots.Plots.Add(new ServerHousingPlots.Plot
-                {
-                    PlotPropertyIndex = plot.Index,
-                    PlotInfoId = plot.PlotInfoEntry.Id,
-                    PlugFacing = plot.PlugFacing,
-                    PlugItemId = plot.PlugItemEntry?.Id ?? 0u,
-                    BuildState = plot.BuildState
-                });
-            }
-
-            if (player != null)
-                player.Session.EnqueueMessageEncrypted(housingPlots);
-            else
-                EnqueueToAll(housingPlots);
-        }
-
-        /// <summary>
         /// Install a House Plug into a Plot
         /// </summary>
         private void SetHousePlug(Residence residence, Player player, ClientHousingPlugUpdate housingPlugUpdate, HousingPlugItemEntry plugItemEntry)
@@ -687,10 +620,10 @@ namespace NexusForever.WorldServer.Game.Map
             UpdatePlot(residence, player, plot, housingPlugUpdate, houseLocation);
 
             // Send updated Property data (informs residence, roof, door, etc.)
-            SendHousingProperties();
+            SendResidences();
 
             // Send plots again after Property was updated
-            SendHousingPlots(residence);
+            SendResidencePlots(residence);
 
             // Resend the Action Bar because buttons may've been enabled after adding a house
             player.Session.EnqueueMessageEncrypted(new ServerShowActionBar
@@ -701,7 +634,7 @@ namespace NexusForever.WorldServer.Game.Map
             });
 
             // Send plots again after Property was updated
-            SendHousingPlots(residence);
+            SendResidencePlots(residence);
 
             // Send residence decor after house change
             SendResidenceDecor();
@@ -749,7 +682,7 @@ namespace NexusForever.WorldServer.Game.Map
                 // Update the Plot and queue necessary plug updates
                 UpdatePlot(residence, player, plot, housingPlugUpdate);
 
-                SendHousingPlots(residence);
+                SendResidencePlots(residence);
 
                 // TODO: Run script(s) associated with PlugItem
 
@@ -786,7 +719,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (housingPlugUpdate != null)
                 plot.SetPlug(housingPlugUpdate.PlugItem, (HousingPlugFacing)housingPlugUpdate.PlugFacing == HousingPlugFacing.Default ? HousingPlugFacing.East : (HousingPlugFacing)housingPlugUpdate.PlugFacing);
 
-            SendHousingPlots(residence);
+            SendResidencePlots(residence);
 
             // TODO: Figure out what this packet is for
             player.Session.EnqueueMessageEncrypted(new Server051F
@@ -838,7 +771,7 @@ namespace NexusForever.WorldServer.Game.Map
                 plot.PlugEntity.RemoveFromMap();
                 plot.RemovePlug();
 
-                SendHousingPlots(residence);
+                SendResidencePlots(residence);
             }
         }
 

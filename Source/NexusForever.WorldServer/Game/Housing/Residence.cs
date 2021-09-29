@@ -26,7 +26,6 @@ namespace NexusForever.WorldServer.Game.Housing
         public ulong Id { get; }
         public ResidenceType Type { get; }
         public ulong? OwnerId { get; }
-        public string OwnerName { get; }
 
         private bool has18PlusLock = false;
         private DateTime unlockTime18Plus = DateTime.MinValue;
@@ -357,6 +356,7 @@ namespace NexusForever.WorldServer.Game.Housing
 
             // TODO: find a better way to do this
             plots[0].SetPlug(573);
+            plots[0].BuildState = 4;
         }
 
         private void InitialiseDefaultPlots()
@@ -855,7 +855,6 @@ namespace NexusForever.WorldServer.Game.Housing
             decors.Add(decor.DecorId, newDecor);
             return newDecor;
         }
-
 
         /// <summary>
         /// Set this <see cref="Residence"/> house plug to the supplied <see cref="HousingPlugItemEntry"/>. Returns <see cref="true"/> if successful

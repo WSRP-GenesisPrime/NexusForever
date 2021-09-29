@@ -837,12 +837,12 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
-                        Id = 98,
+                        Id   = 98,
                         Name = "Category: Reputation"
                     },
                     new PermissionModel
                     {
-                        Id = 99,
+                        Id   = 99,
                         Name = "Command: ReputationUpdate"
                     },
                     new PermissionModel
