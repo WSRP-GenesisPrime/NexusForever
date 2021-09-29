@@ -10,8 +10,6 @@ using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Guild.Static;
-using NexusForever.WorldServer.Game.Social;
-using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
@@ -717,38 +715,15 @@ namespace NexusForever.WorldServer.Game.Guild
             });
         }
 
-        public virtual bool hasChatChannel(ChatChannelType type, GuildMember g)
-        {
-            return true;
-        }
-
         /// <summary>
         /// Send <see cref="IWritable"/> to all online members.
         /// </summary>
-        public void Broadcast(IWritable writable, ulong? except = null)
+        public void Broadcast(IWritable writable)
         {
             foreach (ulong characterId in onlineMembers)
             {
-                if (characterId != except)
-                {
-                    Player player = CharacterManager.Instance.GetPlayer(characterId);
-                    player?.Session?.EnqueueMessageEncrypted(writable);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Send <see cref="IWritable"/> to all online members.
-        /// </summary>
-        public void BroadcastChat(IWritable writable, Player player, ChatChannelType type)
-        {
-            foreach (ulong characterId in onlineMembers)
-            {
-                GuildMember g = GetMember(characterId);
-                if(hasChatChannel(type, g) && characterId != player.CharacterId)
-                {
-                    CharacterManager.Instance.GetPlayer(characterId)?.Session?.EnqueueMessageEncrypted(writable);
-                }
+                Player player = CharacterManager.Instance.GetPlayer(characterId);
+                player?.Session?.EnqueueMessageEncrypted(writable);
             }
         }
 

@@ -1,7 +1,6 @@
 ﻿using NexusForever.Database.Character.Model;
 using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing;
-using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using System;

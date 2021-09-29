@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.WorldServer.Game.Achievement;
 using NexusForever.WorldServer.Game.Guild.Static;
-using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 
@@ -18,8 +16,6 @@ namespace NexusForever.WorldServer.Game.Guild
 
         public GuildStandard Standard { get; }
         public GuildAchievementManager AchievementManager { get; }
-
-        public ChatChannel officerChannel { get; protected set; }
 
         public string MessageOfTheDay
         {

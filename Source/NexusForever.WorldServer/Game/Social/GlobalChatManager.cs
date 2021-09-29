@@ -10,9 +10,9 @@ using NexusForever.Shared;
 using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Database;
 using NexusForever.Shared.Game;
+using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
-using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Map.Search;
 using NexusForever.WorldServer.Game.Social.Model;
 using NexusForever.WorldServer.Game.Social.Static;
@@ -41,11 +41,10 @@ namespace NexusForever.WorldServer.Game.Social
         private readonly Dictionary<ChatChannelType, Dictionary<string, ulong>> chatChannelNames = new();
         private readonly Dictionary<ChatChannelType, Dictionary<ulong, List<ulong>>> characterChatChannels = new();
 
-        // TODO: Switch to caching session GUIDs and announce to each session by Guid.
-        private readonly Dictionary<ChatChannelType, List<WorldSession>> chatChannelSessions = new Dictionary<ChatChannelType, List<WorldSession>>
+        private readonly List<ChatChannelType> defaultChannelTypes = new List<ChatChannelType>
         {
-            { ChatChannelType.Nexus, new List<WorldSession>() },
-            { ChatChannelType.Trade, new List<WorldSession>() }
+            ChatChannelType.Nexus,
+            ChatChannelType.Trade,
         };
 
         private readonly UpdateTimer saveTimer = new(60d);
@@ -80,6 +79,11 @@ namespace NexusForever.WorldServer.Game.Social
 
                 chatChannels[chatChannel.Type].Add(chatChannel.Id, chatChannel);
                 chatChannelNames[chatChannel.Type].Add(chatChannel.Name, chatChannel.Id);
+            }
+
+            foreach (var channelType in defaultChannelTypes)
+            {
+                CreateChatChannel(channelType, 1, channelType.ToString());
             }
         }
 
@@ -171,8 +175,23 @@ namespace NexusForever.WorldServer.Game.Social
         /// </summary>
         public ChatChannel CreateChatChannel(ChatChannelType type, string name, string password = null)
         {
-            ulong id = (ulong) chatChannels[type].Count;
-            return CreateChatChannel(type, id, name, password);
+            if (chatChannelNames[type].TryGetValue(name, out ulong chatId))
+            {
+                if (!chatChannels[type].TryGetValue(chatId, out ChatChannel channel) || !channel.PendingDelete)
+                    throw new InvalidOperationException($"Chat channel {type},{name} already exists!");
+
+                channel.EnqueueDelete(false);
+                channel.Password = password;
+                return channel;
+            }
+            else
+            {
+                ulong id = chatChannelIds[type]++;
+                var channel = new ChatChannel(type, id, name, password);
+                chatChannels[type].Add(id, channel);
+                chatChannelNames[type].Add(name, id);
+                return channel;
+            }
         }
 
         /// <summary>
@@ -287,12 +306,13 @@ namespace NexusForever.WorldServer.Game.Social
             });
         }
 
-        private void SendChatAccept(WorldSession session, string targetName)
+        private void SendChatAccept(WorldSession session, Player target)
         {
             session.EnqueueMessageEncrypted(new ServerChatAccept
             {
-                Name = targetName,
-                Guid = session.Player.Guid
+                Name = target.Name,
+                Guid = target.Guid,
+                GM = target.Session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             });
         }
 
@@ -302,28 +322,22 @@ namespace NexusForever.WorldServer.Game.Social
         /// <param name="session"></param>
         public void JoinChatChannels(WorldSession session)
         {
-            foreach (KeyValuePair<ChatChannelType, List<WorldSession>> chatChannel in chatChannelSessions)
+            foreach (var channelType in defaultChannelTypes)
             {
-                if (chatChannelSessions[chatChannel.Key].Contains(session) || chatChannelSessions[chatChannel.Key].FindAll(s => s.Player == session.Player).ToList().Count <= 0)
-                    chatChannelSessions[chatChannel.Key].Remove(session);
-
-                chatChannelSessions[chatChannel.Key].Add(session);
-
-                session.EnqueueMessageEncrypted(new ServerChatJoin
-                {
-                    Channel = new Channel { Type = chatChannel.Key }
-                });
+                GetChatChannel(channelType, 1).Join(session.Player, null);
             }
         }
 
         /// <summary>
-        /// Removes the <see cref="WorldSession"/> from appropriate chat channels.
+        /// Remove the <see cref="WorldSession"/> from the chat channels sessions list for appropriate chat channels.
         /// </summary>
         /// <param name="session"></param>
         public void LeaveChatChannels(WorldSession session)
         {
-            foreach (KeyValuePair<ChatChannelType, List<WorldSession>> chatChannel in chatChannelSessions)
-                chatChannelSessions[chatChannel.Key].Remove(session);
+            foreach (var channelType in defaultChannelTypes)
+            {
+                GetChatChannel(channelType, 1).Leave(session.Player.CharacterId);
+            }
         }
 
         [ChatChannelHandler(ChatChannelType.Say)]
@@ -353,35 +367,14 @@ namespace NexusForever.WorldServer.Game.Social
             SendChatAccept(session);
         }
 
+        [ChatChannelHandler(ChatChannelType.Guild)]
+        [ChatChannelHandler(ChatChannelType.Society)]
+        [ChatChannelHandler(ChatChannelType.WarParty)]
+        [ChatChannelHandler(ChatChannelType.Community)]
+        [ChatChannelHandler(ChatChannelType.GuildOfficer)]
+        [ChatChannelHandler(ChatChannelType.WarPartyOfficer)]
         [ChatChannelHandler(ChatChannelType.Nexus)]
         [ChatChannelHandler(ChatChannelType.Trade)]
-        private void HandleGlobalChat(WorldSession session, ClientChat chat)
-        {
-            var builder = new ChatMessageBuilder
-            {
-                Type = chat.Channel.Type,
-                FromName = session.Player.Name,
-                Text = chat.Message,
-                Formats = ParseChatLinks(session, chat.Formats).ToList(),
-                Guid = session.Player.Guid,
-                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
-            };
-
-            var serverChat = builder.Build();
-
-            foreach (WorldSession channelSession in chatChannelSessions[chat.Channel.Type])
-            {
-                if(channelSession == session)
-                {
-                    continue;
-                }
-                serverChat.CrossFaction = session.Player.Faction1 != channelSession.Player.Faction1;
-                channelSession.EnqueueMessageEncrypted(serverChat);
-            }
-
-            SendChatAccept(session);
-        }
-
         [ChatChannelHandler(ChatChannelType.Custom)]
         private void HandleChannelChat(WorldSession session, ClientChat chat)
         {
@@ -413,31 +406,7 @@ namespace NexusForever.WorldServer.Game.Social
                 GM       = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
 
-            channel.Broadcast(builder.Build());
-        }
-
-        [ChatChannelHandler(ChatChannelType.Guild)]
-        [ChatChannelHandler(ChatChannelType.Society)]
-        [ChatChannelHandler(ChatChannelType.WarParty)]
-        [ChatChannelHandler(ChatChannelType.Community)]
-        [ChatChannelHandler(ChatChannelType.GuildOfficer)]
-        [ChatChannelHandler(ChatChannelType.WarPartyOfficer)]
-        private void HandleGuildChat(WorldSession session, ClientChat chat)
-        {
-            GuildBase g = GlobalGuildManager.Instance.GetGuild(chat.Channel.ChatId);
-
-            var builder = new ChatMessageBuilder
-            {
-                Type = chat.Channel.Type,
-                ChatId = chat.Channel.ChatId,
-                FromName = session.Player.Name,
-                Text = chat.Message,
-                Formats = ParseChatLinks(session, chat.Formats).ToList(),
-                Guid = session.Player.Guid,
-                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
-            };
-
-            g.BroadcastChat(builder.Build(), session.Player, chat.Channel.Type);
+            channel.Broadcast(builder.Build(), session.Player);
             SendChatAccept(session);
         }
 
@@ -480,21 +449,16 @@ namespace NexusForever.WorldServer.Game.Social
                 Type         = ChatChannelType.Whisper,
                 Self         = false,
                 FromName     = session.Player.Name,
-                FromCharacterId = session.Player.CharacterId,
-                FromCharacterRealmId = 0,
-                Text = whisper.Message,
-                Formats = ParseChatLinks(session, whisper.Formats).ToList(),
+                Text         = whisper.Message,
+                Formats      = ParseChatLinks(session, whisper.Formats).ToList(),
                 CrossFaction = session.Player.Faction1 != target.Faction1,
-                GM = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
+                FromCharacterId = session.Player.CharacterId,
+                FromCharacterRealmId = WorldServer.RealmId,
+                GM           = session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
             };
             target.Session.EnqueueMessageEncrypted(builder.Build());
 
-            session.EnqueueMessageEncrypted(new ServerChatAccept
-            {
-                Name = target.Name,
-                Guid = target.Guid,
-                GM = target.Session.AccountRbacManager.HasPermission(RBAC.Static.Permission.GMFlag)
-            });
+            SendChatAccept(session, target);
         }
 
         /// <summary>

@@ -834,7 +834,6 @@ namespace NexusForever.WorldServer.Game.Entity
             MailManager.SendInitialPackets();
             ZoneMapManager.SendInitialPackets();
             Session.AccountCurrencyManager.SendInitialPackets();
-            GlobalChatManager.Instance.JoinChatChannels(Session);
             QuestManager.SendInitialPackets();
             AchievementManager.SendInitialPackets(null);
             Session.EntitlementManager.SendInitialPackets();
@@ -1019,6 +1018,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
             GuildManager.OnLogin();
             ChatManager.OnLogin();
+            GlobalChatManager.Instance.JoinChatChannels(Session);
         }
 
         private void OnLogout()
