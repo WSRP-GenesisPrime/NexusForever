@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using NexusForever.Shared;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
@@ -100,6 +101,12 @@ namespace NexusForever.WorldServer.Game.Map
                 ActionBarShortcutSetId = 1553,
                 Guid                   = player.Guid
             });
+
+            foreach (Residence residence in residences.Values)
+            {
+                foreach (Decor decor in residence.GetPlacedDecor())
+                    CreateEntityForDecor(residence, decor);
+            }
         }
 
         protected override void OnUnload()
@@ -258,6 +265,9 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 decor.Crate();
                 housingResidenceDecor.DecorData.Add(decor.Build());
+
+                if (decor.ActivateEntity != null)
+                    decor.RemoveActivateEntity();
             }
 
             EnqueueToAll(housingResidenceDecor);
@@ -347,6 +357,8 @@ namespace NexusForever.WorldServer.Game.Map
                 decor.Position = update.Position;
                 decor.Rotation = update.Rotation;
                 decor.Scale    = update.Scale;
+
+                CreateEntityForDecor(residence, decor);
             }
 
             EnqueueToAll(new ServerHousingResidenceDecor
@@ -395,13 +407,9 @@ namespace NexusForever.WorldServer.Game.Map
 
                 if (decor.Type == DecorType.Crate)
                 {
-                    if (decor.Entry.Creature2IdActiveProp != 0u)
-                    {
-                        // TODO: used for decor that have an associated entity
-                    }
-
                     // crate->world
                     decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale);
+                    CreateEntityForDecor(residence, decor);
                 }
                 else
                 {
@@ -412,6 +420,8 @@ namespace NexusForever.WorldServer.Game.Map
                         // world->world
                         decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale);
                         decor.DecorParentId = update.ParentDecorId;
+                        decor.RemoveActivateEntity();
+                        CreateEntityForDecor(residence, decor);
                     }
                 }
             }
@@ -795,6 +805,81 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 TutorialId = 142
             });
+        }
+
+        /// <summary>
+        /// Used to confirm the position and PlotIndex are valid together when placing Decor
+        /// </summary>
+        private Vector3 CalculateWorldCoordinates(Vector3 position)
+        {
+            return new Vector3(1472f + position.X, -715f + position.Y, 1440f + position.Z);
+        }
+
+        private void CreateEntityForDecor(Residence residence, Decor decor)
+        {
+            if (decor.Position == Vector3.Zero)
+                return;
+
+            Creature2Entry creatureEntry = null;
+
+            if (decor.Entry.Creature2IdActiveProp > 0 && decor.Entry.Creature2IdActiveProp < int.MaxValue)
+                creatureEntry = GameTableManager.Instance.Creature2.GetEntry(decor.Entry.Creature2IdActiveProp);
+            else
+            {
+                switch (decor.Entry.HousingDecorTypeId)
+                {
+                    case 4:
+                    case 21:
+                        creatureEntry = GameTableManager.Instance.Creature2.GetEntry(57195); // Generic Chair - Sitting Active Prop - Sniffs showed this was used in every seat entity.
+                        break;
+                    case 59:
+                        creatureEntry = GameTableManager.Instance.Creature2.GetEntry(75398); // Door
+                        break;
+                }
+            }
+
+            if (creatureEntry != null)
+                CreateEntityForDecor(residence, decor, creatureEntry);
+        }
+
+        private void CreateEntityForDecor(Residence residence, Decor decor, Creature2Entry creatureEntry)
+        {
+            if (creatureEntry == null)
+                throw new ArgumentNullException("creatureEntry");
+
+            switch (creatureEntry.CreationTypeEnum)
+            {
+                case 0:
+                    NonPlayer nonPlayerEntity = new NonPlayer(creatureEntry, decor.DecorId, (ushort) (residence.GetPlot(decor.PlotIndex)?.PlugItemEntry?.Id ?? 1159)); // TODO: Update PlugId to match ID of Plot at Decor's PlotIndex.
+                    nonPlayerEntity.Rotation = decor.Rotation.ToEulerDegrees();
+                    EnqueueAdd(nonPlayerEntity, new MapPosition{
+                        Position = CalculateWorldCoordinates(decor.Position),
+                        Info = new MapInfo
+                        {
+                            Entry = Entry,
+                            InstanceId = InstanceId
+                        }
+                        });
+                    decor.SetActivateEntity(nonPlayerEntity);
+                    break;
+                case 10:
+                    Simple activateEntity = new Simple(creatureEntry, decor.DecorId, (ushort) (residence.GetPlot(decor.PlotIndex)?.PlugItemEntry?.Id ?? 1159)); // TODO: Update PlugId to match ID of Plot at Decor's PlotIndex.
+                    activateEntity.Rotation = decor.Rotation.ToEulerDegrees();
+                    EnqueueAdd(activateEntity, new MapPosition
+                    {
+                        Position = CalculateWorldCoordinates(decor.Position),
+                        Info = new MapInfo
+                        {
+                            Entry = Entry,
+                            InstanceId = InstanceId
+                        }
+                    });
+                    decor.SetActivateEntity(activateEntity);
+                    break;
+                default:
+                    log.Warn("Unsupported entity creation type.");
+                    break;
+            }
         }
     }
 }

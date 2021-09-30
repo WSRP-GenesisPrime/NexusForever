@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NexusForever.Database.World.Model;
+using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity.Movement;
 using NexusForever.WorldServer.Game.Entity.Network;
@@ -31,6 +32,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public ulong ActivePropId { get; protected set; }
         public ushort WorldSocketId { get; protected set; }
+        public ulong DecorPropId { get; protected set; }
+        public ushort DecorPlugId { get; protected set; }
 
         public Vector3 LeashPosition { get; protected set; }
         public float LeashRange { get; protected set; } = 15f;
@@ -56,6 +59,13 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             get => Convert.ToBoolean(GetStatInteger(Stat.Sheathed) ?? 0u);
             set => SetStat(Stat.Sheathed, Convert.ToUInt32(value));
+        }
+
+        public void SetDecorEntityStuff(Creature2Entry entry, ulong propId, ushort plugId)
+        {
+            CreatureId = entry.Id;
+            DecorPropId = propId;
+            DecorPlugId = plugId;
         }
 
         /// <summary>
