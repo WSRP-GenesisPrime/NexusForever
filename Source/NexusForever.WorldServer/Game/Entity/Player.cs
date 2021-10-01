@@ -881,7 +881,6 @@ namespace NexusForever.WorldServer.Game.Entity
                 log.Info($"Removing player {Name} from map {Map.Entry.Id} with guid {Guid}.");
             }
             DestroyDependents();
-            Map.OnRemoveFromMap(this);
             base.OnRemoveFromMap();
         }
 

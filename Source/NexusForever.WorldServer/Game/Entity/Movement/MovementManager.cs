@@ -275,8 +275,8 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 isPlayer = true;
             }
 
-            if (isPlayer)
-                player?.Session.EnqueueMessageEncrypted(new Server0639());
+            /*if (isPlayer)
+                player?.Session.EnqueueMessageEncrypted(new Server0639());*/ // slows down the character, unsure what it does.
 
             var serverEntityCommand = new ServerEntityCommand
             {
@@ -292,13 +292,13 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             owner.EnqueueToVisible(serverEntityCommand, true);
             ClearUnhandledCommands();
 
-            if (isPlayer)
-                player?.Session.EnqueueMessageEncrypted(new ServerMovementControl
+            /*if (isPlayer)
+                player?.Session.EnqueueMessageEncrypted(new ServerMovementControl // slows down the character, unsure what it does.
                 {
                     Ticket = 2,
                     Immediate = true,
                     UnitId = player.Guid
-                });
+                });*/
 
             isDirty = false;
             serverControlled = true;

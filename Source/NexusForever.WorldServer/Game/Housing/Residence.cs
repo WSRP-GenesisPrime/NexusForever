@@ -944,7 +944,7 @@ namespace NexusForever.WorldServer.Game.Housing
             Roof = 0;
             Door = 0;
             Entryway = 0;
-            
+
             saveMask |= ResidenceSaveMask.ResidenceInfo;
         }
 

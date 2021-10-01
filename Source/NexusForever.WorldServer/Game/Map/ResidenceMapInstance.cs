@@ -1161,7 +1161,7 @@ namespace NexusForever.WorldServer.Game.Map
                     return GameTableManager.Instance.Creature2.GetEntry(25282); // Target Dummy
                 default:
                     TextTable tt = GameTableManager.Instance.GetTextTable(Language.English);
-                    log.Warn($"Unsupported Decor CreatureEntry: {tt.GetEntry(GameTableManager.Instance.HousingDecorType.GetEntry(decor.Entry.HousingDecorTypeId).LocalizedTextId)}");
+                    //log.Warn($"Unsupported Decor CreatureEntry: {tt.GetEntry(GameTableManager.Instance.HousingDecorType.GetEntry(decor.Entry.HousingDecorTypeId).LocalizedTextId)}");
                     break;
             }
 

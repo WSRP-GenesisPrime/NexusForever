@@ -12,11 +12,6 @@ namespace NexusForever.WorldServer.Game.Map
 {
     public abstract class InstancedMap<T> : IMap, IInstancedMap where T : MapInstance, new()
     {
-        /// <summary>
-        /// Unused. Only here to satisfy interface requirements.
-        /// </summary>
-        public bool IsReadyToUnload() => false;
-        
         private class PendingAdd
         {
             public Player Player { get; init; }

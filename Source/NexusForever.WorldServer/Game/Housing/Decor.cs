@@ -244,7 +244,7 @@ namespace NexusForever.WorldServer.Game.Housing
                 {
                     Id            = Id,
                     DecorId       = DecorId,
-                    DecorInfoId   = Entry?.Id ?? DecorInfoId,
+                    DecorInfoId   = DecorInfoId,
                     DecorType     = (uint)Type,
                     PlotIndex     = PlotIndex,
                     X             = Position.X,
