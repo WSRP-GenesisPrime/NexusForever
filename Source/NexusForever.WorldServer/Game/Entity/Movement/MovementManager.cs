@@ -267,6 +267,17 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             if (!isDirty)
                 return;
 
+            bool isPlayer = false;
+            Player player = null;
+            if (owner is Player)
+            {
+                player = owner as Player;
+                isPlayer = true;
+            }
+
+            if (isPlayer)
+                player?.Session.EnqueueMessageEncrypted(new Server0639());
+
             var serverEntityCommand = new ServerEntityCommand
             {
                 Guid             = owner.Guid,
@@ -280,6 +291,14 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
 
             owner.EnqueueToVisible(serverEntityCommand, true);
             ClearUnhandledCommands();
+
+            if (isPlayer)
+                player?.Session.EnqueueMessageEncrypted(new ServerMovementControl
+                {
+                    Ticket = 2,
+                    Immediate = true,
+                    UnitId = player.Guid
+                });
 
             isDirty = false;
             serverControlled = true;

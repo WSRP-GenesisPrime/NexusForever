@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -8,6 +9,7 @@ using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.Shared.GameTable;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
@@ -15,8 +17,8 @@ namespace NexusForever.WorldServer.Game.Housing
     {
         public ulong Id => Residence.Id;
         public ulong DecorId { get; }
-        public HousingDecorInfoEntry Entry { get; }
-        public WorldEntity ActivateEntity { get; private set; }
+        public HousingDecorInfoEntry Entry { get; protected set; }
+        public WorldEntity Entity { get; private set; }
 
         public DecorType Type
         {
@@ -102,9 +104,40 @@ namespace NexusForever.WorldServer.Game.Housing
 
         private ushort colourShiftId;
 
-        public Residence Residence { get; }
+        public Residence Residence { get; protected set; }
+
+        public uint HookBagIndex 
+        {
+            get => hookBagIndex;
+            set
+            {
+                hookBagIndex = value;
+                saveMask |= DecorSaveMask.Hooks;
+            }
+        }
+        private uint hookBagIndex;
+
+        public uint HookIndex 
+        {
+            get => hookIndex;
+            set
+            {
+                hookIndex = value;
+                saveMask |= DecorSaveMask.Hooks;
+            }
+        }
+        private uint hookIndex;
+
+        public uint DecorInfoId => Entry?.Id ?? decorInfoId;
+        private uint decorInfoId;
 
         private DecorSaveMask saveMask;
+
+        public ulong ClientDecorId { get; private set; }
+
+        public Decor()
+        {
+        }
 
         /// <summary>
         /// Returns if <see cref="Decor"/> is enqueued to be deleted from the database.
@@ -125,14 +158,21 @@ namespace NexusForever.WorldServer.Game.Housing
         public Decor(Residence residence, ResidenceDecor model, HousingDecorInfoEntry entry)
         {
             DecorId       = model.DecorId;
-            Entry         = entry;
             type          = (DecorType)model.DecorType;
+
+            if (type != DecorType.InteriorDecoration)
+                Entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(model.DecorInfoId);
+            else
+                decorInfoId = model.DecorInfoId;
+
             plotIndex     = model.PlotIndex;
             position      = new Vector3(model.X, model.Y, model.Z);
             rotation      = new Quaternion(model.Qx, model.Qy, model.Qz, model.Qw);
             scale         = model.Scale;
             decorParentId = model.DecorParentId;
             colourShiftId = model.ColourShiftId;
+            hookBagIndex  = model.HookBagIndex;
+            hookIndex     = model.HookIndex;
             Residence     = residence;
 
             saveMask = DecorSaveMask.None;
@@ -150,6 +190,23 @@ namespace NexusForever.WorldServer.Game.Housing
             rotation  = Quaternion.Identity;
             Residence = residence;
 
+            saveMask = DecorSaveMask.Create;
+        }
+
+        /// <summary>
+        /// Create a new <see cref="Decor"/> from a <see cref="HousingWallpaperInfoEntry"/> template. Used for Interior Remodelling.
+        /// </summary>
+        public Decor(ulong decorId, HousingWallpaperInfoEntry entry, uint hookBagIndex, uint hookIndex)
+        {
+            DecorId = decorId;
+            decorInfoId = entry.Id;
+            type = DecorType.InteriorDecoration;
+            position = Vector3.Zero;
+            rotation = Quaternion.Identity;
+            HookBagIndex = hookBagIndex;
+            HookIndex = hookIndex;
+            plotIndex = 0;
+            
             saveMask = DecorSaveMask.Create;
         }
 
@@ -187,7 +244,7 @@ namespace NexusForever.WorldServer.Game.Housing
                 {
                     Id            = Id,
                     DecorId       = DecorId,
-                    DecorInfoId   = Entry.Id,
+                    DecorInfoId   = Entry?.Id ?? DecorInfoId,
                     DecorType     = (uint)Type,
                     PlotIndex     = PlotIndex,
                     X             = Position.X,
@@ -199,7 +256,9 @@ namespace NexusForever.WorldServer.Game.Housing
                     Qw            = Rotation.W,
                     Scale         = Scale,
                     DecorParentId = DecorParentId,
-                    ColourShiftId = ColourShiftId
+                    ColourShiftId = ColourShiftId,
+                    HookBagIndex  = HookBagIndex,
+                    HookIndex     = HookIndex
                 });
             }
             else if ((saveMask & DecorSaveMask.Delete) != 0)
@@ -218,7 +277,7 @@ namespace NexusForever.WorldServer.Game.Housing
                 var model = new ResidenceDecor
                 {
                     Id      = Id,
-                    DecorId = DecorId
+                    DecorId = (ulong)DecorId
                 };
 
                 // could probably clean this up with reflection, works for the time being
@@ -268,6 +327,14 @@ namespace NexusForever.WorldServer.Game.Housing
                     model.ColourShiftId = ColourShiftId;
                     entity.Property(p => p.ColourShiftId).IsModified = true;
                 }
+                if ((saveMask & DecorSaveMask.Hooks) != 0)
+                {
+                    model.HookBagIndex = HookBagIndex;
+                    entity.Property(p => p.HookBagIndex).IsModified = true;
+
+                    model.HookIndex = HookIndex;
+                    entity.Property(p => p.HookIndex).IsModified = true;
+                }
             }
 
             saveMask = DecorSaveMask.None;
@@ -291,20 +358,23 @@ namespace NexusForever.WorldServer.Game.Housing
         {
             Move(DecorType.Crate, Vector3.Zero, Quaternion.Identity, 0f);
             DecorParentId = 0u;
-            RemoveActivateEntity();
+            RemoveEntity();
         }
 
-        public void SetActivateEntity(WorldEntity entity)
+        public void SetEntity(WorldEntity entity)
         {
-            ActivateEntity = entity;
+            if (Entity != null && entity != null)
+                throw new InvalidOperationException($"Cannot add an Entity to this Decor when an Entity already exists.");
+
+            Entity = entity;
         }
 
-        public void RemoveActivateEntity()
+        public void RemoveEntity()
         {
-            if (ActivateEntity != null)
+            if (Entity != null)
             {
-                ActivateEntity.Map.EnqueueRemove(ActivateEntity);
-                ActivateEntity = null;
+                Entity.Map.EnqueueRemove(Entity);
+                Entity = null;
             }
         }
 
@@ -317,12 +387,15 @@ namespace NexusForever.WorldServer.Game.Housing
                 ResidenceId   = Residence.Id,
                 DecorType     = Type,
                 PlotIndex     = PlotIndex,
+                HookBagIndex  = HookBagIndex,
+                HookIndex     = HookIndex,
                 Scale         = Scale,
                 Position      = Position,
                 Rotation      = Rotation,
-                DecorInfoId   = Entry.Id,
+                DecorInfoId   = DecorInfoId,
                 ParentDecorId = DecorParentId,
-                ColourShift   = ColourShiftId
+                ColourShift   = ColourShiftId,
+                ActivePropUnitId = Entity?.EntityId ?? 0u
             };
         }
     }

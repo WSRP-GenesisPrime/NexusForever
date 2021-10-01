@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using NexusForever.Database;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Shared.GameTable;
@@ -821,7 +820,17 @@ namespace NexusForever.WorldServer.Game.Housing
         public IEnumerable<Decor> GetPlacedDecor()
         {
             foreach (Decor decor in decors.Values)
-                if (decor.Type != DecorType.Crate)
+                if (decor.Type != DecorType.Crate && decor.Type != DecorType.InteriorDecoration)
+                    yield return decor;
+        }
+
+        /// <summary>
+        /// Return all <see cref="Decor"/> placed in the world for the <see cref="Residence"/>.
+        /// </summary>
+        public IEnumerable<Decor> GetPlacedDecor(uint plotIndex)
+        {
+            foreach (Decor decor in decors.Values)
+                if (decor.Type != DecorType.Crate && decor.PlotIndex == plotIndex)
                     yield return decor;
         }
 
@@ -835,11 +844,23 @@ namespace NexusForever.WorldServer.Game.Housing
         }
 
         /// <summary>
+        /// Return <see cref="Decor"/> with the supplied id.
+        /// </summary>
+        public Decor GetInteriorDecor(uint hookIndex)
+        {
+            Decor decor = decors.Values.Where(i => i.Type == DecorType.InteriorDecoration).SingleOrDefault(x => x.HookIndex == hookIndex);
+            return decor;
+        }
+
+        /// <summary>
         /// Create a new <see cref="Decor"/> from supplied <see cref="HousingDecorInfoEntry"/> for <see cref="Residence"/>.
         /// </summary>
         public Decor DecorCreate(HousingDecorInfoEntry entry)
         {
-            var decor = new Decor(this, GlobalResidenceManager.Instance.NextDecorId, entry);
+            ulong decorId = GlobalResidenceManager.Instance.NextDecorId;
+            if (decorId == Id)
+                decorId = GlobalResidenceManager.Instance.NextDecorId;
+            var decor = new Decor(this, decorId, entry);
             decors.Add(decor.DecorId, decor);
             return decor;
         }
@@ -857,6 +878,31 @@ namespace NexusForever.WorldServer.Game.Housing
             return newDecor;
         }
 
+        public Decor DecorCreate(DecorUpdate decorUpdate)
+        {
+            HousingWallpaperInfoEntry wallpaperInfoEntry = GameTableManager.Instance.HousingWallpaperInfo.GetEntry(decorUpdate.DecorInfoId);
+            if (wallpaperInfoEntry == null)
+                throw new InvalidOperationException();
+
+            ulong decorId = GlobalResidenceManager.Instance.NextDecorId;
+            if (decorId == Id)
+                decorId = GlobalResidenceManager.Instance.NextDecorId;
+            var decor = new Decor(decorId, wallpaperInfoEntry, decorUpdate.HookBagIndex, decorUpdate.HookIndex);
+            decors.Add(decor.DecorId, decor);
+            return decor;
+        }
+
+        public void DecorCreate(Decor decor)
+        {
+            decors.Add(decor.DecorId, decor);
+        }
+
+        public void DecorDelete(Decor decor)
+        {
+            decor.EnqueueDelete();
+
+        }
+
         /// <summary>
         /// Set this <see cref="Residence"/> house plug to the supplied <see cref="HousingPlugItemEntry"/>. Returns <see cref="true"/> if successful
         /// </summary>
@@ -865,7 +911,7 @@ namespace NexusForever.WorldServer.Game.Housing
             if (plugItemEntry == null)
                 throw new ArgumentNullException();
 
-            uint residenceId = GetResidenceEntryForPlug(plugItemEntry.Id);
+            uint residenceId = GlobalResidenceManager.Instance.GetResidenceEntryForPlug(plugItemEntry.Id);
             if (residenceId > 0)
             {
                 HousingResidenceInfoEntry residenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(residenceId);
@@ -885,39 +931,10 @@ namespace NexusForever.WorldServer.Game.Housing
             return false;
         }
 
-        /// <summary>
-        /// Returns a <see cref="HousingResidenceInfoEntry"/> ID if the plug ID is known.
-        /// </summary>
-        private uint GetResidenceEntryForPlug(uint plugItemId)
+        public void RemoveInteriorDecor()
         {
-            Dictionary<uint, uint> residenceLookup = new Dictionary<uint, uint>
-            {
-                { 83, 14 },     // Cozy Aurin House
-                { 295, 19 },    // Cozy Chua House
-                { 293, 22 },    // Cozy Cassian House
-                { 294, 18 },    // Cozy Draken House
-                { 292, 28 },    // Cozy Exile Human House
-                { 80, 11 },     // Cozy Granok House
-                { 297, 26 },    // Spacious Aurin House
-                { 298, 20 },    // Spacious Cassian House
-                { 296, 23 },    // Spacious Chua House
-                { 299, 21 },    // Spacious Draken House
-                { 86, 17 },     // Spacious Exile Human House
-                { 291, 27 },    // Spacious Granok House
-                { 530, 32 },    // Underground Bunker
-                { 534, 34 },    // Blackhole House
-                { 543, 35 },    // Osun House
-                { 18, 1 },      // Worksite? (No remodeling options)
-                { 367, 25 },    // Spaceship ([Jumbo] Cockpit, [Jumbo] Wings)
-                { 554, 37 },    // Aviary/Bird House (Feathered Falkrin, Mossy Hoogle) Birdhouse
-                { 557, 27 },    // Royal Piglet (Entryway Large/Medium/Small, Peaked/Western Roof)
-                { 37, 24 },     // Simple worksite? (No remodeling options)
-                { 38, 1 },     // Simple worksite, again. (No remodeling options)
-                { 19, 1 },     // Simple rocks and trees
-                { 79, 1 }      // Nothing
-            };// 38 has no remodel menu at all, 24 and 30 offer no remodel options.
-
-            return residenceLookup.TryGetValue(plugItemId, out uint residenceId) ? residenceId : 0u;
+            foreach (Decor decor in decors.Values.Where(i => i.Type == DecorType.InteriorDecoration).ToList())
+                decors.Remove(decor.DecorId);
         }
 
         public void RemoveHouse()
@@ -927,7 +944,7 @@ namespace NexusForever.WorldServer.Game.Housing
             Roof = 0;
             Door = 0;
             Entryway = 0;
-
+            
             saveMask |= ResidenceSaveMask.ResidenceInfo;
         }
 

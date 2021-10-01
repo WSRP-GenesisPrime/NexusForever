@@ -1,12 +1,16 @@
+using System;
 using System.Linq;
+using System.Numerics;
 using NexusForever.Database.World.Model;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
-using NexusForever.WorldServer.Game.Reputation.Static;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Network.Message.Model;
+using EntityModel = NexusForever.Database.World.Model.EntityModel;
+using NexusForever.WorldServer.Game.Reputation.Static;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -41,6 +45,11 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             base.Initialise(model);
             QuestChecklistIdx = model.QuestChecklistIdx;
+        }
+
+        public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
+        {
+            base.OnAddToMap(map, guid, vector);
         }
 
         protected override IEntityModel BuildEntityModel()

@@ -7,6 +7,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using System.Linq;
+using EntityModel = NexusForever.Database.World.Model.EntityModel;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
