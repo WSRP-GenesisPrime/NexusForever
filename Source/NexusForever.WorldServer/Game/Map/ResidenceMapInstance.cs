@@ -325,6 +325,7 @@ namespace NexusForever.WorldServer.Game.Map
 
             Decor decor = residence.DecorCreate(entry);
             decor.Type = update.DecorType;
+            decor.PlotIndex = update.PlotIndex;
 
             if (update.ColourShiftId != decor.ColourShiftId)
             {
@@ -401,7 +402,7 @@ namespace NexusForever.WorldServer.Game.Map
                     }
 
                     // crate->world
-                    decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale);
+                    decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale, update.PlotIndex);
                 }
                 else
                 {
@@ -410,7 +411,7 @@ namespace NexusForever.WorldServer.Game.Map
                     else
                     {
                         // world->world
-                        decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale);
+                        decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale, update.PlotIndex);
                         decor.DecorParentId = update.ParentDecorId;
                     }
                 }
@@ -497,7 +498,7 @@ namespace NexusForever.WorldServer.Game.Map
             /*WorldSocketEntry worldSocketEntry = GameTableManager.Instance.WorldSocket.GetEntry(residence.GetPlot((byte)update.PlotIndex).PlotEntry.WorldSocketId);
 
             // TODO: Calculate position based on individual maps on Community & Warplot residences
-            var worldPosition = new Vector3(1472f + update.Position.X, update.Position.Y, 1440f + update.Position.Z);
+            var worldPosition = new Vector3(1472f + update.Position.Z, -715f + update.Position.Y, 1440f + update.Position.X);
 
             (uint gridX, uint gridZ) = MapGrid.GetGridCoord(worldPosition);
             (uint localCellX, uint localCellZ) = MapCell.GetCellCoord(worldPosition);
