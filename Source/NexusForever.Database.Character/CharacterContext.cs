@@ -2099,7 +2099,8 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.PlotIndex)
                     .HasColumnName("plotIndex")
                     .HasColumnType("int(10) unsigned")
-                    .HasDefaultValue(2147483647);
+                    .HasDefaultValue(2147483647)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.Qw)
                     .HasColumnName("qw")
