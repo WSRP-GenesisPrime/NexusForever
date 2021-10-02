@@ -131,13 +131,13 @@ namespace NexusForever.WorldServer.Game.Housing
                 EntityEntry<ResidencePlotModel> entity = context.Attach(model);
                 if ((saveMask & PlotSaveMask.PlotInfoId) != 0)
                 {
-                    model.PlotInfoId = (ushort)PlotInfoEntry.Id;
+                    model.PlotInfoId = (ushort)(PlotInfoEntry?.Id ?? 0u);
                     entity.Property(p => p.PlotInfoId).IsModified = true;
                 }
 
                 if ((saveMask & PlotSaveMask.PlugItemId) != 0)
                 {
-                    model.PlugItemId = (ushort)PlugItemEntry.Id;
+                    model.PlugItemId = (ushort)(PlugItemEntry?.Id ?? 0u);
                     entity.Property(p => p.PlugItemId).IsModified = true;
                 }
 
