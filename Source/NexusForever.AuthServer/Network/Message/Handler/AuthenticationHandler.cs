@@ -67,12 +67,17 @@ namespace NexusForever.AuthServer.Network.Message.Handler
                 session.Events.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.AuthDatabase.UpdateAccountSessionKey(account, sessionKey.ToHexString()),
                     () =>
                 {
+                    uint address = server.Address;
+                    if(session.IsLocalIp() && server.InternalAddress != null)
+                    {
+                        address = (uint) server.InternalAddress;
+                    }
                     session.EnqueueMessageEncrypted(new ServerRealmInfo
                     {
                         AccountId  = account.Id,
                         SessionKey = sessionKey,
                         Realm      = server.Model.Name,
-                        Address    = server.Address,
+                        Address    = address,
                         Port       = server.Model.Port,
                         Type       = server.Model.Type
                     });

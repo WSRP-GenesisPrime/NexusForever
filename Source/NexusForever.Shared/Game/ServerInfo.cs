@@ -14,6 +14,8 @@ namespace NexusForever.Shared.Game
 
         public ServerModel Model { get; }
         public uint Address { get; }
+        public uint? InternalAddress { get; }
+        public bool AssumeOnline { get; }
         public bool IsOnline { get; private set; }
 
         public ServerInfo(ServerModel model)
@@ -30,6 +32,22 @@ namespace NexusForever.Shared.Game
 
                 Address = (uint)IPAddress.HostToNetworkOrder(BitConverter.ToInt32(ipAddress.GetAddressBytes()));
                 Model   = model;
+
+                InternalAddress = null;
+                if (model.InternalIP != null)
+                {
+                    if (!IPAddress.TryParse(model.InternalIP, out IPAddress internalAddress))
+                    {
+                        // find first IPv4 address, client doesn't support IPv6 as address is sent as 4 bytes
+                        internalAddress = Dns.GetHostEntry(model.InternalIP)
+                            .AddressList
+                            .First(a => a.AddressFamily == AddressFamily.InterNetwork);
+
+                        InternalAddress = (uint)IPAddress.HostToNetworkOrder(BitConverter.ToInt32(internalAddress.GetAddressBytes()));
+                    }
+                }
+
+                AssumeOnline = model.AssumeOnline;
             }
             catch (Exception e)
             {
@@ -43,8 +61,16 @@ namespace NexusForever.Shared.Game
         /// </summary>
         public async Task PingHostAsync()
         {
+            if(AssumeOnline)
+            {
+                IsOnline = true;
+                return;
+            }
+
+            string host = Model.InternalIP != null ? Model.InternalIP : Model.Host;
+
             using var client = new TcpClient();
-            await client.ConnectAsync(Model.Host, Model.Port).ContinueWith(task =>
+            await client.ConnectAsync(host, Model.Port).ContinueWith(task =>
             {
                 IsOnline = !task.IsFaulted;
                 return task;
