@@ -169,32 +169,16 @@ namespace NexusForever.Database.Character
             return context.Character.Any(c => c.Name == characterName);
         }
 
-        public async Task<ResidenceModel> GetResidence(ulong residenceId)
-        {
-            await using var context = new CharacterContext(config);
-            return await context.Residence
-                .Include(r => r.Decor)
-                .Include(r => r.Plot)
-                .Include(r => r.Character)
-                .SingleOrDefaultAsync(r => r.Id == residenceId);
-        }
-
-        public async Task<ResidenceModel> GetResidence(string name)
-        {
-            await using var context = new CharacterContext(config);
-            return await context.Residence
-                .Include(r => r.Decor)
-                .Include(r => r.Plot)
-                .Include(r => r.Character)
-                .SingleOrDefaultAsync(r => r.Character.Name == name);
-        }
-
-        public List<ResidenceModel> GetPublicResidences()
+        public List<ResidenceModel> GetResidences()
         {
             using var context = new CharacterContext(config);
             return context.Residence
+                .Include(r => r.Plot)
+                .Include(r => r.Decor)
                 .Include(r => r.Character)
-                .Where(r => r.PrivacyLevel == 0 && r.Character.OriginalName == null)
+                .Include(r => r.Guild)
+                // only load residences where the owner character or guild hasn't been deleted
+                .Where(r => (r.OwnerId.HasValue && !r.Character.DeleteTime.HasValue) || (r.GuildOwnerId.HasValue && !r.Guild.DeleteTime.HasValue)).AsSplitQuery()
                 .ToList();
         }
 
@@ -244,7 +228,7 @@ namespace NexusForever.Database.Character
             using var context = new CharacterContext(config);
 
             return context.CharacterContact
-                .FirstOrDefault()?.ContactId;
+                .DefaultIfEmpty().Max(r => r.Id);
         }
 
         public async Task<List<CharacterContactModel>> GetPendingContactRequests(ulong characterId)
@@ -259,6 +243,13 @@ namespace NexusForever.Database.Character
             return await context.CharacterContact
                 .Where(c => c.ContactId == characterId && c.Accepted == 0 && contactTypes.Contains(c.Type))
                 .ToListAsync();
+        }
+
+        public List<CharacterCreateModel> GetCharacterCreationData()
+        {
+            using var context = new CharacterContext(config);
+
+            return context.CharacterCreate.ToList();
         }
     }
 }

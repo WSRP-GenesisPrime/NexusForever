@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using NexusForever.Database;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Guild;
+using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Map.Search;
@@ -17,17 +21,41 @@ using NexusForever.WorldServer.Network.Message.Model.Shared;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
-    public class Residence : ISaveCharacter
+    public class Residence : ISaveCharacter, IBuildable<ServerHousingProperties.Residence>
     {
         public ulong Id { get; }
-        public ulong OwnerId { get; }
-        public string OwnerName { get; }
-        public string OwnerOriginalName { get; }
-        public byte PropertyInfoId { get; }
+        public ResidenceType Type { get; }
+        public ulong? OwnerId { get; }
 
         private bool has18PlusLock = false;
         private DateTime unlockTime18Plus = DateTime.MinValue;
         private bool waitForEmptyPlot18Plus = false;
+
+        public ulong? GuildOwnerId
+        {
+            get => guildOwnerId;
+            set
+            {
+                guildOwnerId = value;
+                saveMask |= ResidenceSaveMask.GuildOwner;
+            }
+        }
+
+        private ulong? guildOwnerId;
+
+        public PropertyInfoId PropertyInfoId
+        {
+            get => propertyInfoId;
+            set
+            {
+                propertyInfoId = value;
+                saveMask |= ResidenceSaveMask.PropertyInfo;
+
+                UpdatePlots();
+            }
+        }
+
+        private PropertyInfoId propertyInfoId;
 
         public string Name
         {
@@ -212,9 +240,34 @@ namespace NexusForever.WorldServer.Game.Housing
 
         private ResidenceSaveMask saveMask;
 
+        public bool IsCommunityResidence => GuildOwnerId.HasValue && !OwnerId.HasValue;
+
+        /// <summary>
+        /// <see cref="ResidenceMapInstance"/> this <see cref="Residence"/> resides on.
+        /// </summary>
+        /// <remarks>
+        /// This can either be an individual or shared residencial map.
+        /// </remarks>
+        public ResidenceMapInstance Map { get; set; }
+
+        /// <summary>
+        /// Parent <see cref="Residence"/> for this <see cref="Residence"/>.
+        /// </summary>
+        /// <remarks>
+        /// This will be set if the <see cref="Residence"/> is part of a <see cref="Community"/>.
+        /// </remarks>
+        public Residence Parent { get; set; }
+
+        /// <summary>
+        /// A collection of child <see cref="Residence"/> for this <see cref="Residence"/>.
+        /// </summary>
+        /// <remarks>
+        /// This will contain entries if the <see cref="Residence"/> is the parent for a <see cref="Community"/>.
+        /// </remarks>
+        private readonly Dictionary<ulong, ResidenceChild> children = new();
+
         private readonly Dictionary<ulong, Decor> decors = new();
-        private readonly HashSet<Decor> deletedDecors = new();
-        private readonly Plot[] plots = new Plot[7];
+        private readonly List<Plot> plots = new();
 
         /// <summary>
         /// Create a new <see cref="Residence"/> from an existing database model.
@@ -223,9 +276,8 @@ namespace NexusForever.WorldServer.Game.Housing
         {
             Id                  = model.Id;
             OwnerId             = model.OwnerId;
-            OwnerName           = model.Character.Name;
-            OwnerOriginalName   = model.Character.OriginalName;
-            PropertyInfoId      = model.PropertyInfoId;
+            GuildOwnerId        = model.GuildOwnerId;
+            propertyInfoId      = (PropertyInfoId)model.PropertyInfoId;
             name                = model.Name;
             privacyLevel        = (ResidencePrivacyLevel)model.PrivacyLevel;
             wallpaperId         = model.WallpaperId;
@@ -240,20 +292,25 @@ namespace NexusForever.WorldServer.Game.Housing
             gardenSharing       = model.GardenSharing;
             has18PlusLock       = model.NSFWLock;
 
+            // community residences are owned by only a guild
+            Type = model.OwnerId.HasValue ? ResidenceType.Residence : ResidenceType.Community;
+
             if (model.ResidenceInfoId > 0)
                 ResidenceInfoEntry = GameTableManager.Instance.HousingResidenceInfo.GetEntry(model.ResidenceInfoId);
 
             foreach (ResidenceDecor decorModel in model.Decor)
             {
-                var decor = new Decor(decorModel);
-                decors.Add(decor.DecorId, decor);
+                HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorModel.DecorInfoId);
+                if (entry != null)
+                {
+                    var decor = new Decor(this, decorModel, entry);
+                    decors.Add(decor.DecorId, decor);
+                }
             }
 
-            foreach (ResidencePlotModel plotModel in model.Plot)
-            {
-                var plot = new Plot(plotModel);
-                plots[plot.Index] = plot;
-            }
+            foreach (ResidencePlotModel plotModel in model.Plot
+                .OrderBy(e => e.Index))
+                plots.Add(new Plot(plotModel));
 
             saveMask = ResidenceSaveMask.None;
         }
@@ -263,25 +320,58 @@ namespace NexusForever.WorldServer.Game.Housing
         /// </summary>
         public Residence(Player player)
         {
-            Id             = ResidenceManager.Instance.NextResidenceId;
+            Id             = GlobalResidenceManager.Instance.NextResidenceId;
+            Type           = ResidenceType.Residence;
             OwnerId        = player.CharacterId;
-            OwnerName      = player.Name;
-            PropertyInfoId = 35; // TODO: 35 is default for single residence, this will need to change for communities
+            propertyInfoId = PropertyInfoId.Residence;
             name           = $"{player.Name}'s House";
             privacyLevel   = ResidencePrivacyLevel.Public;
 
-            IEnumerable<HousingPlotInfoEntry> plotEntries = GameTableManager.Instance.HousingPlotInfo.Entries.Where(e => e.HousingPropertyInfoId == PropertyInfoId);
-            foreach (HousingPlotInfoEntry entry in plotEntries)
-            {
-                var plot = new Plot(Id, entry);
-                plots[plot.Index] = plot;
-            }
+            saveMask       = ResidenceSaveMask.Create;
 
+            InitialiseDefaultPlots();
             // TODO: find a better way to do this, this adds the starter tent plug
             plots[0].SetPlug(18);
             plots[0].BuildState = 4;
+        }
 
-            saveMask = ResidenceSaveMask.Create;
+        /// <summary>
+        /// Create a new <see cref="Residence"/> for a <see cref="Community"/>.
+        /// </summary>
+        /// <remarks>
+        /// This creates the parent <see cref="Residence"/> which all children are part of.
+        /// </remarks>
+        public Residence(Community community)
+        {
+            Id             = GlobalResidenceManager.Instance.NextResidenceId;
+            Type           = ResidenceType.Community;
+            GuildOwnerId   = community.Id;
+            propertyInfoId = PropertyInfoId.Community;
+            name           = community.Name;
+            privacyLevel   = ResidencePrivacyLevel.Public;
+
+            saveMask       = ResidenceSaveMask.Create;
+
+            InitialiseDefaultPlots();
+
+            // TODO: find a better way to do this
+            plots[0].SetPlug(573);
+            plots[0].BuildState = 4;
+        }
+
+        private void InitialiseDefaultPlots()
+        {
+            foreach (HousingPlotInfoEntry entry in GameTableManager.Instance.HousingPlotInfo.Entries
+                .Where(e => (PropertyInfoId)e.HousingPropertyInfoId == PropertyInfoId)
+                .OrderBy(e => e.HousingPropertyPlotIndex))
+                plots.Add(new Plot(Id, entry));
+        }
+
+        private void UpdatePlots()
+        {
+            foreach (HousingPlotInfoEntry entry in GameTableManager.Instance.HousingPlotInfo.Entries
+                .Where(e => (PropertyInfoId)e.HousingPropertyInfoId == PropertyInfoId))
+                GetPlot((byte)entry.HousingPropertyPlotIndex).PlotInfoEntry = entry;
         }
 
         public void Save(CharacterContext context)
@@ -290,12 +380,13 @@ namespace NexusForever.WorldServer.Game.Housing
             {
                 if ((saveMask & ResidenceSaveMask.Create) != 0)
                 {
-                    // residence doesn't exist in database, all infomation must be saved
+                    // residence doesn't exist in database, all information must be saved
                     context.Add(new ResidenceModel
                     {
                         Id                  = Id,
                         OwnerId             = OwnerId,
-                        PropertyInfoId      = PropertyInfoId,
+                        GuildOwnerId        = GuildOwnerId,
+                        PropertyInfoId      = (byte)PropertyInfoId,
                         Name                = Name,
                         PrivacyLevel        = (byte)privacyLevel,
                         WallpaperId         = wallpaperId,
@@ -315,9 +406,7 @@ namespace NexusForever.WorldServer.Game.Housing
                     // residence already exists in database, save only data that has been modified
                     var model = new ResidenceModel
                     {
-                        Id             = Id,
-                        OwnerId        = OwnerId,
-                        PropertyInfoId = PropertyInfoId
+                        Id = Id
                     };
 
                     // could probably clean this up with reflection, works for the time being
@@ -387,6 +476,16 @@ namespace NexusForever.WorldServer.Game.Housing
                         model.GardenSharing = GardenSharing;
                         entity.Property(p => p.GardenSharing).IsModified = true;
                     }
+                    if ((saveMask & ResidenceSaveMask.GuildOwner) != 0)
+                    {
+                        model.GuildOwnerId = GuildOwnerId;
+                        entity.Property(p => p.GuildOwnerId).IsModified = true;
+                    }
+                    if ((saveMask & ResidenceSaveMask.PropertyInfo) != 0)
+                    {
+                        model.PropertyInfoId = (byte)PropertyInfoId;
+                        entity.Property(p => p.PropertyInfoId).IsModified = true;
+                    }
                     if ((saveMask & ResidenceSaveMask.NSFWLock) != 0)
                     {
                         model.NSFWLock = has18PlusLock;
@@ -397,12 +496,17 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask = ResidenceSaveMask.None;
             }
 
+            var decorToRemove = new List<Decor>();
             foreach (Decor decor in decors.Values)
-                decor.Save(context);
+            {
+                if (decor.PendingDelete)
+                    decorToRemove.Add(decor);
 
-            foreach (Decor decor in deletedDecors.ToList())
                 decor.Save(context);
-            deletedDecors.Clear();
+            }
+
+            foreach (Decor decor in decorToRemove)
+                decors.Remove(decor.DecorId);
 
             foreach (Plot plot in plots)
                 plot.Save(context);
@@ -442,7 +546,7 @@ namespace NexusForever.WorldServer.Game.Housing
             }
         }
 
-        private bool Can18PlusLock(ResidenceMap map)
+        private bool Can18PlusLock(ResidenceMapInstance map)
         {
             if(map == null)
             {
@@ -460,11 +564,15 @@ namespace NexusForever.WorldServer.Game.Housing
             return true;
         }
 
-        private ResidenceMap getMap()
+        public ResidenceMapInstance getMap()
         {
-            ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(this);
-            MapInfo mi = new MapInfo(entrance.Entry, 0, Id);
-            ResidenceMap map = MapManager.Instance.GetMap(mi) as ResidenceMap;
+            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(PropertyInfoId);
+            MapInfo mi = new MapInfo
+            {
+                Entry = entrance.Entry,
+                InstanceId = Id
+            };
+            ResidenceMapInstance map = MapManager.Instance.GetMap(mi) as ResidenceMapInstance;
             return map;
         }
 
@@ -474,7 +582,7 @@ namespace NexusForever.WorldServer.Game.Housing
             {
                 return true;
             }
-            ResidenceMap map = getMap();
+            ResidenceMapInstance map = getMap();
             if(map == null)
             {
                 Set18PlusLockInternal(doLock);
@@ -556,13 +664,139 @@ namespace NexusForever.WorldServer.Game.Housing
             }
         }
 
-        /// <summary>
-        /// Returns true if the supplied character id can modify the <see cref="Residence"/>.
-        /// </summary>
-        public bool CanModifyResidence(ulong characterId)
+        public ServerHousingProperties.Residence Build()
         {
-            // TODO: roommates can also update decor
-            return characterId == OwnerId;
+            return new()
+            {
+                RealmId           = WorldServer.RealmId,
+                ResidenceId       = Id,
+                NeighbourhoodId   = 0x190000000000000A/*GuildOwnerId.GetValueOrDefault(0ul)*/,
+                CharacterIdOwner  = OwnerId,
+                GuildIdOwner      = Type == ResidenceType.Community ? GuildOwnerId : 0,
+                Type              = Type,
+                Name              = Name,
+                PropertyInfoId    = PropertyInfoId,
+                ResidenceInfoId   = ResidenceInfoEntry?.Id ?? 0u,
+                WallpaperExterior = Wallpaper,
+                Entryway          = Entryway,
+                Roof              = Roof,
+                Door              = Door,
+                Ground            = Ground,
+                Music             = Music,
+                Sky               = Sky,
+                Flags             = Flags,
+                ResourceSharing   = ResourceSharing,
+                GardenSharing     = GardenSharing
+            };
+        }
+
+        /// <summary>
+        /// Return all <see cref="ResidenceChild"/>'s.
+        /// </summary>
+        /// <remarks>
+        /// Only community residences will have child residences.
+        /// </remarks>
+        public IEnumerable<ResidenceChild> GetChildren()
+        {
+            return children.Values;
+        }
+
+        /// <summary>
+        /// Return <see cref="ResidenceChild"/> with supplied property info id.
+        /// </summary>
+        /// <remarks>
+        /// Only community residences will have child residences.
+        /// </remarks>
+        public ResidenceChild GetChild(PropertyInfoId propertyInfoId)
+        {
+            return children.Values
+                .SingleOrDefault(c => c.Residence.PropertyInfoId == propertyInfoId);
+        }
+
+
+        /// <summary>
+        /// Return <see cref="ResidenceChild"/> with supplied character id.
+        /// </summary>
+        /// <remarks>
+        /// Only community residences will have child residences.
+        /// </remarks>
+        public ResidenceChild GetChild(ulong characterId)
+        {
+            return children.Values
+                .SingleOrDefault(c => c.Residence.OwnerId == characterId);
+        }
+
+        /// <summary>
+        /// Add child <see cref="Residence"/> to parent <see cref="Residence"/>.
+        /// </summary>
+        /// <remarks>
+        /// Child residences can only be added to a community.
+        /// </remarks>
+        public void AddChild(Residence residence, bool temporary)
+        {
+            if (Type != ResidenceType.Community)
+                throw new InvalidOperationException("Only community residences can have children!");
+
+            if (children.Any(c => c.Value.Residence.PropertyInfoId == residence.PropertyInfoId))
+                throw new ArgumentException();
+
+            children.Add(residence.Id, new ResidenceChild
+            {
+                Residence   = residence,
+                IsTemporary = temporary
+            });
+
+            residence.Parent       = this;
+            residence.GuildOwnerId = GuildOwnerId;
+        }
+
+        /// <summary>
+        /// Remove child <see cref="Residence"/> to parent <see cref="Residence"/>.
+        /// </summary>
+        /// <remarks>
+        /// Child residences can only be removed from a community.
+        /// </remarks>
+        public void RemoveChild(Residence residence)
+        {
+            if (Type != ResidenceType.Community)
+                throw new InvalidOperationException("Only community residences can have children!");
+
+            children.Remove(residence.Id);
+
+            residence.Parent       = null;
+            residence.GuildOwnerId = null;
+        }
+
+        /// <summary>
+        /// Returns true if <see cref="Player"/> can modify the <see cref="Residence"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is valid for both community and individual residences.
+        /// </remarks>
+        public bool CanModifyResidence(Player player)
+        {
+            switch (Type)
+            {
+                case ResidenceType.Community:
+                {
+                    Community community = player.GuildManager.GetGuild<Community>(GuildType.Community);
+                    if (community == null)
+                        return false;
+
+                    Guild.GuildMember member = community.GetMember(player.CharacterId);
+                    if (member == null)
+                        return false;
+
+                    return member.Rank.HasPermission(GuildRankPermission.DecorateCommunity);
+                }
+                case ResidenceType.Residence:
+                {
+                    // TODO: roommates can also update decor
+                    return player.CharacterId == OwnerId;
+                }
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -600,21 +834,28 @@ namespace NexusForever.WorldServer.Game.Housing
             return decor;
         }
 
+        /// <summary>
+        /// Create a new <see cref="Decor"/> from supplied <see cref="HousingDecorInfoEntry"/> for <see cref="Residence"/>.
+        /// </summary>
         public Decor DecorCreate(HousingDecorInfoEntry entry)
         {
-            var decor = new Decor(Id, ResidenceManager.Instance.NextDecorId, entry);
+            var decor = new Decor(this, GlobalResidenceManager.Instance.NextDecorId, entry);
             decors.Add(decor.DecorId, decor);
             return decor;
         }
 
-        public void DecorDelete(Decor decor)
+        /// <summary>
+        /// Create a new <see cref="Decor"/> from an existing <see cref="Decor"/>.
+        /// </summary>
+        /// <remarks>
+        /// Copies all data from the source <see cref="Decor"/> with a new id.
+        /// </remarks>
+        public Decor DecorCopy(Decor decor)
         {
-            decor.EnqueueDelete();
-
-            decors.Remove(decor.DecorId);
-            deletedDecors.Add(decor);
+            var newDecor = new Decor(this, decor, GlobalResidenceManager.Instance.NextDecorId);
+            decors.Add(decor.DecorId, newDecor);
+            return newDecor;
         }
-
 
         /// <summary>
         /// Set this <see cref="Residence"/> house plug to the supplied <see cref="HousingPlugItemEntry"/>. Returns <see cref="true"/> if successful
@@ -663,8 +904,18 @@ namespace NexusForever.WorldServer.Game.Housing
                 { 299, 21 },    // Spacious Draken House
                 { 86, 17 },     // Spacious Exile Human House
                 { 291, 27 },    // Spacious Granok House
-                { 530, 32 }     // Underground Bunker
-            };
+                { 530, 32 },    // Underground Bunker
+                { 534, 34 },    // Blackhole House
+                { 543, 35 },    // Osun House
+                { 18, 1 },      // Worksite? (No remodeling options)
+                { 367, 25 },    // Spaceship ([Jumbo] Cockpit, [Jumbo] Wings)
+                { 554, 37 },    // Aviary/Bird House (Feathered Falkrin, Mossy Hoogle) Birdhouse
+                { 557, 27 },    // Royal Piglet (Entryway Large/Medium/Small, Peaked/Western Roof)
+                { 37, 24 },     // Simple worksite? (No remodeling options)
+                { 38, 1 },     // Simple worksite, again. (No remodeling options)
+                { 19, 1 },     // Simple rocks and trees
+                { 79, 1 }      // Nothing
+            };// 38 has no remodel menu at all, 24 and 30 offer no remodel options.
 
             return residenceLookup.TryGetValue(plugItemId, out uint residenceId) ? residenceId : 0u;
         }
@@ -690,10 +941,10 @@ namespace NexusForever.WorldServer.Game.Housing
 
         /// <summary>
         /// Return <see cref="Plot"/> that matches the supploed Plot Info ID.
-        /// /// </summary>
+        /// </summary>
         public Plot GetPlot(uint plotInfoId)
         {
-            return plots.FirstOrDefault(i => i.PlotEntry.Id == plotInfoId);
+            return plots.FirstOrDefault(i => i.PlotInfoEntry.Id == plotInfoId);
         }
     }
 }

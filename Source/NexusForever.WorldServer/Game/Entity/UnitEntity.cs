@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NexusForever.Database.World.Model;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
+using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -14,9 +16,31 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         private readonly List<Spell.Spell> pendingSpells = new();
 
+        public float HitRadius { get; protected set; } = 1f;
+
         protected UnitEntity(EntityType type)
             : base(type)
         {
+            InitialiseHitRadius();
+        }
+
+        public override void Initialise(EntityModel model)
+        {
+            base.Initialise(model);
+        }
+
+        private void InitialiseHitRadius()
+        {
+            if (CreatureId == 0u)
+                return;
+
+            Creature2Entry creatureEntry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
+            if (creatureEntry == null)
+                return;
+
+            Creature2ModelInfoEntry modelInfoEntry = GameTableManager.Instance.Creature2ModelInfo.GetEntry(creatureEntry.Creature2ModelInfoId);
+            if (modelInfoEntry != null)
+                HitRadius = modelInfoEntry.HitRadius * creatureEntry.ModelScale;
         }
 
         public override void Update(double lastTick)
@@ -130,6 +154,24 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             Spell.Spell spell = pendingSpells.SingleOrDefault(s => s.CastingId == castingId);
             spell?.CancelCast(CastResult.SpellCancelled);
+            pendingSpells.Remove(spell);
+        }
+
+        public void CancelEffect(uint castingId)
+        {
+            EnqueueToVisible(new ServerSpellFinish
+            {
+                ServerUniqueId = castingId
+            }, true);
+            pendingSpells.RemoveAll(s => s.CastingId == castingId);
+        }
+
+        public void WipeEffectsByID(uint spell4Id)
+        {
+            foreach(var spell in pendingSpells.Where(s => s.parameters.SpellInfo.BaseInfo.Entry.Id == spell4Id).ToList())
+            {
+                CancelEffect(spell.CastingId);
+            }
         }
     }
 }

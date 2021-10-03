@@ -20,7 +20,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public EntityType Type { get; }
         public EntityCreateFlag CreateFlags { get; set; }
         public Vector3 Rotation { get; set; } = Vector3.Zero;
-        public Dictionary<Property, PropertyValue> Properties { get; } = new Dictionary<Property, PropertyValue>();
+        public Dictionary<Property, PropertyValue> Properties { get; } = new();
 
         public uint EntityId { get; protected set; }
         public uint CreatureId { get; protected set; }
@@ -30,7 +30,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public Faction Faction2 { get; set; }
 
         public ulong ActivePropId { get; protected set; }
-        public ushort SocketId { get; protected set; }
+        public ushort WorldSocketId { get; protected set; }
 
         public Vector3 LeashPosition { get; protected set; }
         public float LeashRange { get; protected set; } = 15f;
@@ -93,7 +93,7 @@ namespace NexusForever.WorldServer.Game.Entity
             Faction1     = (Faction)model.Faction1;
             Faction2     = (Faction)model.Faction2;
             ActivePropId = model.ActivePropId;
-            SocketId = model.WorldSocketId;
+            WorldSocketId = model.WorldSocketId;
 
             foreach (EntityStatModel statModel in model.EntityStat)
                 stats.Add((Stat)statModel.Stat, new StatValue(statModel));
@@ -113,7 +113,7 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
-        /// Invoked each world tick with the delta since the previous tick occured.
+        /// Invoked each world tick with the delta since the previous tick occurred.
         /// </summary>
         public override void Update(double lastTick)
         {
@@ -144,13 +144,13 @@ namespace NexusForever.WorldServer.Game.Entity
             // This is in large part due to the way Plugs are tied either to a DecorId OR Guid. Other entities do not have the same issue.
             if (!(this is Plug))
             {
-                if (ActivePropId > 0 || SocketId > 0)
+                if (ActivePropId > 0 || WorldSocketId > 0)
                 {
                     entityCreatePacket.WorldPlacementData = new ServerEntityCreate.WorldPlacement
                     {
                         Type = 1,
                         ActivePropId = ActivePropId,
-                        SocketId = SocketId
+                        SocketId = WorldSocketId
                     };
                 }
             }

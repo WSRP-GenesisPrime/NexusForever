@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using NexusForever.Shared;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Command.Context;
@@ -31,12 +32,6 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 quantity ??= 1u;
 
-                if (!(context.InvokingPlayer.Map is ResidenceMap residenceMap))
-                {
-                    context.SendMessage("You need to be on a housing map to use this command!");
-                    return;
-                }
-
                 HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
                 if (entry == null)
                 {
@@ -44,7 +39,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
                 log.Info($"{context.InvokingPlayer.Name} requesting to add decor ID {decorInfoId} (x{quantity}).");
-                residenceMap.DecorCreate(entry, quantity.Value);
+                context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value);
             }
             catch (Exception e)
             {
@@ -104,12 +99,12 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 log.Info($"{target.Name} requesting teleport to plot {name}.");
 
-                Residence residence = ResidenceManager.Instance.GetResidence(name).GetAwaiter().GetResult();
+                Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(name);
                 if (residence == null)
                 {
                     if (firstName == null && lastName == null)
                     {
-                        residence = ResidenceManager.Instance.CreateResidence(target);
+                        residence = GlobalResidenceManager.Instance.CreateResidence(target);
                         log.Info($"Creating residence {residence.Id} for name {name}, firstname {firstName}, lastname {lastName}.");
                     }
                     else
@@ -145,8 +140,9 @@ namespace NexusForever.WorldServer.Command.Handler
                     }
                 }
 
-                ResidenceEntrance entrance = ResidenceManager.Instance.GetResidenceEntrance(residence);
-                target.TeleportTo(entrance.Entry, entrance.Position, 0u, residence.Id);
+                ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+                target.Rotation = entrance.Rotation.ToEulerDegrees();
+                target.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
             }
             catch (Exception e)
             {
@@ -174,8 +170,8 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendError("Setting was not 'on' or 'off'.");
                 return;
             }
-            Residence res = ResidenceManager.Instance.GetResidence(context.InvokingPlayer.Name).GetAwaiter().GetResult();
-            if(res != null)
+            Residence res = GlobalResidenceManager.Instance.GetResidenceByOwner(context.InvokingPlayer.Name);
+            if (res != null)
             {
                 bool result = res.Set18PlusLock(setLock);
                 if(!result)
@@ -244,7 +240,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
 
-            Residence res = ResidenceManager.Instance.GetResidence(context.InvokingPlayer.Name).GetAwaiter().GetResult();
+            Residence res = GlobalResidenceManager.Instance.GetResidenceByOwner(context.InvokingPlayer.Name);
             if (res != null)
             {
                 bool result = res.Set18PlusLock(true, lockTime, timeAmount);
@@ -257,7 +253,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
         [Command(Permission.HouseRemodel, "Change ground/sky.", "remodel")]
         public void HandleRemodelCommand(ICommandContext context,
-            [Parameter("Ground, sky, or music?")]
+            [Parameter("Ground, sky, music, or house plug?")]
             string option,
             [Parameter("ID")]
             ushort id)
@@ -267,13 +263,13 @@ namespace NexusForever.WorldServer.Command.Handler
                 Player target = context.InvokingPlayer;
                 //remodel
                 ClientHousingRemodel clientRemod = new ClientHousingRemodel();
-                ResidenceMap residenceMap = target.Map as ResidenceMap;
+                ResidenceMapInstance residenceMap = target.Map as ResidenceMapInstance;
                 if (residenceMap == null)
                 {
                     context.SendError("You need to be on a housing map to use this command!");
                 }
 
-                Residence residence = ResidenceManager.Instance.GetResidence(target.Name).GetAwaiter().GetResult();
+                Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(context.InvokingPlayer.Name);
 
                 if (option.ToLower() == "ground")
                 {
@@ -290,11 +286,48 @@ namespace NexusForever.WorldServer.Command.Handler
                     residence.Music = id;
                     log.Trace($"{target.Name} requesting to remodel: music ID {id}.");
                 }
+                else if (option.ToLower() == "house")
+                {
+                    var plugItem = GameTableManager.Instance.HousingPlugItem.GetEntry(id);
+                    if(plugItem != null)
+                    {
+                        ClientHousingPlugUpdate pu = new ClientHousingPlugUpdate
+                        {
+                            Operation = PlugUpdateOperation.Place,
+                            PlotInfo = residence.GetPlot(0).PlotInfoEntry.Id,
+                            PlugFacing = (uint)residence.GetPlot(0).PlugFacing,
+                            PlugItem = id,
+                            ResidenceId = residence.Id,
+                            RealmId = WorldServer.RealmId
+                        };
+                        residence.getMap().SetPlug(residence, target, pu);
+                        /*if (residence.SetHouse(plugItem))
+                        {
+                            residence.getMap().HandleHouseChange(target, residence.GetPlot(0));
+                        }
+                        else
+                        {
+                            context.SendError("Unknown error.");
+                            return;
+                        }*/
+                    }
+                    else
+                    {
+                        context.SendError("Invalid housingPlugItem ID.");
+                        return;
+                    }
+                    log.Trace($"{target.Name} requesting to remodel: house plug ID {id}.");
+                    return; // not a normal remodel.
+                }
                 else
                 {
-                    context.SendError("You can only change the ground, sky, or music with this command.");
+                    context.SendError("You can only change the ground, sky, music, or house plug with this command.");
                 }
-                residenceMap.Remodel(target, clientRemod);
+                residenceMap.Remodel(new Network.Message.Model.Shared.TargetResidence
+                {
+                    ResidenceId = residence.Id,
+                    RealmId = WorldServer.RealmId
+                }, target, clientRemod);
             }
             catch (Exception e)
             {

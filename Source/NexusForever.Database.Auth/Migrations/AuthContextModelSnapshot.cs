@@ -821,6 +821,41 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
+                            Id = 100u,
+                            Name = "Category: Guild"
+                        },
+                        new
+                        {
+                            Id = 101u,
+                            Name = "Command: GuildRegister"
+                        },
+                        new
+                        {
+                            Id = 102u,
+                            Name = "Command: GuildJoin"
+                        },
+                        new
+                        {
+                            Id = 103u,
+                            Name = "Category: Map"
+                        },
+                        new
+                        {
+                            Id = 104u,
+                            Name = "Command: MapUnload"
+                        },
+                        new
+                        {
+                            Id = 105u,
+                            Name = "Command: MapPlayerRemove"
+                        },
+                        new
+                        {
+                            Id = 106u,
+                            Name = "Command: MapPlayerRemoveCancel"
+                        },
+                        new
+                        {
                             Id = 50000u,
                             Name = "Category: Morph"
                         },
@@ -928,6 +963,11 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 10001u,
                             Name = "Other: Signature"
+                        },
+                        new
+                        {
+                            Id = 10002u,
+                            Name = "Other: BypassInstanceLimits"
                         });
                 });
 

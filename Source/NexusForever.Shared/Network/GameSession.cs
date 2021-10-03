@@ -2,13 +2,13 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipelines;
 using System.Linq;
 using System.Net.Sockets;
 using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Network.Message;
 using NexusForever.Shared.Network.Message.Model;
 using NexusForever.Shared.Network.Packet;
+using NexusForever.Shared.Network.Static;
 
 namespace NexusForever.Shared.Network
 {
@@ -21,9 +21,7 @@ namespace NexusForever.Shared.Network
 
         protected PacketCrypt encryption;
 
-        private Pipe onDeck = new Pipe();
-        private uint? nextSize = null;
-        private uint remaining = 0;
+        private FragmentedBuffer onDeck;
         private readonly ConcurrentQueue<ClientGamePacket> incomingPackets = new();
         private readonly ConcurrentQueue<ServerGamePacket> outgoingPackets = new();
 
@@ -104,33 +102,39 @@ namespace NexusForever.Shared.Network
             encryption = new PacketCrypt(key);
         }
 
-        protected override void OnData(byte[] data)
+        protected override uint OnData(byte[] data)
         {
-            onDeck.Writer.WriteAsync(data);
-            remaining += (uint)data.Length; // Pipe has no way of checking how much it has remaining, so I'm tracking it manually.
-            Stream stream = onDeck.Reader.AsStream();
-            GamePacketReader reader = new GamePacketReader(stream);
-
-            bool repeat = true;
-            while (repeat)
+            using (var stream = new MemoryStream(data))
+            using (var reader = new GamePacketReader(stream))
             {
-                repeat = false;
-                if (nextSize == null && remaining >= sizeof(uint))
+                while (stream.Remaining() != 0)
                 {
-                    nextSize = reader.ReadUInt() - sizeof(uint);
-                    remaining -= sizeof(uint);
-                    repeat = true;
-                }
-                if (remaining >= nextSize)
-                {
-                    remaining -= (uint)nextSize;
-                    var packet = new ClientGamePacket(reader.ReadBytes((uint)nextSize));
+                    // no packet on deck waiting for additional information, new data will be part of a new packet
+                    if (onDeck == null)
+                    {
+                        if (stream.Remaining() < sizeof(uint))
+                        {
+                            // we don't have enough data to know the length of the next packet
+                            // return the remaining buffer so new data can be appended
+                            return stream.Remaining();
+                        }
 
-                    incomingPackets.Enqueue(packet);
-                    nextSize = null;
-                    repeat = true;
+                        uint size = reader.ReadUInt();
+                        onDeck = new FragmentedBuffer(size - sizeof(uint));
+                    }
+
+                    onDeck.Populate(reader);
+                    if (onDeck.IsComplete)
+                    {
+                        var packet = new ClientGamePacket(onDeck.Data);
+
+                        incomingPackets.Enqueue(packet);
+                        onDeck = null;
+                    }
                 }
             }
+
+            return 0u;
         }
 
         protected override void OnDisconnect()
@@ -194,7 +198,7 @@ namespace NexusForever.Shared.Network
                 catch (InvalidPacketValueException exception)
                 {
                     log.Error(exception);
-                    RequestedDisconnect = true;
+                    ForceDisconnect();
                 }
                 catch (Exception exception)
                 {

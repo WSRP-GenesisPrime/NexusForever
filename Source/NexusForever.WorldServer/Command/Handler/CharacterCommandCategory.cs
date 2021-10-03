@@ -219,6 +219,9 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Maximum number of stacks.", Static.ParameterFlags.Optional)]
             uint? maxStacks)
         {
+            UnitEntity target = context.GetTargetOrInvoker<UnitEntity>();
+            target.WipeEffectsByID(63490);
+            target.WipeEffectsByID(63491);
             uint mStacks = maxStacks ?? 20;
             if(mStacks > 100)
             {
@@ -264,14 +267,14 @@ namespace NexusForever.WorldServer.Command.Handler
 
             for (int i = 0; i < bestSmallStacks; ++i)
             {
-                context.GetTargetOrInvoker<UnitEntity>().CastSpell(63490, 1, new SpellParameters
+                target.CastSpell(63490, 1, new SpellParameters
                 {
                     UserInitiatedSpellCast = false
                 });
             }
             for (int i = 0; i < bestLargeStacks; ++i)
             {
-                context.GetTargetOrInvoker<UnitEntity>().CastSpell(63491, 1, new SpellParameters
+                target.CastSpell(63491, 1, new SpellParameters
                 {
                     UserInitiatedSpellCast = false
                 });

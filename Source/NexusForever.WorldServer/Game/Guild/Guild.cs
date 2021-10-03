@@ -1,25 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.WorldServer.Game.Achievement;
 using NexusForever.WorldServer.Game.Guild.Static;
-using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 
 namespace NexusForever.WorldServer.Game.Guild
 {
-    public partial class Guild : GuildBase
+    public partial class Guild : GuildChat
     {
         public override uint MaxMembers => 200u;
 
         public GuildStandard Standard { get; }
         public GuildAchievementManager AchievementManager { get; }
-
-        public ChatChannel officerChannel { get; protected set; }
 
         public string MessageOfTheDay
         {
@@ -55,6 +51,8 @@ namespace NexusForever.WorldServer.Game.Guild
             AchievementManager = new GuildAchievementManager(this, model);
             messageOfTheDay    = model.GuildData.MessageOfTheDay;
             additionalInfo     = model.GuildData.AdditionalInfo;
+
+            InitialiseChatChannels(ChatChannelType.Guild, ChatChannelType.GuildOfficer);
         }
 
         /// <summary>
@@ -67,6 +65,8 @@ namespace NexusForever.WorldServer.Game.Guild
             AchievementManager = new GuildAchievementManager(this);
             messageOfTheDay    = "";
             additionalInfo     = "";
+
+            InitialiseChatChannels(ChatChannelType.Guild, ChatChannelType.GuildOfficer);
         }
 
         protected override void Save(CharacterContext context, GuildBaseSaveMask baseSaveMask)
@@ -131,6 +131,18 @@ namespace NexusForever.WorldServer.Game.Guild
             };
         }
 
+        /// <summary>
+        /// Set if taxes are enabled for <see cref="Guild"/>.
+        /// </summary>
+        public void SetTaxes(bool enabled)
+        {
+            if (enabled)
+                SetFlag(GuildFlag.Taxes);
+            else
+                RemoveFlag(GuildFlag.Taxes);
+
+            SendGuildFlagUpdate();
+        }
         /// <summary>
         /// Return a <see cref="GuildData"/> packet of this <see cref="Guild"/>
         /// </summary>

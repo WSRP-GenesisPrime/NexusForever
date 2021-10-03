@@ -3,6 +3,7 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Helper;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
 using System;
@@ -165,7 +166,10 @@ namespace NexusForever.WorldServer.Command.Handler
                 tempEntity.SetDisplayInfo(tempEntity.DisplayInfo, outfitGroupEntry.Creature2OutfitInfoId);
             }
             log.Info($"Summoning entity {creature2.Id}: '{creature2.Description}' to {target.Name} @ ({target.Position}, {target.Zone.Id})");
-            target.Map.EnqueueAdd(tempEntity, target.Position);
+            target.Map.EnqueueAdd(tempEntity, new MapPosition
+            {
+                Position = target.Position
+            });
         }
     }
 }

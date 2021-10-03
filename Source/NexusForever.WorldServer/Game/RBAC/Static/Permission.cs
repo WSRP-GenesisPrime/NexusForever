@@ -163,6 +163,12 @@
         GuildRegister               = 101,
         GuildJoin                   = 102,
 
+        // map
+        Map                         = 103,
+        MapUnload                   = 104,
+        MapPlayerRemove             = 105,
+        MapPlayerRemoveCancel       = 106,
+
         // Genesis Prime: morph command
         Morph                       = 50000,
         MorphStoryteller            = 50001,
@@ -209,6 +215,7 @@
 
         // non command permissions
         InstantLogout               = 10000,
-        Signature                   = 10001
+        Signature                   = 10001,
+        BypassInstanceLimits        = 10002
     }
 }

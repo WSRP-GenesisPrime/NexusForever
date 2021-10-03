@@ -2,6 +2,7 @@
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Map;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -41,7 +42,10 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (ReplacementPlug != null)
             {
-                Map.EnqueueAdd(ReplacementPlug, Position);
+                Map.EnqueueAdd(ReplacementPlug, new MapPosition
+                {
+                    Position = Position
+                });
                 ReplacementPlug = null;
             }
 

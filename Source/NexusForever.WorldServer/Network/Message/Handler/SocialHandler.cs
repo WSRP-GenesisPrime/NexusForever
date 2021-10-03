@@ -60,9 +60,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             session.Player.EnqueueToVisible(new ServerEmote
             {
-                Guid = session.Player.Guid,
+                Guid       = session.Player.Guid,
                 StandState = standState,
-                EmoteId = emote.EmoteId
+                EmoteId    = emote.EmoteId
             });
         }
 
@@ -92,7 +92,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientWhoRequest)]
         public static void HandleWhoRequest(WorldSession session, ClientWhoRequest request)
         {
-            List<ServerWhoResponse.WhoPlayer> players = new List<ServerWhoResponse.WhoPlayer>();
+            var players = new List<ServerWhoResponse.WhoPlayer>();
 
             List<WorldSession> allSessions = NetworkManager<WorldSession>.Instance.GetSessions().ToList();
             foreach (WorldSession whoSession in allSessions)

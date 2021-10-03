@@ -52,7 +52,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
 
             AddCommand(new SetRotationCommand
             {
-                Rotation = new Position(rotation)
+                Position = new Position(rotation)
             });
 
             AddCommand(new SetVelocityDefaultsCommand());
@@ -79,7 +79,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 if (splineGridUpdateTimer.HasElapsed)
                 {
                     // update grid position with the interpolated position on the spline
-                    owner.Map.EnqueueRelocate(owner, splinePath.GetPosition());
+                    owner.Relocate(splinePath.GetPosition());
                     splineGridUpdateTimer.Reset();
                 }
             }
@@ -131,7 +131,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             StopSpline();
             AddCommand(new SetRotationCommand
             {
-                Rotation = new Position(rotation)
+                Position = new Position(rotation)
             }, sendImmediately);
         }
 
@@ -241,7 +241,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 return;
 
             Vector3 position = splinePath.GetPosition();
-            owner.Map.EnqueueRelocate(owner, position);
+            owner.Relocate(position);
 
             AddCommand(new SetStateCommand
             {
@@ -349,7 +349,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                             break;
                         }
                     case SetRotationCommand setRotation:
-                        owner.Rotation = setRotation.Rotation.Vector;
+                        owner.Rotation = setRotation.Position.Vector;
                         break;
                 }
 
@@ -394,7 +394,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 {
                     AddCommand(new SetRotationCommand
                     {
-                        Rotation = followRot
+                        Position = followRot
                     });
                 }
 
@@ -413,7 +413,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 {
                     AddCommand(new SetRotationCommand
                     {
-                        Rotation = followRot
+                        Position = followRot
                     });
                 }
 

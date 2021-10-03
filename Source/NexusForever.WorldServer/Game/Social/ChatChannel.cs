@@ -24,15 +24,15 @@ namespace NexusForever.WorldServer.Game.Social
         [Flags]
         public enum ChatChannelSaveMask
         {
-            None     = 0x00,
-            Create   = 0x01,
-            Delete   = 0x02,
+            None = 0x00,
+            Create = 0x01,
+            Delete = 0x02,
             Password = 0x04
         }
 
         public ChatChannelType Type { get; }
         public ulong Id { get; }
-        public string Name { get; }
+        public string Name { get; set; }
 
         public string Password
         {
@@ -68,6 +68,18 @@ namespace NexusForever.WorldServer.Game.Social
                 saveMask |= ChatChannelSaveMask.Delete;
             else
                 saveMask &= ~ChatChannelSaveMask.Delete;
+        }
+
+        public bool IsGuildChannel()
+        {
+            return Type == ChatChannelType.Guild
+                || Type == ChatChannelType.GuildOfficer
+                || Type == ChatChannelType.Community
+                || Type == ChatChannelType.Society
+                || Type == ChatChannelType.WarParty
+                || Type == ChatChannelType.WarPartyOfficer
+                || Type == ChatChannelType.Nexus
+                || Type == ChatChannelType.Trade;
         }
 
         /// <summary>
@@ -288,7 +300,8 @@ namespace NexusForever.WorldServer.Game.Social
 
             // reassign owner
             // try and assign to a moderator first, otherwise a member
-            if (member.HasFlag(ChatChannelMemberFlags.Owner))
+            if (member.HasFlag(ChatChannelMemberFlags.Owner)
+                && !IsGuildChannel())
             {
                 ChatChannelMember newOwner = members
                     .FirstOrDefault(m => m.Value.HasFlag(ChatChannelMemberFlags.Moderator))
@@ -640,13 +653,16 @@ namespace NexusForever.WorldServer.Game.Social
         /// <remarks>
         /// <see cref="CanBroadcast(Player, string)"/> should be invoked before invoking this method.
         /// </remarks>
-        public void Broadcast(IWritable message)
+        public void Broadcast(IWritable message, Player except = null)
         {
             foreach (ChatChannelMember member in members.Values
                 .Where(m => m.IsOnline && !m.PendingDelete))
             {
                 Player player = CharacterManager.Instance.GetPlayer(member.CharacterId);
-                player?.Session?.EnqueueMessageEncrypted(message);
+                if (player != except)
+                {
+                    player?.Session?.EnqueueMessageEncrypted(message);
+                }
             }
         }
 
