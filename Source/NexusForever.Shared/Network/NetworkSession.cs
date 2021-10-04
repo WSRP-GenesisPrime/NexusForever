@@ -124,6 +124,13 @@ namespace NexusForever.Shared.Network
             }
         }
 
+        public bool IsLocalIp()
+        {
+            IPEndPoint ep = socket.RemoteEndPoint as IPEndPoint;
+            byte[] bytes = ep.Address.GetAddressBytes();
+            return (bytes[0] == 192 && bytes[1] == 168);
+        }
+
         /// <summary>
         /// Forece disconnect of <see cref="NetworkSession"/>.
         /// </summary>
