@@ -853,7 +853,7 @@ namespace NexusForever.WorldServer.Game.Housing
         public Decor DecorCopy(Decor decor)
         {
             var newDecor = new Decor(this, decor, GlobalResidenceManager.Instance.NextDecorId);
-            decors.Add(decor.DecorId, newDecor);
+            decors.Add(newDecor.DecorId, newDecor);
             return newDecor;
         }
 
