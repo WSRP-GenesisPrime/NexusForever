@@ -24,6 +24,10 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             WorldEntity mover = session.Player;
             if (session.Player.ControlGuid != session.Player.Guid)
                 mover = session.Player.GetVisible<WorldEntity>(session.Player.ControlGuid);
+
+            if (mover == null)
+                return;
+
             try
             {
                 mover.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);

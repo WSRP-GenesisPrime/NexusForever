@@ -121,13 +121,13 @@ namespace NexusForever.WorldServer
 
                 BuybackManager.Instance.Update(lastTick);
                 GlobalQuestManager.Instance.Update(lastTick);
-                CommandManager.Instance.Update(lastTick);
                 GlobalGuildManager.Instance.Update(lastTick);
                 GlobalResidenceManager.Instance.Update(lastTick); // must be after guild update
                 GlobalChatManager.Instance.Update(lastTick);
 
-                // process commands after everything else in the tick has processed
                 GlobalContactManager.Instance.Update(lastTick);
+                // process commands after everything else in the tick has processed
+                CommandManager.Instance.Update(lastTick);
             });
 
             bootTime = DateTime.UtcNow;
