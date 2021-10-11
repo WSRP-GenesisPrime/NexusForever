@@ -412,7 +412,12 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 if (residence.Map != null)
                     residence.Map.DecorDelete(residence, decor);
                 else
-                    decor.EnqueueDelete();
+                {
+                    if (decor.PendingCreate)
+                        residence.DecorRemove(decor);
+                    else
+                        decor.EnqueueDelete();
+                }
             }
         }
 

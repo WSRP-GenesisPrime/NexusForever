@@ -100,6 +100,7 @@ namespace NexusForever.WorldServer
             GlobalContactManager.Instance.Initialise();
 
             AssetManager.Instance.Initialise();
+            ItemManager.Instance.Initialise();
             PrerequisiteManager.Instance.Initialise();
             GlobalSpellManager.Instance.Initialise();
             GlobalQuestManager.Instance.Initialise();
