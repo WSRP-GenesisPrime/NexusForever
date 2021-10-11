@@ -113,7 +113,6 @@ namespace NexusForever.WorldServer.Game.Housing
         /// Returns if <see cref="Decor"/> is enqueued to be deleted from the database.
         /// </summary>
         public bool PendingDelete => (saveMask & DecorSaveMask.Delete) != 0;
-        public bool PendingCreate => (saveMask & DecorSaveMask.Create) != 0;
 
         /// <summary>
         /// Enqueue <see cref="Decor"/> to be deleted from the database.
