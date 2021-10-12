@@ -1018,14 +1018,14 @@ namespace NexusForever.WorldServer.Game.Entity
 
             GuildManager.OnLogin();
             ChatManager.OnLogin();
-            GlobalChatManager.Instance.JoinChatChannels(Session);
+            GlobalChatManager.Instance.JoinChatChannels(this);
         }
 
         private void OnLogout()
         {
             GuildManager.OnLogout();
             ChatManager.OnLogout();
-            GlobalChatManager.Instance.LeaveChatChannels(Session);
+            GlobalChatManager.Instance.LeaveChatChannels(this);
         }
 
         /// <summary>

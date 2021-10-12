@@ -345,7 +345,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                             if (owner is Player player && player.IsCasting() && setPosition.Position.Vector.GetDistance(GetCommand<SetPositionCommand>().Position.Vector) > 0.005f)
                                 player.CancelSpellsOnMove();
 
-                            owner.Map.EnqueueRelocate(owner, setPosition.Position.Vector);
+                            owner.Relocate(setPosition.Position.Vector);
                             break;
                         }
                     case SetRotationCommand setRotation:

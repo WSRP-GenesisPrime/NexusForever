@@ -227,8 +227,8 @@ namespace NexusForever.Database.Character
         {
             using var context = new CharacterContext(config);
 
-            return context.CharacterContact
-                .DefaultIfEmpty().Max(r => r.Id);
+            return context.CharacterContact.Select(r => r.Id)
+                .DefaultIfEmpty().Max(r => r);
         }
 
         public async Task<List<CharacterContactModel>> GetPendingContactRequests(ulong characterId)

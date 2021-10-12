@@ -6,7 +6,7 @@
         [InventoryLocation(30u)]
         Equipped  = 0,
 
-        [InventoryLocation(160u)]
+        [InventoryLocation(16u)]
         Inventory = 1,
 
         [InventoryLocation(32u)]

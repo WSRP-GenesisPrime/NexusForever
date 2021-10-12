@@ -32,7 +32,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 quantity ??= 1u;
                 charges ??= 1u;
                 log.Info($"{context.InvokingPlayer.Name} requesting to add item ID {itemId} (x{quantity}, {charges} charges).");
-                context.InvokingPlayer.Inventory.ItemCreate(itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
+                context.InvokingPlayer.Inventory.ItemCreate(InventoryLocation.Inventory, itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
             }
             catch (Exception e)
             {
