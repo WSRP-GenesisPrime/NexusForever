@@ -82,7 +82,15 @@ namespace NexusForever.WorldServer.Game.Spell
                 player.Map.EnqueueAdd(mount, position);
 
             // FIXME: also cast 52539,Riding License - Riding Skill 1 - SWC - Tier 1,34464
+            player.CastSpell(52539, new SpellParameters
+            {
+                UserInitiatedSpellCast = false
+            });
             // FIXME: also cast 80530,Mount Sprint  - Tier 2,36122
+            player.CastSpell(80531, new SpellParameters
+            {
+                UserInitiatedSpellCast = false
+            });
         }
 
         [SpellEffectHandler(SpellEffectType.Teleport)]
@@ -211,6 +219,16 @@ namespace NexusForever.WorldServer.Game.Spell
         [SpellEffectHandler(SpellEffectType.Fluff)]
         private void HandleEffectFluff(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
+        }
+
+        [SpellEffectHandler(SpellEffectType.Proc)]
+        private void HandleEffectProc(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            ProcInfo procInfo = target.ApplyProc(info.Entry);
+            if (procInfo != null)
+                log.Trace($"Applied Proc {info.Entry.Id} for {procInfo.Type} to Entity {target.Guid}.");
+            else
+                log.Trace($"Failed to apply Proc {info.Entry.Id} for {(ProcType)info.Entry.DataBits00} to Entity {target.Guid}.");
         }
     }
 }

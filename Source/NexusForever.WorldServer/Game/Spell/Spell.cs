@@ -53,6 +53,9 @@ namespace NexusForever.WorldServer.Game.Spell
 
                 // TODO: add a timer to count down on the Effect before sending the finish - sending the finish will e.g. wear off the buff
                 //SendSpellFinish();
+
+                foreach (SpellTargetInfo target in targets)
+                    target.Entity.RemoveProc(parameters.SpellInfo.Entry.Id);
             }
         }
 

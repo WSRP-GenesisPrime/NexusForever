@@ -28,6 +28,32 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         private SplinePath splinePath;
         private readonly UpdateTimer splineGridUpdateTimer = new(SplineGridUpdateTime);
 
+        private bool isMoving
+        {
+            get => _isMoving;
+            set
+            {
+                if (owner is not Player player)
+                    return;
+
+                if (value == _isMoving)
+                    return;
+
+                if (value != _isMoving)
+                {
+                    // Started moving
+                    if (value == true)
+                        player.FireProc(Static.ProcType.BeginMoving);
+                    else
+                        player.FireProc(Static.ProcType.StopsMoving);
+                }
+
+                _isMoving = value;
+            }
+        }
+        private bool _isMoving;
+        public bool IsMoving() => isMoving;
+
         private bool isDirty;
 
         /// <summary>
@@ -331,6 +357,11 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             if (!commands.TryGetValue(command.Value, out IEntityCommandModel model))
                 return default;
             return (T)model;
+        }
+
+        public void SetVelocity (SetVelocityCommand setVelocity)
+        {
+            isMoving = !setVelocity.VelocityData.HasStopped();
         }
 
         public IEnumerator<(EntityCommand, IEntityCommandModel)> GetEnumerator()

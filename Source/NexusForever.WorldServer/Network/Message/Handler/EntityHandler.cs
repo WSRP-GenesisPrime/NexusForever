@@ -10,6 +10,7 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game;
 using NLog;
+using NexusForever.WorldServer.Game.Entity.Static;
 
 namespace NexusForever.WorldServer.Network.Message.Handler
 {
@@ -21,11 +22,16 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         public static void HandleEntityCommand(WorldSession session, ClientEntityCommand entityCommand)
         {
             WorldEntity mover = session.Player;
+            if (mover == null)
+                return;
+
             if (session.Player.ControlGuid != session.Player.Guid)
                 mover = session.Player.GetVisible<WorldEntity>(session.Player.ControlGuid);
 
             if (mover == null)
                 return;
+
+            var player = session.Player;
 
             foreach ((EntityCommand id, IEntityCommandModel command) in entityCommand.Commands)
             {
@@ -40,6 +46,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     }
                     case SetRotationCommand setRotation:
                         mover.Rotation = setRotation.Position.Vector;
+                        break;
+                    case SetVelocityCommand setVelocity:
+                        player.MovementManager.SetVelocity(setVelocity);
                         break;
                 }
             }

@@ -8,12 +8,16 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
     public abstract class UnitEntity : WorldEntity
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
         private readonly List<Spell.Spell> pendingSpells = new();
+        private Dictionary<ProcType, List<ProcInfo>> procs = new();
 
         public float HitRadius { get; protected set; } = 1f;
 
@@ -21,6 +25,8 @@ namespace NexusForever.WorldServer.Game.Entity
             : base(type)
         {
             InitialiseHitRadius();
+            foreach (ProcType procType in AssetManager.HandledProcTypes)
+                procs.Add(procType, new List<ProcInfo>());
         }
 
         public override void Initialise(EntityModel model)
@@ -52,6 +58,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 if (spell.IsFinished)
                     pendingSpells.Remove(spell);
             }
+
+            foreach (ProcInfo proc in procs.Values.SelectMany(p => p).ToList())
+                proc.Update(lastTick);
         }
 
         /// <summary>
@@ -140,6 +149,65 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             Spell.Spell spell = pendingSpells.SingleOrDefault(s => s.CastingId == castingId);
             spell?.CancelCast(CastResult.SpellCancelled);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ProcInfo ApplyProc(Spell4EffectsEntry entry)
+        {
+            ProcInfo proc = new ProcInfo(this, entry);
+
+            if (procs.ContainsKey(proc.Type))
+            {
+                bool canApplyProc = true;
+                foreach (ProcInfo procInfo in procs[proc.Type])
+                {
+                    if (procInfo.ApplicatorSpell4Id == proc.ApplicatorSpell4Id)
+                        canApplyProc = false;
+                }
+
+                if (canApplyProc)
+                    procs[proc.Type].Add(proc);
+                else
+                    return null;
+            }
+            else
+            {
+                log.Warn($"Unhandled ProcType {entry.DataBits00}!");
+                return null;
+            }
+            return proc;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void RemoveProc(uint spell4Id)
+        {
+            foreach (List<ProcInfo> procList in procs.Values.ToList())
+            {
+                foreach (ProcInfo proc in procList.ToList())
+                {
+                    if (proc.ApplicatorSpell4Id == spell4Id)
+                    {
+                        procs[proc.Type].Remove(proc);
+                        log.Trace($"Removed Proc {proc.Effect.Id} from {proc.Type} for Entity {Guid}.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void FireProc(ProcType type)
+        {
+            if (procs.TryGetValue(type, out List<ProcInfo> procList))
+            {
+                foreach (ProcInfo proc in procList)
+                    proc.Trigger();
+            }
         }
     }
 }
