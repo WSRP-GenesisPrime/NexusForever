@@ -34,6 +34,10 @@
         Stealth             = 116,
         SpellObj            = 129,
         /// <summary>
+        /// Checks for an ObjectId, which is a hashed petflair id.
+        /// </summary>
+        HoverboardFlair     = 190,
+        /// <summary>
         /// Used for Mount checks
         /// </summary>
         Unknown194          = 194,
