@@ -180,7 +180,7 @@ namespace NexusForever.WorldServer.Game.Loot
         /// <remarks>This should mainly be used when a Player opens a Loot bag in their inventory.</remarks>
         public void DropLoot(WorldSession looter, Item lootedItem)
         {
-            if (!itemLoot.ContainsKey(lootedItem.Entry.Id))
+            if (!itemLoot.ContainsKey(lootedItem.Info.Entry.Id))
                 return;
 
             // Build Dictionary of IDs for the Player. Need CharacterID in case player logs out and back in before loot expires.
@@ -189,7 +189,7 @@ namespace NexusForever.WorldServer.Game.Loot
                 throw new InvalidOperationException($"Player not found on the WorldSession {looter.Account.Id}");
             playerIds.Add(looter.Player.CharacterId, looter.Player.Guid);
 
-            LootInstance lootInstance = GenerateLootInstance(lootedItem.Entry.Id, looter.Player.Guid, looter.Player, playerIds, LooterType.Player, LootEntityType.Item);
+            LootInstance lootInstance = GenerateLootInstance(lootedItem.Info.Entry.Id, looter.Player.Guid, looter.Player, playerIds, LooterType.Player, LootEntityType.Item);
             lootInstances.Add(lootInstance);
 
             // This baby's gonna blow!

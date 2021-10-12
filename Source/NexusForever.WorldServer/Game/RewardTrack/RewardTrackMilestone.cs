@@ -1,5 +1,7 @@
 ﻿using NexusForever.Shared.GameTable.Model;
+using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RewardTrack.Static;
+using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using System;
@@ -93,16 +95,14 @@ namespace NexusForever.WorldServer.Game.RewardTrack
                         throw new NotImplementedException();
 
                     // TODO: Change to check if Player has room for X Item
-                    if (session.Player.Inventory.IsInventoryFull())
+                    if (session.Player.Inventory.GetInventorySlotsRemaining(InventoryLocation.Inventory)
+                        < count)
                     {
-                        session.EnqueueMessageEncrypted(new ServerGenericError
-                        {
-                            Error = Game.Static.GenericError.ItemInventoryFull
-                        });
+                        session.Player.SendGenericError(GenericError.ItemInventoryFull);
                         return false;
                     }
 
-                    session.Player.Inventory.ItemCreate(itemId, count, Entity.Static.ItemUpdateReason.RewardTrack);
+                    session.Player.Inventory.ItemCreate(InventoryLocation.Inventory, itemId, count, ItemUpdateReason.RewardTrack);
                     return true;
             }
 

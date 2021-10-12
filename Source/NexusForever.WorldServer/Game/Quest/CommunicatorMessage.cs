@@ -11,6 +11,7 @@ namespace NexusForever.WorldServer.Game.Quest
 {
     public class CommunicatorMessage
     {
+        public uint Id => entry.Id;
         public ushort QuestId => (ushort)entry.QuestIdDelivered;
 
         private readonly CommunicatorMessagesEntry entry;
@@ -49,7 +50,7 @@ namespace NexusForever.WorldServer.Game.Quest
                 if (questId == 0)
                     continue;
 
-                if (player.QuestManager.GetQuestState(questId) != (QuestState)entry.States[i])
+                if (player.QuestManager.GetQuestState(questId) <= (QuestState)entry.States[i])
                     return false;
             }
 

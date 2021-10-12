@@ -40,8 +40,8 @@ using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
-using NLog;
 using NexusForever.WorldServer.Game.Loot;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -603,50 +603,53 @@ namespace NexusForever.WorldServer.Game.Entity
 
             CostumeManager.SendInitialPackets();
 
-            var playerCreate = new ServerPlayerCreate
+            if (PreviousMap == null)
             {
-                ItemProficiencies = GetItemProficiencies(),
-                FactionData       = new ServerPlayerCreate.Faction
+                var playerCreate = new ServerPlayerCreate
                 {
-                    FactionId          = Faction1, // This does not do anything for the player's "main" faction. Exiles/Dominion
-                    FactionReputations = ReputationManager
+                    ItemProficiencies = GetItemProficiencies(),
+                    FactionData = new ServerPlayerCreate.Faction
+                    {
+                        FactionId = Faction1, // This does not do anything for the player's "main" faction. Exiles/Dominion
+                        FactionReputations = ReputationManager
                         .Select(r => new ServerPlayerCreate.Faction.FactionReputation
                         {
                             FactionId = r.Id,
-                            Value     = r.Amount
+                            Value = r.Amount
                         })
                         .ToList()
-                },
-                BindPoint             = BindPoint,
-                ActiveCostumeIndex    = CostumeIndex,
-                InputKeySet           = (uint)InputKeySet,
-                CharacterEntitlements = Session.EntitlementManager.GetCharacterEntitlements()
+                    },
+                    BindPoint = BindPoint,
+                    ActiveCostumeIndex = CostumeIndex,
+                    InputKeySet = (uint)InputKeySet,
+                    CharacterEntitlements = Session.EntitlementManager.GetCharacterEntitlements()
                     .Select(e => new ServerPlayerCreate.CharacterEntitlement
                     {
                         Entitlement = e.Type,
-                        Count       = e.Amount
+                        Count = e.Amount
                     })
                     .ToList(),
-                TradeskillMaterials   = SupplySatchelManager.BuildNetworkPacket(),
-                Xp                    = XpManager.TotalXp,
-                RestBonusXp           = XpManager.RestBonusXp
-            };
+                    TradeskillMaterials = SupplySatchelManager.BuildNetworkPacket(),
+                    Xp = XpManager.TotalXp,
+                    RestBonusXp = XpManager.RestBonusXp
+                };
 
-            foreach (Currency currency in CurrencyManager)
-                playerCreate.Money[(byte)currency.Id - 1] = currency.Amount;
+                foreach (Currency currency in CurrencyManager)
+                    playerCreate.Money[(byte)currency.Id - 1] = currency.Amount;
 
-            foreach (Item item in Inventory
-                .Where(b => b.Location != InventoryLocation.Ability)
-                .SelectMany(i => i))
-            {
-                playerCreate.Inventory.Add(new InventoryItem
+                foreach (Item item in Inventory
+                    .Where(b => b.Location != InventoryLocation.Ability)
+                    .SelectMany(i => i))
                 {
-                    Item   = item.BuildNetworkItem(),
-                    Reason = ItemUpdateReason.NoReason
-                });
+                    playerCreate.Inventory.Add(new InventoryItem
+                    {
+                        Item = item.BuildNetworkItem(),
+                        Reason = ItemUpdateReason.NoReason
+                    });
+                }
+                playerCreate.SpecIndex = SpellManager.ActiveActionSet;
+                Session.EnqueueMessageEncrypted(playerCreate);
             }
-            playerCreate.SpecIndex = SpellManager.ActiveActionSet;
-            Session.EnqueueMessageEncrypted(playerCreate);
 
             TitleManager.SendTitles();
             SpellManager.SendInitialPackets();
@@ -1356,7 +1359,8 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 case RezType.WakeHere:
                     uint cost = ghost.GetCostForRez();
-                    CurrencyManager.CurrencySubtractAmount(CurrencyType.Credits, cost);
+                    if (cost > 0u && CurrencyManager.CanAfford(CurrencyType.Credits, cost))
+                        CurrencyManager.CurrencySubtractAmount(CurrencyType.Credits, cost);
                     break;
                 default:
                     break;

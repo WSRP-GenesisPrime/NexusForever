@@ -21,7 +21,7 @@ namespace NexusForever.WorldServer.Game.Entity
             // Probably worth considering an Attribute-grouped Class that allows us to run differentt regeneration methods & calculations for each stat.
 
             if (Health < MaxHealth)
-                ModifyHealth((uint)(MaxHealth / 200f));
+                ModifyHealth((uint)(MaxHealth / 50f));
 
             if (Shield < MaxShieldCapacity)
                 Shield += (uint)(MaxShieldCapacity * GetPropertyValue(Property.ShieldRegenPct) * regenTimer.Duration);

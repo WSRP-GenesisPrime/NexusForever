@@ -21,7 +21,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public TelegraphDamageEntry TelegraphDamage { get; }
 
         private float casterHitRadius = 0f;
-        private bool npcsSpawned = false;
+        //private bool npcsSpawned = false;
 
         public Telegraph(TelegraphDamageEntry telegraphDamageEntry, UnitEntity caster, Vector3 position, Vector3 rotation)
         {

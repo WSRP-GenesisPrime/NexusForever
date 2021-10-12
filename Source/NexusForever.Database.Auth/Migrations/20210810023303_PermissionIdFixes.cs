@@ -11,9 +11,6 @@ namespace NexusForever.Database.Auth.Migrations
                 columns: new[] { "id", "name" },
                 values: new object[,]
                 {
-                    { 100u, "Category: Guild" },
-                    { 101u, "Command: GuildRegister" },
-                    { 102u, "Command: GuildJoin" },
                     { 115u, "Category: EntityThreat" },
                     { 116u, "Command: EntityThreatAdjust" },
                     { 117u, "Command: EntityThreatList" },
@@ -27,21 +24,6 @@ namespace NexusForever.Database.Auth.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DeleteData(
-                table: "permission",
-                keyColumn: "id",
-                keyValue: 100u);
-
-            migrationBuilder.DeleteData(
-                table: "permission",
-                keyColumn: "id",
-                keyValue: 101u);
-
-            migrationBuilder.DeleteData(
-                table: "permission",
-                keyColumn: "id",
-                keyValue: 102u);
-
             migrationBuilder.DeleteData(
                 table: "permission",
                 keyColumn: "id",

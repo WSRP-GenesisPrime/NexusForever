@@ -14,7 +14,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public Location(WorldEntry world, Vector3 position, Vector3 rotation)
         {
-            World = world;
+            World    = world;
             Position = position;
             Rotation = rotation;
         }

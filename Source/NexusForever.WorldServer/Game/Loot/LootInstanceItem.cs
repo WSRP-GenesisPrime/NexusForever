@@ -98,7 +98,7 @@ namespace NexusForever.WorldServer.Game.Loot
                     session.Player.CurrencyManager.CurrencyAddAmount((CurrencyType)StaticId, Amount, isLoot: true);
                     break;
                 case LootItemType.StaticItem:
-                    session.Player.Inventory.ItemCreate(StaticId, Amount, ItemUpdateReason.Loot);
+                    session.Player.Inventory.ItemCreate(InventoryLocation.Inventory, StaticId, Amount, ItemUpdateReason.Loot);
                     break;
                 case LootItemType.VirtualItem:
                     session.Player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.VirtualCollect, StaticId, Amount);

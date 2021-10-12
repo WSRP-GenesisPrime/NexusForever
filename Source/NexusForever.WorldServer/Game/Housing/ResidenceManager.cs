@@ -1,6 +1,8 @@
 ﻿using System;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Guild;
+using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 
@@ -71,7 +73,7 @@ namespace NexusForever.WorldServer.Game.Housing
             owner.Session.EnqueueMessageEncrypted(new ServerHousingBasics
             {
                 ResidenceId     = Residence?.Id ?? 0ul,
-                /*NeighbourhoodId = GuildManager.GetGuild<Community>(GuildType.Community)?.Id ?? 0ul,*/
+                NeighbourhoodId = owner.GuildManager.GetGuild<Community>(GuildType.Community)?.Id ?? 0ul,
                 PrivacyLevel    = flags
             });
         }

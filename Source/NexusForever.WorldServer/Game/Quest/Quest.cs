@@ -29,7 +29,7 @@ namespace NexusForever.WorldServer.Game.Quest
                 state = value;
                 saveMask |= QuestSaveMask.State;
 
-                OnStateChange(oldState, state);
+                OnStateChange(oldState);
             }
         }
 
@@ -267,7 +267,7 @@ namespace NexusForever.WorldServer.Game.Quest
             if (Info.Entry.QuestShareEnum == 0u)
                 return false;
 
-            return State == QuestState.Accepted || State == QuestState.Achieved || State == QuestState.Completed;
+            return State is QuestState.Accepted or QuestState.Achieved or QuestState.Completed;
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace NexusForever.WorldServer.Game.Quest
 
             // Order in reverse Index so that sequential steps don't completed by the same action
             foreach (QuestObjective objective in objectives
-                .Where(o => o.Entry.Type == (uint)type && o.IsTarget(data))
+                .Where(o => o.ObjectiveInfo.Entry.Type == (uint)type && o.IsTarget(data))
                 .OrderByDescending(o => o.Index))
             {
                 ObjectiveUpdate(objective, progress);
@@ -298,7 +298,11 @@ namespace NexusForever.WorldServer.Game.Quest
                     SendQuestObjectiveUpdate(objective);
             }
 
-            if (objectives.All(o => o.IsComplete()) && State != QuestState.Achieved)
+            // TODO: Should you be able to complete optional objectives after required are completed?
+            if (AreAllRequiredObjectivesCompleted())
+                CompleteAllOptionalObjectives();
+
+            if (objectives.All(o => o.IsComplete()))
                 State = QuestState.Achieved;
         }
 
@@ -313,7 +317,7 @@ namespace NexusForever.WorldServer.Game.Quest
             if (State == QuestState.Achieved)
                 return;
 
-            QuestObjective objective = objectives.SingleOrDefault(i => i.Entry.Id == id);
+            QuestObjective objective = objectives.SingleOrDefault(o => o.ObjectiveInfo.Id == id);
             if (objective == null)
                 return;
 
@@ -337,11 +341,10 @@ namespace NexusForever.WorldServer.Game.Quest
 
         private bool CanUpdateObjective(QuestObjective objective, uint progress)
         {
-            // sequential objectives
-            if ((objective.Entry.Flags & 0x02) != 0)
+            if (objective.ObjectiveInfo.IsSequential())
             {
                 for (int i = 0; i < objective.Index; i++)
-                    if ((objectives[i].Entry.Flags & 0x02) != 0) // Ensure each previous step wasn't optional.
+                    if ((objectives[i].ObjectiveInfo.Entry.Flags & 0x02) != 0) // Ensure each previous step wasn't optional.
                         if (!objectives[i].IsComplete())
                             return false;
             }
@@ -361,9 +364,9 @@ namespace NexusForever.WorldServer.Game.Quest
 
             foreach (QuestObjective objective in objectives)
             {
-                if (objective.Entry.Flags == 0u ||
-                    (objective.Entry.Flags & 0x02) != 0 || 
-                    (objective.Entry.Flags & 0x04) != 0)
+                if (objective.ObjectiveInfo.Entry.Flags == 0u ||
+                    (objective.ObjectiveInfo.Entry.Flags & 0x02) != 0 || 
+                    (objective.ObjectiveInfo.Entry.Flags & 0x04) != 0)
                     if (!objective.IsComplete())
                         return false;
             }
@@ -375,7 +378,7 @@ namespace NexusForever.WorldServer.Game.Quest
         {
             foreach (QuestObjective objective in objectives)
             {
-                if ((objective.Entry.Flags & 0x02) == 0 && !objective.IsComplete())
+                if ((objective.ObjectiveInfo.Entry.Flags & 0x02) == 0 && !objective.IsComplete())
                     objective.Complete();
             }
         }
@@ -411,16 +414,21 @@ namespace NexusForever.WorldServer.Game.Quest
             });
         }
 
-        private void OnStateChange(QuestState oldState, QuestState newState)
+        /// <summary>
+        /// Invoked when <see cref="QuestState"/> for <see cref="Quest"/> is updated.
+        /// </summary>
+        private void OnStateChange(QuestState oldState)
         {
             player.Session.EnqueueMessageEncrypted(new ServerQuestStateChange
             {
-                QuestId = Id,
+                QuestId    = Id,
                 QuestState = State
             });
 
-            foreach (ushort questId in GlobalQuestManager.Instance.GetQuestIdsForDelivery(Id, state))
-                player.QuestManager.QuestMention(questId);
+            // check if this quest and state is a trigger for a new communicator message
+            foreach (CommunicatorMessage message in GlobalQuestManager.Instance.GetQuestCommunicatorQuestStateTriggers(Id, state))
+                if (message.Meets(player))
+                    player.QuestManager.QuestMention(message.QuestId);
         }
 
         public IEnumerator<QuestObjective> GetEnumerator()

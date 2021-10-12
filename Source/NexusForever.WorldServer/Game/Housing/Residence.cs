@@ -258,7 +258,6 @@ namespace NexusForever.WorldServer.Game.Housing
         private readonly Dictionary<ulong, ResidenceChild> children = new();
 
         private readonly Dictionary<ulong, Decor> decors = new();
-        private readonly HashSet<Decor> deletedDecors = new();
         private readonly List<Plot> plots = new();
 
         /// <summary>
@@ -473,8 +472,17 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask = ResidenceSaveMask.None;
             }
 
+            var decorToRemove = new List<Decor>();
             foreach (Decor decor in decors.Values)
+            {
+                if (decor.PendingDelete)
+                    decorToRemove.Add(decor);
+
                 decor.Save(context);
+            }
+
+            foreach (Decor decor in decorToRemove)
+                decors.Remove(decor.DecorId);
 
             foreach (Plot plot in plots)
                 plot.Save(context);
@@ -654,20 +662,34 @@ namespace NexusForever.WorldServer.Game.Housing
         /// </summary>
         public Decor DecorCreate(HousingDecorInfoEntry entry)
         {
-            var decor = new Decor(this, Id, GlobalResidenceManager.Instance.NextDecorId, entry);
+            var decor = new Decor(this, GlobalResidenceManager.Instance.NextDecorId, entry);
             decors.Add(decor.DecorId, decor);
             return decor;
         }
 
         /// <summary>
-        /// Remove <see cref="Decor"/> from <see cref="Residence"/>.
+        /// Create a new <see cref="Decor"/> from an existing <see cref="Decor"/>.
         /// </summary>
-        public void DecorDelete(Decor decor)
+        /// <remarks>
+        /// Copies all data from the source <see cref="Decor"/> with a new id.
+        /// </remarks>
+        public Decor DecorCopy(Decor decor)
         {
-            decor.EnqueueDelete();
+            var newDecor = new Decor(this, decor, GlobalResidenceManager.Instance.NextDecorId);
+            decors.Add(newDecor.DecorId, newDecor);
+            return newDecor;
+        }
 
+        /// <summary>
+        /// Remove existing <see cref="Decor"/> from the <see cref="Residence"/>.
+        /// </summary>
+        /// <remarks>
+        /// This does not queue the <see cref="Decor"/> for deletion from the database.
+        /// This is intended to be used for <see cref="Decor"/> that has yet to be saved to the database.
+        /// </remarks>
+        public void DecorRemove(Decor decor)
+        {
             decors.Remove(decor.DecorId);
-            deletedDecors.Add(decor);
         }
 
         /// <summary>

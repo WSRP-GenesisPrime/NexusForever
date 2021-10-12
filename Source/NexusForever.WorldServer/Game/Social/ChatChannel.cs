@@ -24,9 +24,9 @@ namespace NexusForever.WorldServer.Game.Social
         [Flags]
         public enum ChatChannelSaveMask
         {
-            None     = 0x00,
-            Create   = 0x01,
-            Delete   = 0x02,
+            None = 0x00,
+            Create = 0x01,
+            Delete = 0x02,
             Password = 0x04
         }
 

@@ -15,11 +15,11 @@ namespace NexusForever.WorldServer.Game.Quest
     public class QuestObjective : IUpdate
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+        
+        public QuestInfo QuestInfo { get; }
+        public QuestObjectiveInfo ObjectiveInfo { get; }
 
-        public QuestInfo Info { get; }
-
-        public QuestObjectiveType Type => (QuestObjectiveType)Entry.Type;
-        public QuestObjectiveEntry Entry { get; }
+        public QuestObjectiveType Type => (QuestObjectiveType)ObjectiveInfo.Type;
 
         public byte Index { get; }
 
@@ -54,13 +54,13 @@ namespace NexusForever.WorldServer.Game.Quest
         /// <summary>
         /// Create a new <see cref="QuestObjective"/> from an existing database model.
         /// </summary>
-        public QuestObjective(QuestInfo info, QuestObjectiveEntry entry, CharacterQuestObjectiveModel model)
+        public QuestObjective(QuestInfo questInfo, QuestObjectiveInfo objectiveInfo, CharacterQuestObjectiveModel model)
         {
-            Info     = info;
-            Entry    = entry;
-            Index    = model.Index;
-            progress = model.Progress;
-            timer    = model.Timer;
+            QuestInfo     = questInfo;
+            ObjectiveInfo = objectiveInfo;
+            Index         = model.Index;
+            progress      = model.Progress;
+            timer         = model.Timer;
 
             if (IsChecklist() || UsesTargetGroups())
                 BuildTargets();
@@ -69,13 +69,13 @@ namespace NexusForever.WorldServer.Game.Quest
         /// <summary>
         /// Create a new <see cref="QuestObjective"/> from supplied <see cref="QuestObjectiveEntry"/>.
         /// </summary>
-        public QuestObjective(QuestInfo info, QuestObjectiveEntry entry, byte index)
+        public QuestObjective(QuestInfo questInfo, QuestObjectiveInfo objectiveInfo, byte index)
         {
-            Info  = info;
-            Entry = entry;
-            Index = index;
+            QuestInfo     = questInfo;
+            ObjectiveInfo = objectiveInfo;
+            Index         = index;
 
-            if (Entry.MaxTimeAllowedMS != 0u)
+            if (objectiveInfo.Entry.MaxTimeAllowedMS != 0u)
             {
                 // TODO
             }
@@ -91,16 +91,16 @@ namespace NexusForever.WorldServer.Game.Quest
         /// </summary>
         private void BuildTargets()
         {
-            uint targetGroupId = Entry.Data > 0 ? Entry.Data : Entry.TargetGroupIdRewardPane;
+            uint targetGroupId = ObjectiveInfo.Entry.Data > 0 ? ObjectiveInfo.Entry.Data : ObjectiveInfo.Entry.TargetGroupIdRewardPane;
             if (targetGroupId == 0u)
                 throw new InvalidOperationException();
 
-            targetIds = AssetManager.Instance.GetQuestObjectiveTargetIds(Entry.Id).ToList();
+            targetIds = AssetManager.Instance.GetQuestObjectiveTargetIds(ObjectiveInfo.Id).ToList();
             if (targetIds.Count == 0u)
                 return;
 
-            if (targetIds.Count < Entry.Count)
-                for (int i = targetIds.Count - 1; i < Entry.Count; i++)
+            if (targetIds.Count < ObjectiveInfo.Entry.Count)
+                for (int i = targetIds.Count - 1; i < ObjectiveInfo.Entry.Count; i++)
                     targetIds.Add(targetIds[0]);
         }
 
@@ -114,7 +114,7 @@ namespace NexusForever.WorldServer.Game.Quest
                 context.Add(new CharacterQuestObjectiveModel
                 {
                     Id       = characterId,
-                    QuestId  = (ushort)Info.Entry.Id,
+                    QuestId  = (ushort)QuestInfo.Entry.Id,
                     Index    = Index,
                     Progress = Progress
                 });
@@ -124,7 +124,7 @@ namespace NexusForever.WorldServer.Game.Quest
                 var model = new CharacterQuestObjectiveModel
                 {
                     Id      = characterId,
-                    QuestId = (ushort)Info.Entry.Id,
+                    QuestId = (ushort)QuestInfo.Entry.Id,
                     Index   = Index
                 };
 
@@ -152,13 +152,13 @@ namespace NexusForever.WorldServer.Game.Quest
         private bool IsDynamic()
         {
             // dynamic objectives have their progress based on percentage rather than count
-            return (Type == QuestObjectiveType.KillCreature
-                || Type == QuestObjectiveType.KillTargetGroups
-                || Type == QuestObjectiveType.Unknown15
-                || Type == QuestObjectiveType.KillTargetGroup
-                || Type == QuestObjectiveType.KillCreature2)
-                && Entry.Count > 1u
-                && (Entry.Flags & 0x0200) == 0;
+            return ObjectiveInfo.Type is QuestObjectiveType.KillCreature
+                    or QuestObjectiveType.KillTargetGroups
+                    or QuestObjectiveType.Unknown15
+                    or QuestObjectiveType.KillTargetGroup
+                    or QuestObjectiveType.KillCreature2
+                && ObjectiveInfo.Entry.Count > 1u
+                && !ObjectiveInfo.HasUnknown0200();
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace NexusForever.WorldServer.Game.Quest
                Type == QuestObjectiveType.KillTargetGroup ||
                Type == QuestObjectiveType.KillTargetGroups ||
                Type == QuestObjectiveType.TalkToTargetGroup ||
-               Type == QuestObjectiveType.ActivateEntity && Entry.TargetGroupIdRewardPane != 0u);
+               Type == QuestObjectiveType.ActivateEntity && ObjectiveInfo.Entry.TargetGroupIdRewardPane != 0u);
         }
 
         /// <summary>
@@ -197,18 +197,18 @@ namespace NexusForever.WorldServer.Game.Quest
         /// </summary>
         public bool IsTarget(uint id)
         {
-            return (Entry.Data == id || targetIds.Contains(id));
+            return (ObjectiveInfo.Entry.Data == id || targetIds.Contains(id));
         }
 
         private uint GetMaxValue()
         {
             if (IsChecklist())
-                return (uint)(1 << (int)Entry.Count) - 1;
+                return (uint)(1 << (int)ObjectiveInfo.Entry.Count) - 1;
 
             if (IsDynamic())
                 return 1000u;
 
-            return Entry.Count;
+            return ObjectiveInfo.Entry.Count;
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace NexusForever.WorldServer.Game.Quest
             if (IsChecklist())
                 update = (uint)(1 << (int)update);
             else if (IsDynamic())
-                update = (uint)(((float)update / Entry.Count) * 1000f);
+                update = (uint)(((float)update / ObjectiveInfo.Entry.Count) * 1000f);
 
             Progress = Math.Min(progress + update, GetMaxValue());
         }
