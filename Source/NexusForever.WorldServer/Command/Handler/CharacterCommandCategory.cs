@@ -232,7 +232,12 @@ namespace NexusForever.WorldServer.Command.Handler
             uint largeStacks = 0;
             uint bestSmallStacks = 0;
             uint bestLargeStacks = 0;
-            float bestError = float.MaxValue;
+            float bestError = targetScale;
+            if (bestError < 1f)
+            {
+                bestError = 1 / bestError;
+            }
+            bestError -= 1f;
             float bestScale = 1f;
 
             float scale = 1f;
