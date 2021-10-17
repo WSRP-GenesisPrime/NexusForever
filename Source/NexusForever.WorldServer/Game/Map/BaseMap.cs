@@ -107,6 +107,11 @@ namespace NexusForever.WorldServer.Game.Map
                         RelocateEntity(actionRelocate.Entity, actionRelocate.Vector);
                         break;
                     case GridActionRemove actionRemove:
+                        if(actionRemove.Entity.Map == null)
+                        {
+                            log.Info("Tried to remove entity that was already removed.");
+                            break;
+                        }
                         RemoveEntity(actionRemove.Entity);
                         break;
                 }
@@ -419,11 +424,16 @@ namespace NexusForever.WorldServer.Game.Map
 
         protected virtual void RemoveEntity(GridEntity entity)
         {
+            string playerText = "";
+            if(entity is Player removedPlayer)
+            {
+                playerText = $" Player name is {removedPlayer.Name}.";
+            }
+            log.Trace($"Removing entity {entity.Guid} from map {Entry.Id}; Map is {(entity.Map != null ? "not null" : "null")}.{playerText}");
+
             Debug.Assert(entity.Map != null);
 
             GetGrid(entity.Position).RemoveEntity(entity);
-
-            log.Trace($"Removed entity {entity.Guid} from map {Entry.Id}.");
 
             entityCounter.Enqueue(entity.Guid);
             entities.Remove(entity.Guid);
