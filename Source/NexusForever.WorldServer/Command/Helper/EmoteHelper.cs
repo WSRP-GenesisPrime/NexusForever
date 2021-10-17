@@ -155,6 +155,11 @@ namespace NexusForever.WorldServer.Command.Helper
                     4
                 }
             },
+            { "dead5", new List<uint>()
+                {
+                    5
+                }
+            },
             //Added by Archive Update
             { "drakenlounge", new List<uint>()
                 {
@@ -308,11 +313,11 @@ namespace NexusForever.WorldServer.Command.Helper
         /// </summary>
         private static readonly Dictionary<String, List<uint>> EmoteSexExclusionLibrary = new Dictionary<String, List<uint>>()
         {
-            { "dead5", new List<uint>()
-                {
-                    0
-                }
-            },
+        //    { "dead5", new List<uint>()
+        //        {
+        //            0
+        //        }
+        //    },
             //Added by Archive Update
             { "drakenlounge7", new List<uint>()
                 {
