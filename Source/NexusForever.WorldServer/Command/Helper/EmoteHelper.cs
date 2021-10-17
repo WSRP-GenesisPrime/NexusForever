@@ -63,7 +63,46 @@ namespace NexusForever.WorldServer.Command.Helper
             { "wounded", 98 },
             { "wounded2", 99 },
             { "wounded3", 100 },
-            { "wounded4", 101 }
+            { "wounded4", 101 },
+            //Emotes added by Archive Update
+            { "lounge2", 433 },
+            { "lounge3", 434 },
+            { "coffin", 435 },
+            { "drakenlounge", 436 },
+            { "drakenlounge2", 437 },
+            { "drakenlounge3", 438 },
+            { "drakenlounge4", 439 },
+            { "drakenlounge5", 440 },
+            { "drakenlounge6", 441 },
+            { "drakenlounge7", 442 },
+            { "drakenlounge8", 443 },
+            { "drakenlounge9", 444 },
+            { "drakenlounge10", 445 },
+            { "drakenthrone", 446 },
+            { "channeling4", 447 },
+            { "2hstrike", 448 },
+            { "combatloop2", 449 },
+            { "npcstance", 450 },
+            { "npcstance2", 451 },
+            { "stalkerstance", 452 },
+            { "stalkerstance2", 453 },
+            { "bladedance", 454 },
+            { "meditate", 455 },
+            { "readyesper", 456 },
+            { "channeling5", 457 },
+            { "channeling6", 458 },
+            { "channeling7", 459 },
+            { "channeling8", 460 },
+            { "rapidfire", 461 },
+            { "rapidfire2", 462 },
+            { "chargeshot", 463 },
+            { "readyresos", 464 },
+            { "resofire", 465 },
+            { "resofire2", 466 },
+            { "resocharge", 467 },
+            { "resofire3", 468 },
+            { "readycombat2", 469 },
+            { "readystaff", 470 }
         };
 
         /// <summary>
@@ -120,9 +159,192 @@ namespace NexusForever.WorldServer.Command.Helper
                 {
                     5
                 }
+            },
+            //Added by Archive Update
+            { "drakenlounge", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge2", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge3", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge4", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge5", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge6", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge7", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge8", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge9", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "drakenlounge10", new List<uint>()
+                {
+                    1, 2, 3, 4, 12, 13, 16
+                }
+            },
+            { "2hstrike", new List<uint>()
+                {
+                    4
+                }
+            },
+            { "combatloop2", new List<uint>()
+                {
+                    4
+                }
+            },
+            { "stalkerstance", new List<uint>()
+                {
+                    3
+                }
+            },
+            { "stalkerstance", new List<uint>()
+                {
+                    3
+                }
+            },
+            { "stalkerstance2", new List<uint>()
+                {
+                    3
+                }
+            },
+            { "bladedance", new List<uint>()
+                {
+                    3, 12, 16
+                }
+            },
+            { "meditate", new List<uint>()
+                {
+                    3, 12, 16
+                }
+            },
+            { "channeling5", new List<uint>()
+                {
+                    3, 12, 16
+                }
+            },
+            { "channeling6", new List<uint>()
+                {
+                    3, 12, 16
+                }
+            },
+            { "channeling7", new List<uint>()
+                {
+                    3, 12, 16
+                }
+            },
+            { "rapidfire", new List<uint>()
+                {
+                    3, 12
+                }
+            },
+            { "rapidfire2", new List<uint>()
+                {
+                    3, 12
+                }
+            },
+            { "chargeshot", new List<uint>()
+                {
+                    3, 12
+                }
+            },
+            { "readyresos", new List<uint>()
+                {
+                    4, 5
+                }
+            },
+            { "resofire", new List<uint>()
+                {
+                    4, 5
+                }
+            },
+            { "resofire2", new List<uint>()
+                {
+                    4, 5
+                }
+            },
+            { "resocharge", new List<uint>()
+                {
+                    4, 5
+                }
+            },
+            { "resofire3", new List<uint>()
+                {
+                    4, 5
+                }
+            },
+            { "readystaff", new List<uint>()
+                {
+                    3, 12
+                }
             }
         };
 
+        /// <summary>
+        /// (GENESIS PRIME) Dictionary that represents exclusion of player character sexes from using certain emotes.
+        /// </summary>
+        private static readonly Dictionary<String, List<uint>> EmoteSexExclusionLibrary = new Dictionary<String, List<uint>>()
+        {
+        //    { "dead5", new List<uint>()
+        //        {
+        //            0
+        //        }
+        //    },
+            //Added by Archive Update
+            { "drakenlounge7", new List<uint>()
+                {
+                    0
+                }
+            },
+            { "drakenlounge8", new List<uint>()
+                {
+                    0
+                }
+            },
+            { "drakenlounge9", new List<uint>()
+                {
+                    0
+                }
+            },
+            { "drakenlounge10", new List<uint>()
+                {
+                    0
+                }
+            },
+            { "drakenthrone", new List<uint>()
+                {
+                    1
+                }
+            },
+        };
 
         /// <summary>
         /// (GENESIS PRIME) Returns whether the given emote and race combo is a no-go.
@@ -132,6 +354,14 @@ namespace NexusForever.WorldServer.Command.Helper
             if (EmoteExclusionLibrary.TryGetValue(emoteName, out List<uint> exclusionList))
             {
                 return !(exclusionList.Contains(playerRaceID));
+            }
+            return true;
+        }
+        public static bool IsEmoteAllowedBySex(string emoteName, uint playerSexID)
+        {
+            if (EmoteSexExclusionLibrary.TryGetValue(emoteName, out List<uint> exclusionList))
+            {
+                return !(exclusionList.Contains(playerSexID));
             }
             return true;
         }
@@ -151,9 +381,9 @@ namespace NexusForever.WorldServer.Command.Helper
         /// <summary>
         /// (GENESIS PRIME) Get a list of valid emotes.
         /// </summary>
-        public static List<string> GetEmoteList(uint playerRaceID)
+        public static List<string> GetEmoteList(uint playerRaceID, uint playerSexID)
         {
-            return EmoteLibrary.Keys.Where(e => IsEmoteAllowedByRace(e, playerRaceID)).ToList();
+            return EmoteLibrary.Keys.Where(e => IsEmoteAllowedByRace(e, playerRaceID) && IsEmoteAllowedBySex(e, playerSexID)).ToList();
         }
     }
 }
