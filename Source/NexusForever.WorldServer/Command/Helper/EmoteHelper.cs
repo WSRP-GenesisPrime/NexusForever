@@ -226,11 +226,6 @@ namespace NexusForever.WorldServer.Command.Helper
                     3
                 }
             },
-            { "stalkerstance", new List<uint>()
-                {
-                    3
-                }
-            },
             { "stalkerstance2", new List<uint>()
                 {
                     3
