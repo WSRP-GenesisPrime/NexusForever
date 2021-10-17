@@ -155,11 +155,6 @@ namespace NexusForever.WorldServer.Command.Helper
                     4
                 }
             },
-            { "dead5", new List<uint>()
-                {
-                    5
-                }
-            },
             //Added by Archive Update
             { "drakenlounge", new List<uint>()
                 {
