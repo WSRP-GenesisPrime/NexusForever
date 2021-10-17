@@ -352,11 +352,11 @@ namespace NexusForever.WorldServer.Command.Helper
             }
             return true;
         }
-        public static bool IsEmoteAllowedBySex(string emoteName, uint playerRaceID)
+        public static bool IsEmoteAllowedBySex(string emoteName, uint playerSexID)
         {
             if (EmoteSexExclusionLibrary.TryGetValue(emoteName, out List<uint> exclusionList))
             {
-                return !(exclusionList.Contains(playerRaceID));
+                return !(exclusionList.Contains(playerSexID));
             }
             return true;
         }
@@ -376,9 +376,9 @@ namespace NexusForever.WorldServer.Command.Helper
         /// <summary>
         /// (GENESIS PRIME) Get a list of valid emotes.
         /// </summary>
-        public static List<string> GetEmoteList(uint playerRaceID)
+        public static List<string> GetEmoteList(uint playerRaceID, uint playerSexID)
         {
-            return EmoteLibrary.Keys.Where(e => IsEmoteAllowedByRace(e, playerRaceID) && IsEmoteAllowedBySex(e, playerRaceID)).ToList();
+            return EmoteLibrary.Keys.Where(e => IsEmoteAllowedByRace(e, playerRaceID) && IsEmoteAllowedBySex(e, playerSexID)).ToList();
         }
     }
 }

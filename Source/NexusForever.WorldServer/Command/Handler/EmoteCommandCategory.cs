@@ -103,7 +103,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             Player player = context.InvokingPlayer;
             string message = "Emotes for your race:";
-            foreach(string emote in EmoteHelper.GetEmoteList((uint)player.Race)) {
+            foreach(string emote in EmoteHelper.GetEmoteList((uint)player.Race, (uint)player.Sex)) {
                 message += $"\n{emote}";
             }
 
