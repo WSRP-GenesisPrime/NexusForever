@@ -31,14 +31,13 @@ namespace NexusForever.WorldServer.Game.Entity
             GuildManager.OnLogin();
             ChatManager.OnLogin();
             ContactManager.OnLogin();
-            GlobalChatManager.Instance.JoinChatChannels(this);
         }
 
         private void OnLogout()
         {
             GuildManager.OnLogout();
             ChatManager.OnLogout();
-            GlobalChatManager.Instance.LeaveChatChannels(this);
+            GlobalChatManager.Instance.LeaveDefaultChatChannels(this);
         }
 
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
@@ -74,6 +73,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
             pendingTeleport = null;
 
+            GlobalChatManager.Instance.JoinDefaultChatChannels(this);
             SendPacketsAfterAddToMap();
 
             if (Health == 0u)
