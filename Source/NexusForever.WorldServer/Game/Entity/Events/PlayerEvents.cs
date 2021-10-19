@@ -31,12 +31,14 @@ namespace NexusForever.WorldServer.Game.Entity
             GuildManager.OnLogin();
             ChatManager.OnLogin();
             ContactManager.OnLogin();
+            GlobalChatManager.Instance.JoinChatChannels(this);
         }
 
         private void OnLogout()
         {
             GuildManager.OnLogout();
             ChatManager.OnLogout();
+            GlobalChatManager.Instance.LeaveChatChannels(this);
         }
 
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
