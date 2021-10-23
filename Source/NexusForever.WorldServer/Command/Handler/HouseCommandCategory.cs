@@ -39,7 +39,25 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
                 log.Info($"{context.InvokingPlayer.Name} requesting to add decor ID {decorInfoId} (x{quantity}).");
-                context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value);
+                Residence res = context.InvokingPlayer?.CurrentResidence;
+                if (res == null || !res.CanModifyResidence(context.InvokingPlayer))
+                {
+                    res = context.InvokingPlayer?.ResidenceManager?.Residence;
+                }
+                if (res != null)
+                {
+                    if (res.Map != null)
+                    {
+                        res.Map.DecorCreate(res, entry, (uint)quantity);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < quantity.Value; ++i)
+                        {
+                            res.DecorCreate(entry);
+                        }
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -300,7 +318,7 @@ namespace NexusForever.WorldServer.Command.Handler
                             ResidenceId = residence.Id,
                             RealmId = WorldServer.RealmId
                         };
-                        residence.getMap().SetPlug(residence, target, pu);
+                        residence.GetMap().SetPlug(residence, target, pu);
                         /*if (residence.SetHouse(plugItem))
                         {
                             residence.getMap().HandleHouseChange(target, residence.GetPlot(0));
