@@ -233,27 +233,27 @@ namespace NexusForever.WorldServer.Command.Helper
             },
             { "bladedance", new List<uint>()
                 {
-                    3, 12, 16
+                    3, 5, 12, 16
                 }
             },
             { "meditate", new List<uint>()
                 {
-                    3, 12, 16
+                    3, 5, 12, 16
                 }
             },
             { "channeling5", new List<uint>()
                 {
-                    3, 12, 16
+                    3, 5, 12, 16
                 }
             },
             { "channeling6", new List<uint>()
                 {
-                    3, 12, 16
+                    3, 5, 12, 16
                 }
             },
             { "channeling7", new List<uint>()
                 {
-                    3, 12, 16
+                    3, 5, 12, 16
                 }
             },
             { "rapidfire", new List<uint>()
