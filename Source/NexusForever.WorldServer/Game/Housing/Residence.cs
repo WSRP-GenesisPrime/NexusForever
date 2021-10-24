@@ -564,7 +564,7 @@ namespace NexusForever.WorldServer.Game.Housing
             return true;
         }
 
-        public ResidenceMapInstance getMap()
+        public ResidenceMapInstance GetMap()
         {
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(PropertyInfoId);
             MapInfo mi = new MapInfo
@@ -582,7 +582,7 @@ namespace NexusForever.WorldServer.Game.Housing
             {
                 return true;
             }
-            ResidenceMapInstance map = getMap();
+            ResidenceMapInstance map = GetMap();
             if(map == null)
             {
                 Set18PlusLockInternal(doLock);

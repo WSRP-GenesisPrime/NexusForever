@@ -55,6 +55,31 @@ namespace NexusForever.WorldServer.Game.Map
             });
         }
 
+        public Residence GetResidenceByPropertyInfoId(PropertyInfoId slot)
+        {
+            return residences.Where(r => r.Value.PropertyInfoId == slot).FirstOrDefault().Value;
+        }
+
+        private static readonly Dictionary<uint, PropertyInfoId> ZoneToPropertyInfo = new Dictionary<uint, PropertyInfoId>()
+        {
+            { 1136, PropertyInfoId.Residence },
+            { 1265, PropertyInfoId.Community },
+            { 1161, PropertyInfoId.CommunityResidence1 },
+            { 1162, PropertyInfoId.CommunityResidence2 },
+            { 1163, PropertyInfoId.CommunityResidence3 },
+            { 1164, PropertyInfoId.CommunityResidence4 },
+            { 1165, PropertyInfoId.CommunityResidence5 },
+        };
+
+        public Residence GetResidenceByZone(WorldZoneEntry zone)
+        {
+            if (ZoneToPropertyInfo.TryGetValue(zone.Id, out PropertyInfoId id))
+            {
+                return GetResidenceByPropertyInfoId(id);
+            }
+            return null;
+        }
+
         private void RemoveResidence(Residence residence)
         {
             residences.Remove(residence.Id);
