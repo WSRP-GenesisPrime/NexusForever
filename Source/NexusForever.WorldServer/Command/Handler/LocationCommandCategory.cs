@@ -23,9 +23,10 @@ namespace NexusForever.WorldServer.Command.Handler
             float x = context.InvokingPlayer.Position.X;
             float y = context.InvokingPlayer.Position.Y;
             float z = context.InvokingPlayer.Position.Z;
+            uint zoneId = context.InvokingPlayer.Zone.Id;
             uint mapId = context.InvokingPlayer.Map.Entry.Id;
             string teleportCommand = $"!teleport coordinates {x} {y} {z} {mapId}";
-            context.SendMessage($"Your current location:\n      X:{x}, Y:{y}, Z:{z}\n     World Map ID: {mapId}\n     {teleportCommand}");
+            context.SendMessage($"Your current location:\n      X:{x}, Y:{y}, Z:{z}\n     World Map ID: {mapId}\n     Zone ID: {zoneId}\n     {teleportCommand}");
         }
     }
 }
