@@ -2779,6 +2779,18 @@ namespace NexusForever.Database.Character.Migrations
                         .HasDefaultValue(0u)
                         .HasColumnName("decorType");
 
+                    b.Property<uint>("HookBagIndex")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("hookBagIndex")
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u);
+
+                    b.Property<uint>("HookIndex")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("hookIndex")
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u);
+
                     b.Property<uint>("PlotIndex")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
@@ -2909,6 +2921,12 @@ namespace NexusForever.Database.Character.Migrations
                         .HasColumnType("tinyint(3) unsigned")
                         .HasDefaultValue((byte)0)
                         .HasColumnName("propertyInfoId");
+
+                    b.Property<ushort>("ResidenceInfoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("residenceInfoId")
+                        .HasColumnType("smallint unsigned")
+                        .HasDefaultValueSql("'0'");
 
                     b.Property<byte>("ResourceSharing")
                         .ValueGeneratedOnAdd()

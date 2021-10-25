@@ -230,6 +230,8 @@ namespace NexusForever.Shared.GameTable
         public GameTable<HazardEntry> Hazard { get; private set; }
         public GameTable<HookAssetEntry> HookAsset { get; private set; }
         public GameTable<HookTypeEntry> HookType { get; private set; }
+
+        [GameData]
         public GameTable<HousingBuildEntry> HousingBuild { get; private set; }
         public GameTable<HousingContributionInfoEntry> HousingContributionInfo { get; private set; }
         public GameTable<HousingContributionTypeEntry> HousingContributionType { get; private set; }
@@ -238,6 +240,8 @@ namespace NexusForever.Shared.GameTable
         public GameTable<HousingDecorInfoEntry> HousingDecorInfo { get; private set; }
 
         public GameTable<HousingDecorLimitCategoryEntry> HousingDecorLimitCategory { get; private set; }
+
+        [GameData]
         public GameTable<HousingDecorTypeEntry> HousingDecorType { get; private set; }
         public GameTable<HousingMannequinPoseEntry> HousingMannequinPose { get; private set; }
         public GameTable<HousingMapInfoEntry> HousingMapInfo { get; private set; }

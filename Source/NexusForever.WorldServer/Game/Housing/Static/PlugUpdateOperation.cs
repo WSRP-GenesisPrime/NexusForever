@@ -2,8 +2,8 @@
 {
     public enum PlugUpdateOperation
     {
-        Place = 1,
-        Remove = 2,
-        Repair = 4
+        Place   = 1,
+        Remove  = 2,
+        Repair  = 4
     }
 }
