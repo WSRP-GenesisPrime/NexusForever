@@ -94,7 +94,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         {
             var players = new List<ServerWhoResponse.WhoPlayer>();
 
-            List<WorldSession> allSessions = NetworkManager<WorldSession>.Instance.GetSessions().ToList();
+            List<WorldSession> allSessions = NetworkManager<WorldSession>.Instance.ToList();
             foreach (WorldSession whoSession in allSessions)
             {
                 if (whoSession.Player == null)

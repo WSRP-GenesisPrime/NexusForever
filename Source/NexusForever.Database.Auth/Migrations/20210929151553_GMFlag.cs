@@ -9,7 +9,7 @@ namespace NexusForever.Database.Auth.Migrations
             migrationBuilder.InsertData(
                 table: "permission",
                 columns: new[] { "id", "name" },
-                values: new object[] { 50900u, "Flag: GM" });
+                values: new object[] { 10003u, "Other: GMFlag" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -17,7 +17,7 @@ namespace NexusForever.Database.Auth.Migrations
             migrationBuilder.DeleteData(
                 table: "permission",
                 keyColumn: "id",
-                keyValue: 50900u);
+                keyValue: 10003u);
         }
     }
 }
