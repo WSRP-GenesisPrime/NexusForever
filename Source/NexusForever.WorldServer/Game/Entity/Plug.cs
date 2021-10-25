@@ -59,8 +59,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public override void OnRemoveFromMap()
         {
-            base.OnRemoveFromMap();
-
             if (ReplacementPlug != null)
             {
                 Map.EnqueueAdd(ReplacementPlug, new MapPosition
@@ -69,6 +67,8 @@ namespace NexusForever.WorldServer.Game.Entity
                 });
                 ReplacementPlug = null;
             }
+
+            base.OnRemoveFromMap();
         }
     }
 }

@@ -133,8 +133,6 @@ namespace NexusForever.WorldServer.Game.Housing
 
         private DecorSaveMask saveMask;
 
-        public ulong ClientDecorId { get; private set; }
-
         public Decor()
         {
         }
@@ -381,7 +379,7 @@ namespace NexusForever.WorldServer.Game.Housing
 
         public void RemoveEntity()
         {
-            if (Entity != null)
+            if (Entity != null && Entity.Map != null)
             {
                 Entity.Map.EnqueueRemove(Entity);
                 Entity = null;
