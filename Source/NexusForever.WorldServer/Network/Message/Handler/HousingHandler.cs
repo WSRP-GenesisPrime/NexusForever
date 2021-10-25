@@ -538,7 +538,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         public static void HandleHousingDecorPropRequest(WorldSession session, ClientHousingPropUpdate propRequest)
         {
             if (!(session.Player.Map is ResidenceMapInstance residenceMap))
-                throw new InvalidPacketValueException();
+                return; // This somehow pops when teleporting from a house to Thayd.
+                //throw new InvalidPacketValueException();
 
             log.Info($"{propRequest.Operation}");
 

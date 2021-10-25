@@ -1104,7 +1104,7 @@ namespace NexusForever.WorldServer.Game.Map
                 UnitId = decor.Entity.Guid
             });
 
-            log.Info($"Guid: {decor.Entity.Guid}");
+            //log.Info($"Guid: {decor.Entity.Guid}");
         }
 
         public void CreateOrMoveDecorEntity(Player player, ClientHousingPropUpdate propRequest)
@@ -1127,8 +1127,11 @@ namespace NexusForever.WorldServer.Game.Map
 
                 // TODO: Calculate entity locations instead of relying on client data
                 propRequestDecor.Entity.Rotation = propRequest.Rotation.ToEulerDegrees();
-                propRequestDecor.Entity.MovementManager.SetRotation(propRequest.Rotation.ToEulerDegrees());
-                propRequestDecor.Entity.MovementManager.SetPosition(propRequest.Position);
+                if (propRequestDecor.Entity.MovementManager != null) // happens sometimes, apparently.
+                {
+                    propRequestDecor.Entity.MovementManager.SetRotation(propRequest.Rotation.ToEulerDegrees());
+                    propRequestDecor.Entity.MovementManager.SetPosition(propRequest.Position);
+                }
                 return;
             }
 
@@ -1181,8 +1184,17 @@ namespace NexusForever.WorldServer.Game.Map
                     return creatureEntry;
             }
 
+            if(decor.Entry.Id >= 3699)
+            {
+                // Added by spreadsheet, creature2Id should be assumed correct.
+                return null;
+            }
+
             switch (decor.Entry.HousingDecorTypeId)
             {
+                case 1:
+                case 59:
+                    return GameTableManager.Instance.Creature2.GetEntry(70052);
                 case 4:
                 case 21:
                     return GameTableManager.Instance.Creature2.GetEntry(57195); // Generic Chair - Sitting Active Prop - Sniffs showed this was used in every seat entity.
