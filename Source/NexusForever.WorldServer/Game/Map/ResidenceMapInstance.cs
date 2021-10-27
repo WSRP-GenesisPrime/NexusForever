@@ -729,7 +729,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player))
                 throw new InvalidPacketValueException();
 
-            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            Plot plot = residence.GetPlotByPlotInfo(housingPlugUpdate.PlotInfo);
             if (plot == null)
                 throw new HousingException();
 
@@ -854,7 +854,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player))
                 throw new InvalidPacketValueException();
 
-            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            Plot plot = residence.GetPlotByPlotInfo(housingPlugUpdate.PlotInfo);
             if (plot == null)
                 throw new HousingException();
 
@@ -944,7 +944,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player))
                 throw new InvalidPacketValueException();
 
-            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            Plot plot = residence.GetPlotByPlotInfo(housingPlugUpdate.PlotInfo);
             if (plot == null)
                 throw new HousingException();
 
@@ -1255,9 +1255,9 @@ namespace NexusForever.WorldServer.Game.Map
 
         private ushort GetPlotId(Residence residence, uint plotIndex)
         {
-            HousingPlotInfoEntry entry = residence.GetPlot(plotIndex)?.PlotInfoEntry;
+            HousingPlotInfoEntry entry = residence.GetPlotByIndex(plotIndex)?.PlotInfoEntry;
             if (entry == null)
-                return (ushort)(residence.GetPlot(plotIndex)?.PlotInfoEntry.WorldSocketId ?? 1159);
+                return (ushort)(residence.GetPlotByPlotInfo(plotIndex)?.PlotInfoEntry.WorldSocketId ?? 1159);
 
             return (ushort)entry.WorldSocketId;
         }
