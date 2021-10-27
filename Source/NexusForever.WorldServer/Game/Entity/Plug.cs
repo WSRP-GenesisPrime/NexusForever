@@ -28,10 +28,10 @@ namespace NexusForever.WorldServer.Game.Entity
                 PlugFlags = 63
             };
         }
-        
+
         /// <summary>
-         /// Queue a replacement <see cref="Plug"/> to assume this entity's WorldSocket and WorldPlug location
-         /// </summary>
+        /// Queue a replacement <see cref="Plug"/> to assume this entity's WorldSocket and WorldPlug location
+        /// </summary>
         public void EnqueueReplace(Plug newPlug)
         {
             ReplacementPlug = newPlug;
