@@ -31,6 +31,7 @@ namespace NexusForever.WorldServer.Game.Entity
             GuildManager.OnLogin();
             ChatManager.OnLogin();
             ContactManager.OnLogin();
+            ShutdownManager.Instance.OnLogin(this);
         }
 
         private void OnLogout()

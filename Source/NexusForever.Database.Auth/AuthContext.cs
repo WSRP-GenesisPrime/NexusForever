@@ -946,6 +946,21 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
+                        Id   = 107,
+                        Name = "Category: RealmShutdown"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 108,
+                        Name = "Command: RealmShutdownStart"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 109,
+                        Name = "Command: RealmShutdownCancel"
+                    },
+                    new PermissionModel
+                    {
                         Id   = 110,
                         Name = "Command: QuestList"
                     },
