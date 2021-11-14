@@ -199,9 +199,6 @@
         AccountChangePass           = 50800,
         AccountChangeMyPass         = 50810,
 
-        // GP: GM flag
-        GMFlag                      = 50900,
-
         // GP: Costume commands
         Costume                     = 60000,
         CostumeOverride             = 60010,
@@ -216,6 +213,7 @@
         // non command permissions
         InstantLogout               = 10000,
         Signature                   = 10001,
-        BypassInstanceLimits        = 10002
+        BypassInstanceLimits        = 10002,
+        GMFlag                      = 10003
     }
 }

@@ -147,6 +147,29 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
+        [Command(Permission.GMFlag, "Summon pet by Creature2Entry ID.", "id")]
+        public void HandlePetSummonId(ICommandContext context,
+            [Parameter("Creature2Entry ID.")]
+            uint id)
+        {
+            Player target = context.InvokingPlayer;
+            if (target.VanityPetGuid != null)
+            {
+                context.SendError("You already have a pet - please dismiss it before summoning another.");
+                return;
+            }
+
+            try
+            {
+                SummonCreatureToPlayer(context, (uint)id);
+            }
+            catch (TypeInitializationException tie)
+            {
+                log.Error($"Exception caught in HouseCommandCategory.HandlePetSummon!\nInvoked by {context.InvokingPlayer.Name}; {tie.Message} : {tie.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
+        }
+
         public void SummonCreatureToPlayer(ICommandContext context, uint creatureId)
         {
             Player target = context.InvokingPlayer;

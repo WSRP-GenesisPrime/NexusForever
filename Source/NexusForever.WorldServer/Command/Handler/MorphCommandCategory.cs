@@ -51,22 +51,32 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
 
-                Creature2DisplayGroupEntryEntry displayGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2DisplayGroupEntry.Entries, (d => d.Creature2DisplayGroupId == creature2.Creature2DisplayGroupId));
-                if (displayGroupEntry == null)
+                ChangePlayerDisplayInfo(player, creature2);
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught in MorphCommandCategory.HandleMorph!\n{e.Message} :\n{e.StackTrace}");
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
+        }
+
+        [Command(Permission.GMFlag, "Change into a creature by Creature2Entry ID.", "id")]
+        public void HandleMorphId(ICommandContext context,
+            [Parameter("Creature2Entry ID.")]
+            uint creatureID)
+        {
+            try
+            {
+                Player player = context.InvokingPlayer;
+
+                Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong)creatureID);
+                if (creature2 == null || creatureID == 0)
+                {
+                    context.SendError("Invalid Creature2Entry ID.");
                     return;
-
-                // change the player's display information to the creature's display information
-                Creature2OutfitGroupEntryEntry outfitGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2OutfitGroupEntry.Entries, (d => d.Creature2OutfitGroupId == creature2.Creature2OutfitGroupId));
-
-
-                if (outfitGroupEntry != null) // check if the creature has an outfit
-                {
-                    player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId, outfitGroupEntry.Creature2OutfitInfoId); // if there is outfit information, use outfit info parameter
                 }
-                else
-                {
-                    player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId);
-                }
+
+                ChangePlayerDisplayInfo(player, creature2);
             }
             catch (Exception e)
             {
@@ -123,6 +133,26 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 log.Error($"Exception caught in MorphCommandCategory.HandleMorphList!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
+        }
+
+        public void ChangePlayerDisplayInfo(Player player, Creature2Entry creature2)
+        {
+            Creature2DisplayGroupEntryEntry displayGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2DisplayGroupEntry.Entries, (d => d.Creature2DisplayGroupId == creature2.Creature2DisplayGroupId));
+            if (displayGroupEntry == null)
+                return;
+
+            // change the player's display information to the creature's display information
+            Creature2OutfitGroupEntryEntry outfitGroupEntry = System.Linq.Enumerable.FirstOrDefault(GameTableManager.Instance.Creature2OutfitGroupEntry.Entries, (d => d.Creature2OutfitGroupId == creature2.Creature2OutfitGroupId));
+
+
+            if (outfitGroupEntry != null) // check if the creature has an outfit
+            {
+                player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId, outfitGroupEntry.Creature2OutfitInfoId); // if there is outfit information, use outfit info parameter
+            }
+            else
+            {
+                player.SetDisplayInfo(displayGroupEntry.Creature2DisplayInfoId);
             }
         }
     }

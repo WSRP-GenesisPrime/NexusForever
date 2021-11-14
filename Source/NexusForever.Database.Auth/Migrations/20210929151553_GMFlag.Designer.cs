@@ -9,7 +9,7 @@ using NexusForever.Database.Auth;
 namespace NexusForever.Database.Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20210618044325_GMFlag")]
+    [Migration("20210929151553_GMFlag")]
     partial class GMFlag
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -823,68 +823,38 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
-                            Id = 50000u,
-                            Name = "Category: Morph"
+                            Id = 100u,
+                            Name = "Category: Guild"
                         },
                         new
                         {
-                            Id = 50001u,
-                            Name = "Command: MorphStoryTeller"
+                            Id = 101u,
+                            Name = "Command: GuildRegister"
                         },
                         new
                         {
-                            Id = 50100u,
-                            Name = "Category: Emote"
+                            Id = 102u,
+                            Name = "Command: GuildJoin"
                         },
                         new
                         {
-                            Id = 50200u,
-                            Name = "Category: Chron"
+                            Id = 103u,
+                            Name = "Category: Map"
                         },
                         new
                         {
-                            Id = 50300u,
-                            Name = "Category: XRoll"
+                            Id = 104u,
+                            Name = "Command: MapUnload"
                         },
                         new
                         {
-                            Id = 50400u,
-                            Name = "Command: CharacterProps"
+                            Id = 105u,
+                            Name = "Command: MapPlayerRemove"
                         },
                         new
                         {
-                            Id = 50500u,
-                            Name = "Category: Boost"
-                        },
-                        new
-                        {
-                            Id = 50600u,
-                            Name = "Command: HouseRemodel"
-                        },
-                        new
-                        {
-                            Id = 50700u,
-                            Name = "Command: RealmOnline"
-                        },
-                        new
-                        {
-                            Id = 50710u,
-                            Name = "Command: RealmUptime"
-                        },
-                        new
-                        {
-                            Id = 50800u,
-                            Name = "Command: AccountChangePass"
-                        },
-                        new
-                        {
-                            Id = 50810u,
-                            Name = "Command: AccountChangeMyPass"
-                        },
-                        new
-                        {
-                            Id = 50900u,
-                            Name = "Flag: GM"
+                            Id = 106u,
+                            Name = "Command: MapPlayerRemoveCancel"
                         },
                         new
                         {
@@ -895,6 +865,16 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 10001u,
                             Name = "Other: Signature"
+                        },
+                        new
+                        {
+                            Id = 10002u,
+                            Name = "Other: BypassInstanceLimits"
+                        },
+                        new
+                        {
+                            Id = 10003u,
+                            Name = "Other: GMFlag"
                         });
                 });
 
@@ -952,12 +932,6 @@ namespace NexusForever.Database.Auth.Migrations
                             Id = 5u,
                             Flags = 2u,
                             Name = "WebSocket"
-                        },
-                        new
-                        {
-                            Id = 6u,
-                            Flags = 1u,
-                            Name = "Storyteller"
                         });
                 });
 
