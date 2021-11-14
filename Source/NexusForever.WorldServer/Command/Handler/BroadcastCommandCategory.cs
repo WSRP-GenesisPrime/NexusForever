@@ -24,7 +24,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             try
             {
-                foreach (WorldSession session in NetworkManager<WorldSession>.Instance.GetSessions())
+                foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
                 {
                     session.EnqueueMessageEncrypted(new ServerRealmBroadcast
                     {

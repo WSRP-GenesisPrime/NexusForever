@@ -994,6 +994,11 @@ namespace NexusForever.Database.Auth
                     {
                         Id   = 10002,
                         Name = "Other: BypassInstanceLimits"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 10003,
+                        Name = "Other: GMFlag"
                     });
             });
 

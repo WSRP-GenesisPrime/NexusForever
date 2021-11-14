@@ -23,7 +23,7 @@ namespace NexusForever.WorldServer.Command.Handler
             try
             {
                 WorldServer.RealmMotd = message;
-                foreach (WorldSession session in NetworkManager<WorldSession>.Instance.GetSessions())
+                foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
                     GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
             }
             catch (Exception e)
@@ -36,7 +36,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.RealmOnline, "Displays the users online", "online")]
         public void HandleRealmOnline(ICommandContext context)
         {
-            List<WorldSession> allSessions = NetworkManager<WorldSession>.Instance.GetSessions().ToList();
+            List<WorldSession> allSessions = NetworkManager<WorldSession>.Instance.ToList();
 
             int index = 0;
             foreach (WorldSession session in allSessions)

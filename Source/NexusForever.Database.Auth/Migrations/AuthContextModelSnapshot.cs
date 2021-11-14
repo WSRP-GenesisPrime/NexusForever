@@ -968,6 +968,11 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 10002u,
                             Name = "Other: BypassInstanceLimits"
+                        },
+                        new
+                        {
+                            Id = 10003u,
+                            Name = "Other: GMFlag"
                         });
                 });
 
