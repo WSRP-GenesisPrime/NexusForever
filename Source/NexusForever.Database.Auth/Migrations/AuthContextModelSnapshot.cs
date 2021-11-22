@@ -974,7 +974,7 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
-                            Id = 107u,
+                            Id = 110u,
                             Name = "Command: QuestList"
                         },
                         new

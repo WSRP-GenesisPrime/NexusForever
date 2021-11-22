@@ -946,7 +946,7 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
-                        Id   = 107,
+                        Id   = 110,
                         Name = "Command: QuestList"
                     },
                     new PermissionModel 

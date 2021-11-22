@@ -9,7 +9,7 @@ using NexusForever.Database.Auth;
 namespace NexusForever.Database.Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20211122162031_QuestList Permissions")]
+    [Migration("20211122172412_QuestList Permissions")]
     partial class QuestListPermissions
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -976,7 +976,7 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
-                            Id = 107u,
+                            Id = 110u,
                             Name = "Command: QuestList"
                         },
                         new

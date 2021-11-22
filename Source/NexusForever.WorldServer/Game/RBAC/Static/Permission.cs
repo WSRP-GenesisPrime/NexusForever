@@ -81,11 +81,11 @@
         EntityProperties            = 45,
         EntityModify                = 60,
         EntityModifyDisplayInfo     = 61,
-        EntityThreat                = 106,
-        EntityThreatAdjust          = 107,
-        EntityThreatList            = 108,
-        EntityThreatClear           = 109,
-        EntityThreatRemove          = 110,
+        EntityThreat                = 115,
+        EntityThreatAdjust          = 116,
+        EntityThreatList            = 117,
+        EntityThreatClear           = 118,
+        EntityThreatRemove          = 119,
 
         // generic unlock
         Generic                     = 46,
@@ -138,7 +138,7 @@
         QuestAchieveObjective       = 79,
         QuestObjective              = 80,
         QuestKill                   = 81,
-        QuestList                   = 107,
+        QuestList                   = 110,
         QuestActivate               = 2002,
 
         // spell
