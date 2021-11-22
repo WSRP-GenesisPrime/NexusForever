@@ -65,6 +65,12 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
         }
 
+        [MessageHandler(GameMessageOpcode.ClientHousingNeighborUpdate)]
+        public static void HandleNeighborRoommate(WorldSession session, ClientHousingNeighborUpdate request)
+        {
+
+        }
+
         [MessageHandler(GameMessageOpcode.ClientContactsRequestResponse)]
         public static void HandleRequestResponse(WorldSession session, ClientContactsRequestResponse request)
         {

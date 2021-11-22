@@ -7,21 +7,33 @@ namespace NexusForever.WorldServer.Network.Message.Model
     [Message(GameMessageOpcode.ServerHousingNeighbors)]
     public class ServerHousingNeighbors : IWritable
     {
+        public static ServerHousingNeighbors dummy()
+        {
+            ServerHousingNeighbors shn = new ServerHousingNeighbors();
+            NeighborData nd = new NeighborData();
+            nd.NeighborId = 1;
+            nd.NeighborHoodId = 2;
+            nd.RealmId = WorldServer.RealmId;
+            nd.CharacterID = 352;
+            shn.Neighbors.Add(nd);
+            return shn;
+        }
+
         public class NeighborData : IWritable
         {
-            public ulong ContactID1 { get; set; }
-            public ulong ContactID2 { get; set; }
-            public ushort Unknown1 { get; set; } = 0;
+            public ulong NeighborId { get; set; }
+            public ulong NeighborHoodId { get; set; }
+            public ushort RealmId { get; set; } = 0;
             public ulong CharacterID { get; set; }
-            public uint Unknown2 { get; set; } = 8;
+            public uint PermissionLevel { get; set; } = 2;
 
             public void Write(GamePacketWriter writer)
             {
-                writer.Write(ContactID1);
-                writer.Write(ContactID2);
-                writer.Write(Unknown1);
-                writer.Write(CharacterID);
-                writer.Write(Unknown2); // can be 3 or 4 bytes when its value is 0; otherwise always 4 bytes.
+                writer.Write(NeighborId, 64u);
+                writer.Write(NeighborHoodId, 64u);
+                writer.Write(RealmId, 14u);
+                writer.Write(CharacterID, 64u);
+                writer.Write(PermissionLevel, 32u);
             }
         }
 

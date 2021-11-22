@@ -797,7 +797,8 @@ namespace NexusForever.WorldServer.Game.Entity
             ResidenceManager.SendHousingBasics();
             ContactManager.OnLogin();
 
-            Session.EnqueueMessageEncrypted(new ServerHousingNeighbors());
+            Session.EnqueueMessageEncrypted(ServerHousingNeighbors.dummy());
+            //Session.EnqueueMessageEncrypted(new ServerHousingNeighbors());
             Session.EnqueueMessageEncrypted(new ServerInstanceSettings());
 
             SetControl(this);
