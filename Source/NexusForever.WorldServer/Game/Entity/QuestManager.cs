@@ -704,5 +704,13 @@ namespace NexusForever.WorldServer.Game.Entity
 
             return false;
         }
+
+        /// <summary>
+        /// Returns a collection of all active quests.
+        /// </summary>
+        public IEnumerable<Quest.Quest> GetActiveQuests()
+        {
+            return activeQuests.Values.AsEnumerable();
+        }
     }
 }

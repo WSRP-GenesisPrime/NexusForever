@@ -138,6 +138,7 @@
         QuestAchieveObjective       = 79,
         QuestObjective              = 80,
         QuestKill                   = 81,
+        QuestList                   = 107,
         QuestActivate               = 2002,
 
         // spell

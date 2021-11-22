@@ -944,6 +944,11 @@ namespace NexusForever.Database.Auth
                         Id   = 106,
                         Name = "Command: MapPlayerRemoveCancel"
                     },
+                    new PermissionModel
+                    {
+                        Id   = 107,
+                        Name = "Command: QuestList"
+                    },
                     new PermissionModel 
                     {
                         Id   = 115,
