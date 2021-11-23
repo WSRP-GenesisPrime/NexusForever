@@ -521,7 +521,7 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 // TODO: check if this is complete, client seems to also refer to contact info
                 // for more see QuestTracker:HelperShowQuestCallbackBtn in LUA which contains the logic to show the complete button in the quest tracker
-                if (!quest.Info.IsCommunicatorReceived())
+                if (!quest.Info.IsCommunicatorReceived() && !quest.Info.CanBeCalledBack())
                     throw new QuestException($"Player {player.CharacterId} tried to complete quest {questId} without communicator message!");
             }
             else
