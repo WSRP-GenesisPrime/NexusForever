@@ -23,5 +23,13 @@ namespace NexusForever.WorldServer.Script
         public virtual void OnActivateFail(WorldEntity me, WorldEntity activator)
         {
         }
+
+        public virtual void OnEnterRange(WorldEntity me, WorldEntity activator)
+        { 
+        }
+
+        public virtual void OnExitRange(WorldEntity me, WorldEntity activator)
+        {
+        }
     }
 }

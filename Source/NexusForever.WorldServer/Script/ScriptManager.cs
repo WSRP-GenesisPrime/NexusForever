@@ -14,6 +14,7 @@ namespace NexusForever.WorldServer.Script
 
         private ImmutableDictionary<uint, CreatureScript> creatureScripts;
         private ImmutableDictionary<uint, PlugScript> plugScripts;
+        private ImmutableDictionary<uint, QuestScript> questScripts;
 
         public ScriptManager()
         {
@@ -29,6 +30,7 @@ namespace NexusForever.WorldServer.Script
         {
             var creatureDict = ImmutableDictionary.CreateBuilder<uint, CreatureScript>();
             var plugDict = ImmutableDictionary.CreateBuilder<uint, PlugScript>();
+            var questDict = ImmutableDictionary.CreateBuilder<uint, QuestScript>();
 
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.GetCustomAttributes(typeof(ScriptAttribute), true).Length > 0))
@@ -41,11 +43,15 @@ namespace NexusForever.WorldServer.Script
 
                     if (type.IsSubclassOf(typeof(PlugScript)))
                         plugDict.TryAdd(attribute.Id, instance as PlugScript);
+
+                    if (type.IsSubclassOf(typeof(QuestScript)))
+                        questDict.TryAdd(attribute.Id, instance as QuestScript);
                 }
             }
 
             creatureScripts = creatureDict.ToImmutable();
             plugScripts = plugDict.ToImmutable();
+            questScripts = questDict.ToImmutable();
         }
 
         public T GetScript<T>(uint id) where T : Script
@@ -55,6 +61,9 @@ namespace NexusForever.WorldServer.Script
 
             if (typeof(PlugScript).IsAssignableFrom(typeof(T)))
                 return plugScripts.TryGetValue(id, out PlugScript plugScript) ? plugScript as T : null;
+
+            if (typeof(QuestScript).IsAssignableFrom(typeof(T)))
+                return questScripts.TryGetValue(id, out QuestScript questScript) ? questScript as T : null;
 
             log.Warn($"Unhandled ScriptType {typeof(T)}");
             return null;

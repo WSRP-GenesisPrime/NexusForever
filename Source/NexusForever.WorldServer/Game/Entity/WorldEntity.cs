@@ -74,7 +74,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public float LeashRange { get; protected set; } = 50f;
         public MovementManager MovementManager { get; private set; }
 
-        public float RangeCheck { get; private set; } = 15f;
+        public float RangeCheck { get; set; } = 15f;
         protected readonly Dictionary<uint, WorldEntity> inRangeEntities = new();
 
         private EventQueue events = new();

@@ -11,6 +11,7 @@ using NexusForever.Shared.Game;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Script;
 
 namespace NexusForever.WorldServer.Game.Quest
 {
@@ -395,6 +396,7 @@ namespace NexusForever.WorldServer.Game.Quest
                 return;
 
             objective.ObjectiveUpdate(progress);
+            ScriptManager.Instance.GetScript<QuestScript>(Id)?.OnObjectiveUpdate(player, this, objective);
 
             if (AreAllRequiredObjectivesCompleted())
                 CompleteAllOptionalObjectives();
@@ -429,6 +431,8 @@ namespace NexusForever.WorldServer.Game.Quest
             foreach (CommunicatorMessage message in GlobalQuestManager.Instance.GetQuestCommunicatorQuestStateTriggers(Id, state))
                 if (message.Meets(player))
                     player.QuestManager.QuestMention(message.QuestId);
+
+            ScriptManager.Instance.GetScript<QuestScript>(Id)?.OnQuestStateChange(player, this, State);
         }
 
         public IEnumerator<QuestObjective> GetEnumerator()

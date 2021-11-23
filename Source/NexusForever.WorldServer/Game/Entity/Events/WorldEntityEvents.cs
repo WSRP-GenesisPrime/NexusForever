@@ -102,7 +102,6 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void OnActivateFail(Player activator)
         {
-            // deliberately empty
             ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnActivateFail(this, activator);
         }
 
@@ -111,7 +110,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void OnEnterRange(WorldEntity entity)
         {
-            // deliberately empty
+            ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnEnterRange(this, entity);
         }
 
         /// <summary>
@@ -119,7 +118,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void OnExitRange(WorldEntity entity)
         {
-            // deliberately empty
+            ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnExitRange(this, entity);
         }
 
         /// <summary>
