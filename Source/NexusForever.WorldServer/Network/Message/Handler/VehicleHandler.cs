@@ -11,7 +11,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         public static void HandleVehicleDisembark(WorldSession session, ClientVehicleDisembark disembark)
         {
             if (session.Player.VehicleGuid == 0u)
-                throw new InvalidPacketValueException();
+                return;
 
             session.Player.Dismount();
         }

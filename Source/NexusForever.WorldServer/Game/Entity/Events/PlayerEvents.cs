@@ -32,6 +32,7 @@ namespace NexusForever.WorldServer.Game.Entity
             ChatManager.OnLogin();
             ContactManager.OnLogin();
             ShutdownManager.Instance.OnLogin(this);
+            GlobalChatManager.Instance.JoinDefaultChatChannels(this);
         }
 
         private void OnLogout()
@@ -73,8 +74,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             pendingTeleport = null;
-
-            GlobalChatManager.Instance.JoinDefaultChatChannels(this);
+            
             SendPacketsAfterAddToMap();
 
             if (Health == 0u)
