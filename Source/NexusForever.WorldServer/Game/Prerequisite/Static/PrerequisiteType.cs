@@ -24,7 +24,7 @@
         /// <summary>
         /// Checks for whether or not the Player has an AMP.
         /// </summary>
-        AMP                 = 50,
+        HasBuff             = 50,
         Path                = 52,
         Vital               = 73,
         /// <summary>

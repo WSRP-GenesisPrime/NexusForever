@@ -14,11 +14,14 @@ using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
     public abstract partial class UnitEntity : WorldEntity
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
         private readonly List<Spell.Spell> pendingSpells = new();
         protected UnitAI AI { get; set; }
         public UnitAI GetAI() => AI;
@@ -48,6 +51,8 @@ namespace NexusForever.WorldServer.Game.Entity
         }
         private bool inCombat;
 
+        private Dictionary<ProcType, List<ProcInfo>> procs = new();
+
         public float HitRadius { get; protected set; } = 1f;
 
         protected UnitEntity(EntityType type)
@@ -57,6 +62,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
             InitialiseAI();
             InitialiseHitRadius();
+            foreach (ProcType procType in AssetManager.HandledProcTypes)
+                procs.Add(procType, new List<ProcInfo>());
         }
 
         public override void Initialise(EntityModel model)
@@ -96,6 +103,9 @@ namespace NexusForever.WorldServer.Game.Entity
 
             ThreatManager.Update(lastTick);
             AI?.Update(lastTick);
+
+            foreach (ProcInfo proc in procs.Values.SelectMany(p => p).ToList())
+                proc.Update(lastTick);
         }
 
         /// <summary>
@@ -252,6 +262,15 @@ namespace NexusForever.WorldServer.Game.Entity
             spell = pendingSpells.FirstOrDefault(i => !i.IsCasting && !i.IsFinished && i.CastMethod == castMethod);
 
             return spell != null;
+        }
+
+        /// <summary>
+        /// Finish all <see cref="Spell.Spell"/> that match the given spell4Id for this <see cref="UnitEntity"/>.
+        /// </summary>
+        public void FinishSpells(uint spell4Id)
+        {
+            foreach (Spell.Spell spell in pendingSpells.Where(i => !i.IsCasting && !i.IsFinished && i.Spell4Id == spell4Id))
+                spell.Finish();
         }
 
         /// <summary>
@@ -480,6 +499,66 @@ namespace NexusForever.WorldServer.Game.Entity
 
                     Loot.Add(loot);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ProcInfo ApplyProc(Spell4EffectsEntry entry)
+        {
+            ProcInfo proc = new ProcInfo(this, entry);
+
+            if (procs.ContainsKey(proc.Type))
+            {
+                bool canApplyProc = true;
+                foreach (ProcInfo procInfo in procs[proc.Type])
+                {
+                    if (procInfo.ApplicatorSpell4Id == proc.ApplicatorSpell4Id)
+                        canApplyProc = false;
+                }
+
+                if (canApplyProc)
+                    procs[proc.Type].Add(proc);
+                else
+                    return null;
+            }
+            else
+            {
+                log.Warn($"Unhandled ProcType {entry.DataBits00}!");
+                return null;
+            }
+            return proc;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void RemoveProc(uint spell4Id)
+        {
+            foreach (List<ProcInfo> procList in procs.Values.ToList())
+            {
+                foreach (ProcInfo proc in procList.ToList())
+                {
+                    if (proc.ApplicatorSpell4Id == spell4Id)
+                    {
+                        proc.EndTrigger();
+                        procs[proc.Type].Remove(proc);
+                        log.Trace($"Removed Proc {proc.Effect.Id} from {proc.Type} for Entity {Guid}.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void FireProc(ProcType type)
+        {
+            if (procs.TryGetValue(type, out List<ProcInfo> procList))
+            {
+                foreach (ProcInfo proc in procList)
+                    proc.Trigger();
             }
         }
     }

@@ -42,7 +42,7 @@ namespace NexusForever.WorldServer.Game.Entity
             characterId = owner?.CharacterId ?? 0ul;
             player = owner;
 
-            foreach ((InventoryLocation location, uint defaultCapacity) in AssetManager.Instance.InventoryLocationCapacities)
+            foreach ((InventoryLocation location, uint defaultCapacity) in AssetManager.InventoryLocationCapacities)
                 bags.Add(location, new Bag(location, defaultCapacity));
 
             foreach (ItemModel itemModel in model.Item
@@ -61,7 +61,7 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             characterId = owner;
 
-            foreach ((InventoryLocation location, uint defaultCapacity) in AssetManager.Instance.InventoryLocationCapacities)
+            foreach ((InventoryLocation location, uint defaultCapacity) in AssetManager.InventoryLocationCapacities)
                 bags.Add(location, new Bag(location, defaultCapacity));
 
             foreach (uint itemId in creationEntry.ItemIds.Where(i => i != 0u))

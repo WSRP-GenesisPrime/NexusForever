@@ -51,6 +51,9 @@ namespace NexusForever.WorldServer.Game.Spell
 
                 DamageCalculator.Instance.CalculateDamage(caster, target, this, info, (DamageType)info.Entry.DamageType, damage);
 
+                if (info.Damage.CombatResult == CombatResult.Critical)
+                    caster.FireProc(ProcType.CriticalDamage);
+
                 target.TakeDamage(caster, info.Damage);
             }
 
@@ -502,6 +505,16 @@ namespace NexusForever.WorldServer.Game.Spell
                 throw new NotImplementedException($"Can only apply execution delay to non-Players");
 
             target.GetAI()?.AddExecutionDelay(info.Entry.DurationTime);
+        }
+
+        [SpellEffectHandler(SpellEffectType.Proc)]
+        private void HandleEffectProc(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            ProcInfo procInfo = target.ApplyProc(info.Entry);
+            if (procInfo != null)
+                log.Trace($"Applied Proc {info.Entry.Id} for {procInfo.Type} to Entity {target.Guid}.");
+            else
+                log.Trace($"Failed to apply Proc {info.Entry.Id} for {(ProcType)info.Entry.DataBits00} to Entity {target.Guid}.");
         }
     }
 }

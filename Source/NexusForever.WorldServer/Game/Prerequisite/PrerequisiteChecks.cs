@@ -155,8 +155,8 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
-        [PrerequisiteCheck(PrerequisiteType.AMP)]
-        private static bool PrerequisiteCheckAmp(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        [PrerequisiteCheck(PrerequisiteType.HasBuff)]
+        private static bool PrerequisiteCheckHasBuff(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
             if (value == 0 && objectId == 0)
                 return false;
@@ -165,12 +165,14 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             if (spell4 == null)
                 throw new InvalidOperationException();
 
+            Spell.Spell buff = null;
+
             switch (comparison)
             {
                 case PrerequisiteComparison.Equal:
-                    return player.SpellManager.GetSpell(spell4.Spell4BaseIdBaseSpell) != null;
+                    return player.HasSpell(value, out buff);
                 case PrerequisiteComparison.NotEqual:
-                    return player.SpellManager.GetSpell(spell4.Spell4BaseIdBaseSpell) == null;
+                    return !player.HasSpell(value, out buff);
                 default:
                     return false;
             }

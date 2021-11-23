@@ -71,11 +71,6 @@ namespace NexusForever.WorldServer.Game.Spell
 
             events.Update(lastTick);
 
-            // Prevent Mounts from Ending instantly
-            // TODO: Reference this spell to Mount Entity and finish spell when Mount is removed?
-            if (parameters.SpellInfo.BaseInfo.Entry.Spell4SpellTypesIdSpellType == 30) // This also happens with the Mount Unlock items. Investigate further.
-                return;
-
             if (status == SpellStatus.Executing && HasThresholdToCast)
                 status = SpellStatus.Waiting;
 
@@ -121,6 +116,9 @@ namespace NexusForever.WorldServer.Game.Spell
                         if (CastMethod != CastMethod.ChargeRelease)
                             SetCooldown();
                     }
+
+                foreach (SpellTargetInfo target in targets)
+                    target.Entity.RemoveProc(parameters.SpellInfo.Entry.Id);
             }
         }
 

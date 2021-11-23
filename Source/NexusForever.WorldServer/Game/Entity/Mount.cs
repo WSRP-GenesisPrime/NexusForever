@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NexusForever.Shared.GameTable;
@@ -21,6 +22,14 @@ namespace NexusForever.WorldServer.Game.Entity
         /// Display info applied to the pilot in the <see cref="ItemSlot.Mount"/> slot.
         /// </summary>
         public ItemDisplayEntry PilotDisplayInfo { get; }
+
+        private List<uint> playerSpellList = new()
+        {
+            80530,
+            80531,
+            52539,
+            52543
+        };
 
         public Mount(Player owner, uint spell4Id, uint creatureId, uint vehicleId, uint itemDisplayId)
             : base(EntityType.Mount, creatureId, vehicleId, spell4Id)
@@ -140,6 +149,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateVisuals(player);
+            RemoveSpells(player);
         }
 
         private void UpdateVisuals(Player player)
@@ -159,6 +169,14 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             EnqueueToVisible(visualUpdate, true);
+        }
+
+        private void RemoveSpells(Player player)
+        {
+            foreach (uint spellId in playerSpellList)
+                player.FinishSpells(spellId);
+
+            player.FinishSpells(SpellEntry.Id);
         }
     }
 }
