@@ -28,6 +28,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public void QueueCinematic(CinematicBase cinematic)
         {
             QueuedCinematics.Add(cinematic);
+            if (QueuedCinematics.Count == 1u)
+                PlayQueuedCinematics();
         }
 
         /// <summary>

@@ -85,9 +85,6 @@ namespace NexusForever.WorldServer.Game.Cinematic
         /// </summary>
         public void StartPlayback()
         {
-            if (playerActor == null)
-                throw new InvalidOperationException($"{GetType().Name} must have a Player Actor set.");
-
             Player.Session.EnqueueMessageEncrypted(new ServerCinematicNotify
             {
                 Flags = InitialFlags,
@@ -147,6 +144,10 @@ namespace NexusForever.WorldServer.Game.Cinematic
             {
                 Hide = true
             });
+
+            if (playerActor == null)
+                return;
+
             Player.Session.EnqueueMessageEncrypted(new ServerCinematic022B());
             Player.Session.EnqueueMessageEncrypted(new ServerCinematic0212
             {
