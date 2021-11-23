@@ -283,6 +283,20 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 if (creationEntry == null)
                     throw new InvalidPacketValueException();
 
+                // TODO: Remove below to let players make Novice characters in Tutorial.
+                if (creationEntry.Xp == 0u)
+                {
+                    creationEntry = GameTableManager.Instance.CharacterCreation.Entries.FirstOrDefault(c => c.Xp == 1710 && c.RaceId == creationEntry.RaceId && c.ClassId == creationEntry.ClassId && c.FactionId == creationEntry.FactionId && c.Sex == creationEntry.Sex);
+                    if (creationEntry == null)
+                    {
+                        session.EnqueueMessageEncrypted(new ServerCharacterCreate
+                        {
+                            Result = CharacterModifyResult.CreateFailed_Internal
+                        });
+                        return;
+                    }
+                }
+
                 if (creationEntry.EntitlementIdRequired != 0u)
                 {
                     // TODO: Aurin engineer has this
