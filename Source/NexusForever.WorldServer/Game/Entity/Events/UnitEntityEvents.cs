@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 using NexusForever.WorldServer.Game.Combat;
-using NexusForever.WorldServer.Game.Entity.Movement;
 using NexusForever.WorldServer.Game.Entity.Static;
-using NexusForever.WorldServer.Game.Map;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -94,14 +91,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
         protected override void OnDeath(UnitEntity killer)
         {
-            if (killer is Player player && this is not Player)
-            {
-                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillCreature, CreatureId, 1u);
-                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillCreature2, CreatureId, 1u);
-                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillTargetGroup, CreatureId, 1u);
-                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillTargetGroups, CreatureId, 1u);
-            }
-            
             AI?.OnDeath(killer);
 
             base.OnDeath(killer);

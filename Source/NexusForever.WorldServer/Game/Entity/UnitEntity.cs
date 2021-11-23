@@ -14,6 +14,7 @@ using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Script;
 using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
@@ -439,9 +440,21 @@ namespace NexusForever.WorldServer.Game.Entity
             // Fire Events (OnKill, OnDeath)
             OnDeath(attacker);
 
-            // Reward XP
-            if (attacker is Player player)
+            foreach (HostileEntity hostile in ThreatManager.GetPreviousThreatList())
+                RewardKiller(hostile.GetEntity(this));
+        }
+
+        private void RewardKiller(UnitEntity killer)
+        {
+            if (killer is Player player && this is not Player)
             {
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillCreature, CreatureId, 1u);
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillCreature2, CreatureId, 1u);
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillTargetGroup, CreatureId, 1u);
+                player.QuestManager.ObjectiveUpdate(Quest.Static.QuestObjectiveType.KillTargetGroups, CreatureId, 1u);
+                ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnDeathRewardGrant(this, player);
+
+                // Reward XP
                 if (CreatureId > 0u)
                 {
                     uint groupValue = 0u;
@@ -452,7 +465,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
                     player.XpManager.GrantXpForCreatureKill(Level, groupValue, GetPropertyValue(Property.XpMultiplier));
                 }
-                
+
                 // TODO: Reward XP for PvP Kills
             }
             // Reward Loot

@@ -31,5 +31,9 @@ namespace NexusForever.WorldServer.Script
         public virtual void OnExitRange(WorldEntity me, WorldEntity activator)
         {
         }
+
+        public virtual void OnDeathRewardGrant(WorldEntity me, WorldEntity killer)
+        {
+        }
     }
 }
