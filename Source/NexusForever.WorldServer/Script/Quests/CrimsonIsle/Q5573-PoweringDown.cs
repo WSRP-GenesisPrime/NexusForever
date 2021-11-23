@@ -1,4 +1,5 @@
-﻿using NexusForever.WorldServer.Game.Entity;
+﻿using NexusForever.WorldServer.Game.Cinematic.Cinematics;
+using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Quest;
 using NexusForever.WorldServer.Game.Quest.Static;
 
@@ -17,7 +18,8 @@ namespace NexusForever.WorldServer.Script.Quests.CrimsonIsle
 
             if (objective.IsComplete() && quest.State != QuestState.Achieved)
             {
-                // Play Cinematic
+                player.CinematicManager.QueueCinematic(new Cinematic_Q5573_PoweringDown(player));
+                player.CinematicManager.PlayQueuedCinematics();
                 player.QuestManager.ObjectiveUpdate(QOBJ_CINEMATIC_COMPLETE, 1u);
             }
         }
