@@ -7,6 +7,7 @@ using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Script;
 using System;
 using System.Numerics;
 
@@ -122,6 +123,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 }
 
                 QuestManager.ObjectiveUpdate(QuestObjectiveType.EnterZone, Zone.Id, 1);
+                ScriptManager.Instance.GetScript<MapScript>(Map.Entry.Id)?.OnEnterZone(this, Zone.Id);
             }
 
             ZoneMapManager.OnZoneUpdate();

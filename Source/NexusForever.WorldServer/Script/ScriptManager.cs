@@ -15,6 +15,7 @@ namespace NexusForever.WorldServer.Script
         private ImmutableDictionary<uint, CreatureScript> creatureScripts;
         private ImmutableDictionary<uint, PlugScript> plugScripts;
         private ImmutableDictionary<uint, QuestScript> questScripts;
+        private ImmutableDictionary<uint, MapScript> mapScripts;
 
         public ScriptManager()
         {
@@ -31,6 +32,7 @@ namespace NexusForever.WorldServer.Script
             var creatureDict = ImmutableDictionary.CreateBuilder<uint, CreatureScript>();
             var plugDict = ImmutableDictionary.CreateBuilder<uint, PlugScript>();
             var questDict = ImmutableDictionary.CreateBuilder<uint, QuestScript>();
+            var mapDict = ImmutableDictionary.CreateBuilder<uint, MapScript>();
 
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.GetCustomAttributes(typeof(ScriptAttribute), true).Length > 0))
@@ -46,12 +48,16 @@ namespace NexusForever.WorldServer.Script
 
                     if (type.IsSubclassOf(typeof(QuestScript)))
                         questDict.TryAdd(attribute.Id, instance as QuestScript);
+
+                    if (type.IsSubclassOf(typeof(MapScript)))
+                        mapDict.TryAdd(attribute.Id, instance as MapScript);
                 }
             }
 
             creatureScripts = creatureDict.ToImmutable();
             plugScripts = plugDict.ToImmutable();
             questScripts = questDict.ToImmutable();
+            mapScripts = mapDict.ToImmutable();
         }
 
         public T GetScript<T>(uint id) where T : Script
@@ -64,6 +70,9 @@ namespace NexusForever.WorldServer.Script
 
             if (typeof(QuestScript).IsAssignableFrom(typeof(T)))
                 return questScripts.TryGetValue(id, out QuestScript questScript) ? questScript as T : null;
+
+            if (typeof(MapScript).IsAssignableFrom(typeof(T)))
+                return mapScripts.TryGetValue(id, out MapScript mapScript) ? mapScript as T : null;
 
             log.Warn($"Unhandled ScriptType {typeof(T)}");
             return null;
