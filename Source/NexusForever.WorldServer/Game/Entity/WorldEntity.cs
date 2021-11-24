@@ -1080,5 +1080,10 @@ namespace NexusForever.WorldServer.Game.Entity
             if (Loot.Count == 0u)
                 SetDeathState(DeathState.CorpseLooted);
         }
+
+        public void QueueEvent(IEvent eventToQueue)
+        {
+            events.EnqueueEvent(eventToQueue);
+        }
     }
 }

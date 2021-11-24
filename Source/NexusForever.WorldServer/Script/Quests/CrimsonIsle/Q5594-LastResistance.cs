@@ -5,12 +5,6 @@ using NexusForever.WorldServer.Game.Quest.Static;
 
 namespace NexusForever.WorldServer.Script.Quests.CrimsonIsle
 {
-    [Script(5594)]
-    public class Q5594_LastResistance : QuestScript
-    {
-        
-    }
-
     [Script(31792)]
     public class Q5594_LastResistance_Warbot : CreatureScript
     {
