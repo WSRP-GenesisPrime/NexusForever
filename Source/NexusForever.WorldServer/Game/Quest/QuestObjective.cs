@@ -167,7 +167,8 @@ namespace NexusForever.WorldServer.Game.Quest
         public bool IsChecklist()
         {
             // TODO: Determine other Types that are also Checklists
-            return Type == QuestObjectiveType.ActivateTargetGroupChecklist;
+            return Type == QuestObjectiveType.ActivateTargetGroupChecklist
+                || Type == QuestObjectiveType.Unknown10;
         }
 
         /// <summary>
@@ -181,7 +182,8 @@ namespace NexusForever.WorldServer.Game.Quest
                Type == QuestObjectiveType.KillTargetGroup ||
                Type == QuestObjectiveType.KillTargetGroups ||
                Type == QuestObjectiveType.TalkToTargetGroup ||
-               Type == QuestObjectiveType.ActivateEntity && ObjectiveInfo.Entry.TargetGroupIdRewardPane != 0u);
+               Type == QuestObjectiveType.ActivateEntity && ObjectiveInfo.Entry.TargetGroupIdRewardPane != 0u ||
+               Type == QuestObjectiveType.Unknown10);
         }
 
         /// <summary>
