@@ -22,10 +22,17 @@ namespace NexusForever.WorldServer.Script.Quests.NorthernWilds
         public class Q3487_Shellshock_Ultrabot : CreatureScript
         {
             private Vector3 LOC_DESTINATION = new Vector3(4450f, -700f, -5150f);
+            const ushort ACH_WARBOT = 1296;
 
             public override void OnAddToMap(WorldEntity me)
             {
                 me.MovementManager.MoveTo(LOC_DESTINATION, 5f);
+            }
+
+            public override void OnDeathRewardGrant(WorldEntity me, WorldEntity killer)
+            {
+                if (killer is Player player)
+                    player.AchievementManager.GrantAchievement(ACH_WARBOT);
             }
         }
     }

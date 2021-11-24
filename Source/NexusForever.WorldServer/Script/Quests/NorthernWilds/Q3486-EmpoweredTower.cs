@@ -1,5 +1,6 @@
 ﻿using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.WorldServer.Game.Cinematic.Cinematics;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Quest;
@@ -18,7 +19,10 @@ namespace NexusForever.WorldServer.Script.Quests.NorthernWilds
             public override void OnQuestStateChange(Player player, Quest quest, QuestState newState)
             {
                 if (newState == QuestState.Completed)
+                {
+                    player.CinematicManager.QueueCinematic(new Cinematic_Q3486_EmpoweredTower(player));
                     player.QuestManager.QuestMention(QUEST_SETTING_UP_CAMP);
+                }
             }
         }
 
