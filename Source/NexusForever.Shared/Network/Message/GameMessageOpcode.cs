@@ -136,6 +136,7 @@ namespace NexusForever.Shared.Network.Message
         ServerCinematicTransition       = 0x0218,
         ServerCinematicVisualEffect     = 0x021C,
         ServerCinematicActorVisibility  = 0x0220,
+        ServerCinematic0227             = 0x0227,
         ServerCinematicActor            = 0x0228,
         ServerCinematicText             = 0x022A,
         ServerCinematic022B             = 0x022B,

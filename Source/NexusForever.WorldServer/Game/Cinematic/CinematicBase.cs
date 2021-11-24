@@ -21,6 +21,7 @@ namespace NexusForever.WorldServer.Game.Cinematic
         public List<Camera> Cameras { get; } = new List<Camera>();
         public Transition StartTransition { get; protected set; }
         public Transition EndTransition { get; protected set; }
+        public Position InitialCameraPosition { get; protected set; } = null;
 
         protected Actor playerActor;
 
@@ -107,6 +108,14 @@ namespace NexusForever.WorldServer.Game.Cinematic
         }
 
         /// <summary>
+        /// Sets the Initial Camera Position. This is used when offsetting camera and not using the player location.
+        /// </summary>
+        protected void SetInitialCameraPosition(Position position)
+        {
+            InitialCameraPosition = position;
+        }
+
+        /// <summary>
         /// Sends all packet data to the Player for all <see cref="Actor"/> stored for playback.
         /// </summary>
         protected void SendActors()
@@ -145,13 +154,16 @@ namespace NexusForever.WorldServer.Game.Cinematic
                 Hide = true
             });
 
-            if (playerActor == null)
+            if (playerActor == null && InitialCameraPosition == null)
                 return;
+
+            if (InitialCameraPosition == null)
+                InitialCameraPosition = new Position(Player.Position);
 
             Player.Session.EnqueueMessageEncrypted(new ServerCinematic022B());
             Player.Session.EnqueueMessageEncrypted(new ServerCinematic0212
             {
-                Position = new Position(Player.Position)
+                Position = InitialCameraPosition
             });
         }
 
