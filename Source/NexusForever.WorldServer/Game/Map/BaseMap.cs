@@ -57,6 +57,11 @@ namespace NexusForever.WorldServer.Game.Map
             Entry       = entry;
             File = BaseMapManager.Instance.GetBaseMap(Entry.AssetPath);
             entityCache = EntityCacheManager.Instance.GetEntityCache((ushort)Entry.Id);
+
+            // TODO: Remove Crimson Isle "hack" because the ship at the end of zone has massive offset
+            if (Entry.Id == 870)
+                VisionRange = 256f;
+
             HasLoaded = true;
         }
 
