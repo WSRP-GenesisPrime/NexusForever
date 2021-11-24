@@ -1232,7 +1232,10 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (VehicleGuid != 0u)
             {
-                Vehicle vehicle = GetVisible<Vehicle>(VehicleGuid);
+                WorldEntity platform = GetVisible<WorldEntity>(VehicleGuid);
+                if (platform is not Vehicle vehicle)
+                    return;
+
                 vehicle.PassengerRemove(this);
             }
         }
