@@ -439,9 +439,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
             // Fire Events (OnKill, OnDeath)
             OnDeath(attacker);
-
-            foreach (HostileEntity hostile in ThreatManager.GetPreviousThreatList())
-                RewardKiller(hostile.GetEntity(this));
         }
 
         private void RewardKiller(UnitEntity killer)
@@ -478,7 +475,7 @@ namespace NexusForever.WorldServer.Game.Entity
             switch (newState)
             {
                 case DeathState.JustDied:
-                    GenerateLoot();
+                    GenerateRewards();
 
                     // Clear Threat
                     ThreatManager.ClearThreatList();
@@ -499,13 +496,15 @@ namespace NexusForever.WorldServer.Game.Entity
             base.OnDeathStateChange(newState);
         }
 
-        private void GenerateLoot()
+        private void GenerateRewards()
         {
             foreach (HostileEntity hostileEntity in ThreatManager.GetThreatList())
             {
                 UnitEntity target = hostileEntity.GetEntity(this);
                 if (target != null && target is Player player)
                 {
+                    RewardKiller(player);
+
                     LootInstance loot = GlobalLootManager.Instance.DropLoot(player.Session, this);
                     if (loot == null)
                         continue;

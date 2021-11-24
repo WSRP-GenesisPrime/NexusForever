@@ -13,7 +13,6 @@ namespace NexusForever.WorldServer.Game.Combat
     public class ThreatManager : IUpdate, IEnumerable<HostileEntity>
     {
         private ConcurrentDictionary<uint /*unitId*/, HostileEntity> hostiles = new ConcurrentDictionary<uint, HostileEntity>();
-        private ConcurrentDictionary<uint /*unitId*/, HostileEntity> previousHostiles = new ConcurrentDictionary<uint, HostileEntity>();
 
         private UnitEntity owner;
         private UpdateTimer updateInterval = new UpdateTimer(1d);
@@ -94,13 +93,8 @@ namespace NexusForever.WorldServer.Game.Combat
         /// </summary>
         public void ClearThreatList()
         {
-            previousHostiles.Clear();
-
             foreach (HostileEntity hostile in hostiles.Values.ToList())
-            {
-                previousHostiles.TryAdd(hostile.HatedUnitId, hostile);
                 RemoveTarget(hostile.HatedUnitId);
-            }
 
             hostiles.Clear();
             owner.OnThreatChange(GetThreatList());
@@ -161,14 +155,6 @@ namespace NexusForever.WorldServer.Game.Combat
         public IEnumerable<HostileEntity> GetThreatList()
         {
             return hostiles.Values.OrderByDescending(i => i.Threat).AsEnumerable();
-        }
-
-        /// <summary>
-        /// Returns an <see cref="IEnumerable{T}}"/> containing all <see cref="HostileEntity"/> ordered in descending threat.
-        /// </summary>
-        public IEnumerable<HostileEntity> GetPreviousThreatList()
-        {
-            return previousHostiles.Values.OrderByDescending(i => i.Threat).AsEnumerable();
         }
 
         public IEnumerator<HostileEntity> GetEnumerator()
