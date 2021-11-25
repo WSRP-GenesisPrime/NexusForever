@@ -304,6 +304,8 @@ namespace NexusForever.Shared.Network.Message
         ServerUnlockPetFlair            = 0x068D,
         ServerChangePetStance           = 0x068F,
         ServerPublicEventStart          = 0x0700,
+        ServerQueueFinish               = 0x0715,
+        ServerQueueStatus               = 0x0717,
         ClientRandomRollRequest         = 0x071B,
         ServerRandomRollResponse        = 0x071C,
         ClientCinematicState            = 0x0720,

@@ -103,6 +103,7 @@ namespace NexusForever.WorldServer
                 GlobalResidenceManager.Instance.Update(lastTick); // must be after guild update
                 GlobalChatManager.Instance.Update(lastTick);
                 GlobalContactManager.Instance.Update(lastTick);
+                LoginQueueManager.Instance.Update(lastTick);
                 ShutdownManager.Instance.Update(lastTick);
 
                 // process commands after everything else in the tick has processed
@@ -112,6 +113,7 @@ namespace NexusForever.WorldServer
             // initialise network and command managers last to make sure the rest of the server is ready for invoked handlers
             MessageManager.Instance.Initialise();
             NetworkManager<WorldSession>.Instance.Initialise(ConfigurationManager<WorldServerConfiguration>.Instance.Config.Network);
+            LoginQueueManager.Instance.Initialise();
 
             CommandManager.Instance.Initialise();
 
