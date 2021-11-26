@@ -7,11 +7,11 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NexusForever.WorldServer.Game.Cinematic.Cinematics
+namespace NexusForever.WorldServer.Game.Cinematic.Cinematics.LevianBay
 {
-    public class SomeQuest_LevianBay : CinematicBase
+    public class Cinematic_QUNKNOWN_LevianBay : CinematicBase
     {
-        public SomeQuest_LevianBay(Player player)
+        public Cinematic_QUNKNOWN_LevianBay(Player player)
         {
             Player = player;
             Duration = 10000;

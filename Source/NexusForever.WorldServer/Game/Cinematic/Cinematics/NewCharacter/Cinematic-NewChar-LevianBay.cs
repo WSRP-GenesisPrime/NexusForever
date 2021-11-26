@@ -14,11 +14,12 @@ namespace NexusForever.WorldServer.Game.Cinematic.Cinematics.NewCharacter
         public Cinematic_NewChar_LevianBay(Player player)
         {
             Player = player;
-            Duration = 10000;
-            InitialFlags = 5;
+            Duration = 34033;
+            InitialFlags = 7;
             InitialCancelMode = 2;
-            StartTransition = new Transition(0, 1, 2, 1500, 0, 1500);
-            EndTransition = new Transition(9000, 0, 0);
+            CinematicId = 28;
+            StartTransition = new Transition(0, 1, 2, 1000, 0, 1500);
+            EndTransition = new Transition(32533, 0, 0);
 
             Setup();
         }
@@ -31,7 +32,11 @@ namespace NexusForever.WorldServer.Game.Cinematic.Cinematics.NewCharacter
 
             // Add Screen Effects
             List<IKeyframeAction> ScreenEffects = new List<IKeyframeAction>();
-            ScreenEffects.Add(new VisualEffect(38791, Player.Guid));
+            ScreenEffects.Add(new VisualEffect(30667, Player.Guid));
+            ScreenEffects.Add(new VisualEffect(21853, Player.Guid));
+            ScreenEffects.Add(new VisualEffect(29743, Player.Guid));
+            ScreenEffects.Add(new VisualEffect(27968, Player.Guid));
+            ScreenEffects.Add(new VisualEffect(30489, Player.Guid, initialDelay: 4367));
             Keyframes.Add("ScreenEffects", ScreenEffects);
 
             List<IKeyframeAction> PlayerVisuals = new List<IKeyframeAction>();
@@ -41,23 +46,46 @@ namespace NexusForever.WorldServer.Game.Cinematic.Cinematics.NewCharacter
 
         private void SetupActors()
         {
-            Position initialPosition = new Position(new Vector3(-2712.029052734375f, -1309.1015625f, -6127.48681640625f));
-            AddActor(new Actor(0, 0, 0, initialPosition), new List<VisualEffect>
+            Position initialPosition = new Position(new Vector3(-3784.26953125f, -988.6632690429688f, -6188.072265625f));
+            AddActor(new Actor(50444, 14, 3.1415929794311523f, initialPosition), new List<VisualEffect>
             {
+                new VisualEffect(20016),
+                new VisualEffect(20016)
+            });
+
+            AddActor(new Actor(50441, 14, 3.1415929794311523f, initialPosition), new List<VisualEffect>
+            {
+                new VisualEffect(20016)
+            });
+
+            AddActor(new Actor(50442, 14, 3.1415929794311523f, initialPosition), new List<VisualEffect>
+            {
+                new VisualEffect(20016)
+            });
+
+            AddActor(new Actor(0, 7, -1.134464144706726f, new Position(new Vector3(-3858.369384765625f, -973.4382934570312f, -6048.97216796875f))), new List<VisualEffect>
+            {
+                new VisualEffect(21598, initialDelay: 26000)
             });
         }
 
         private void SetupCamera()
         {
-            Camera mainCam = new Camera(14794, 0, 0, 1f, useRotation: true);
+            Camera mainCam = new Camera(GetActor(50444), 7, 0, true, 0);
             AddCamera(mainCam);
-            mainCam.AddTransition(0, 0, 1500, 0, 1500);
+            mainCam.AddAttach(6333, 8);
+            mainCam.AddTransition(6333, 0, 1500, 0, 1500);
+            mainCam.AddAttach(23600, 9);
+            mainCam.AddTransition(23600, 0, 1500, 0, 1500);
         }
 
         private void SetupTexts()
         {
-            //AddText(578135, 2900, 5700);
-            //AddText(578136, 5800, 11000);
+            AddText(578464, 4500, 6567);
+            AddText(578465, 6633, 10200);
+            AddText(578466, 10300, 11400);
+            AddText(578467, 11500, 13600);
+            AddText(578468, 13700, 18000);
         }
 
         protected override void Play()
