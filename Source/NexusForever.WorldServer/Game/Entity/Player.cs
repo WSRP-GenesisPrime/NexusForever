@@ -691,8 +691,6 @@ namespace NexusForever.WorldServer.Game.Entity
             if (Map.Entry.Id == 3460 && firstTimeLoggingIn)
                 CinematicManager.QueueCinematic(new NoviceTutorialOnEnter(this));
 
-            CinematicManager.PlayQueuedCinematics();
-
             log.Trace($"Player {Name} took {(DateTime.UtcNow - start).TotalMilliseconds}ms to send packets after add to map.");
         }
 

@@ -10,14 +10,21 @@ namespace NexusForever.WorldServer.Game.Cinematic
     public class ActorVisibility : IKeyframeAction
     {
         public uint Delay { get; }
-        public Actor Actor { get; }
+        public uint ActorUnitId { get; }
         public bool Hide { get; }
         public bool Unknown0 { get; }
 
         public ActorVisibility(uint delay, Actor actor, bool hide = false)
         {
             Delay = delay;
-            Actor = actor;
+            ActorUnitId = actor.Id;
+            Hide = hide;
+        }
+
+        public ActorVisibility(uint delay, uint unitId, bool hide = false)
+        {
+            Delay = delay;
+            ActorUnitId = unitId;
             Hide = hide;
         }
 
@@ -26,7 +33,7 @@ namespace NexusForever.WorldServer.Game.Cinematic
             session.EnqueueMessageEncrypted(new ServerCinematicActorVisibility
             {
                 Delay = Delay,
-                UnitId = Actor.Id,
+                UnitId = ActorUnitId,
                 Hide = Hide,
                 Unknown0 = Unknown0
             });

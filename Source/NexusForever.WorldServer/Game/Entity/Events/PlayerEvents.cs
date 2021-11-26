@@ -85,6 +85,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
             if (PreviousMap == null)
                 OnLogin();
+
+            ScriptManager.Instance.GetScript<MapScript>(Map.Entry.Id)?.OnAddToMap(this);
         }
 
         public override void OnRemoveFromMap()

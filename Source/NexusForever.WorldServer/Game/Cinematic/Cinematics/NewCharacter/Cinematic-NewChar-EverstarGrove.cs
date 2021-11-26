@@ -6,14 +6,14 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 
-namespace NexusForever.WorldServer.Game.Cinematic.Cinematics
+namespace NexusForever.WorldServer.Game.Cinematic.Cinematics.NewCharacter
 {
-    public class EverstarGroveOnCreate : CinematicBase
+    public class Cinematic_NewChar_EverstarGrove : CinematicBase
     {
         const uint ACTOR_AURIN_SHIP = 48242;
         const uint ACTOR_RAPTARUK = 35851;
 
-        public EverstarGroveOnCreate(Player player)
+        public Cinematic_NewChar_EverstarGrove(Player player)
         {
             Player = player;
             Duration = 15333;
