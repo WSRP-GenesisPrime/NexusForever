@@ -1,4 +1,5 @@
-﻿using NexusForever.WorldServer.Game.Entity;
+﻿using NexusForever.WorldServer.Game.Cinematic.Cinematics.NewCharacter;
+using NexusForever.WorldServer.Game.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,12 @@ namespace NexusForever.WorldServer.Script.Map
     public class CrimsonIsle : MapScript
     {
         static uint Q5596_QOBJ_CRASH_SITE_ZONEID = 1611;
+
+        public override void OnAddToMap(Player player)
+        {
+            if (player.QuestManager.GetQuestState(5596) == null)
+                player.CinematicManager.QueueCinematic(new Cinematic_NewChar_CrimsonIsle(player));
+        }
 
         public override void OnEnterZone(Player player, uint zoneId)
         {
