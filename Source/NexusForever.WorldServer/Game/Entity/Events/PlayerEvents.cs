@@ -22,6 +22,7 @@ namespace NexusForever.WorldServer.Game.Entity
         private double warriorBuilderTimer;
         private float warriorDecayRate = 150f;
         private float esperResetTimer;
+        private float engineerResetTimer;
 
         private void OnLogin()
         {
@@ -219,6 +220,22 @@ namespace NexusForever.WorldServer.Game.Entity
                     {
                         if (esperResetTimer > 0f)
                             esperResetTimer = 0f;
+                    }
+                    break;
+                case Class.Engineer:
+                    if (!InCombat)
+                    {
+                        engineerResetTimer += 0.5f;
+                        if (engineerResetTimer < 5f)
+                            break;
+
+                        if (perSecondTick >= 1f)
+                            Resource1 -= 10f;
+                    }
+                    else
+                    {
+                        if (engineerResetTimer > 0f)
+                            engineerResetTimer = 0f;
                     }
                     break;
             }
