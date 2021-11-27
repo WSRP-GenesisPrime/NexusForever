@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using NexusForever.Database.World.Model;
 using NexusForever.Shared.Game;
+using NexusForever.Shared.Game.Events;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.AI;
@@ -34,23 +35,23 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public bool InCombat
         {
-            get => inCombat;
+            get => combatState == CombatState.Free ? false : true;
             private set
             {
                 if (inCombat == value)
                     return;
 
-                inCombat = value;
-                OnCombatStateChange(value);
+                if (inCombat == true && value == false)
+                    combatState = CombatState.Exiting;
 
-                EnqueueToVisible(new ServerUnitEnteredCombat
-                {
-                    UnitId = Guid,
-                    InCombat = value
-                }, true);
+                if (inCombat == false && value == true)
+                    combatState = CombatState.Engaged;
+
+                inCombat = value;
             }
         }
         private bool inCombat;
+        private CombatState combatState;
 
         private Dictionary<ProcType, List<ProcInfo>> procs = new();
 
@@ -103,10 +104,40 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             ThreatManager.Update(lastTick);
+            CombatStateTick();
             AI?.Update(lastTick);
 
             foreach (ProcInfo proc in procs.Values.SelectMany(p => p).ToList())
                 proc.Update(lastTick);
+        }
+
+        /// <summary>
+        /// Handle Combat State changes.
+        /// </summary>
+        /// <remarks>We update combat state this way to ensure that spells that check whether uses is in Combat are able to trigger effects during the same tick combat is ending.</remarks>
+        private void CombatStateTick()
+        {
+            bool currentCombatState = InCombat;
+            switch (combatState)
+            {
+                case CombatState.Exiting:
+                    combatState = CombatState.Exited;
+                    break;
+                case CombatState.Exited:
+                    combatState = CombatState.Free;
+                    break;
+            }
+
+            if (currentCombatState != InCombat)
+            {
+                OnCombatStateChange(InCombat);
+
+                EnqueueToVisible(new ServerUnitEnteredCombat
+                {
+                    UnitId = Guid,
+                    InCombat = InCombat
+                }, true);
+            }
         }
 
         /// <summary>
@@ -572,6 +603,11 @@ namespace NexusForever.WorldServer.Game.Entity
                 foreach (ProcInfo proc in procList)
                     proc.Trigger();
             }
+        }
+
+        public CombatState GetCombatState()
+        {
+            return combatState;
         }
     }
 }
