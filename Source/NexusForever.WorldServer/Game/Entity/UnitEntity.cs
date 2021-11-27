@@ -11,6 +11,7 @@ using NexusForever.WorldServer.Game.AI;
 using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Loot;
+using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Game.Static;
@@ -52,6 +53,7 @@ namespace NexusForever.WorldServer.Game.Entity
         }
         private bool inCombat;
         private CombatState combatState;
+        private bool previousCombatState;
 
         private Dictionary<ProcType, List<ProcInfo>> procs = new();
 
@@ -117,7 +119,6 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <remarks>We update combat state this way to ensure that spells that check whether uses is in Combat are able to trigger effects during the same tick combat is ending.</remarks>
         private void CombatStateTick()
         {
-            bool currentCombatState = InCombat;
             switch (combatState)
             {
                 case CombatState.Exiting:
@@ -128,8 +129,9 @@ namespace NexusForever.WorldServer.Game.Entity
                     break;
             }
 
-            if (currentCombatState != InCombat)
+            if (previousCombatState != InCombat)
             {
+                previousCombatState = InCombat;
                 OnCombatStateChange(InCombat);
 
                 EnqueueToVisible(new ServerUnitEnteredCombat
@@ -346,7 +348,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (this is Player && target is Player)
                 return false;
 
-            return GetDispositionTo(target.Faction1) < Reputation.Static.Disposition.Friendly;
+            return target.Faction1 != (Faction)0 ? GetDispositionTo(target.Faction1) < Disposition.Friendly : false;
         }
 
         /// <summary>
