@@ -12,10 +12,11 @@ namespace NexusForever.WorldServer.Script.Map
     public class CrimsonIsle : MapScript
     {
         static uint Q5596_QOBJ_CRASH_SITE_ZONEID = 1611;
+        static ushort QUEST_MIND_THE_MINES_SCRAP_THE_SCRAB = 5593;
 
         public override void OnAddToMap(Player player)
         {
-            if (player.QuestManager.GetQuestState(5596) == null)
+            if (player.QuestManager.GetQuestState(QUEST_MIND_THE_MINES_SCRAP_THE_SCRAB) == null)
                 player.CinematicManager.QueueCinematic(new Cinematic_NewChar_CrimsonIsle(player));
         }
 

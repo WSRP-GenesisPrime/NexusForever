@@ -36,6 +36,11 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void Initialise(EntityModel model)
         {
             base.Initialise(model);
+            if (Health == 0u)
+            {
+                MaxHealth = 101u;
+                ModifyHealth((long)MaxHealth);
+            }
             QuestChecklistIdx = model.QuestChecklistIdx;
 
             ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnCreate(this);
