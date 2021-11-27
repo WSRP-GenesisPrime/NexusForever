@@ -16,6 +16,7 @@ namespace NexusForever.WorldServer.Script
         private ImmutableDictionary<uint, PlugScript> plugScripts;
         private ImmutableDictionary<uint, QuestScript> questScripts;
         private ImmutableDictionary<uint, MapScript> mapScripts;
+        private ImmutableDictionary<uint, SpellScript> spellScripts;
 
         public ScriptManager()
         {
@@ -33,6 +34,7 @@ namespace NexusForever.WorldServer.Script
             var plugDict = ImmutableDictionary.CreateBuilder<uint, PlugScript>();
             var questDict = ImmutableDictionary.CreateBuilder<uint, QuestScript>();
             var mapDict = ImmutableDictionary.CreateBuilder<uint, MapScript>();
+            var spellDict = ImmutableDictionary.CreateBuilder<uint, SpellScript>();
 
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.GetCustomAttributes(typeof(ScriptAttribute), true).Length > 0))
@@ -51,6 +53,9 @@ namespace NexusForever.WorldServer.Script
 
                     if (type.IsSubclassOf(typeof(MapScript)))
                         mapDict.TryAdd(attribute.Id, instance as MapScript);
+
+                    if (type.IsSubclassOf(typeof(SpellScript)))
+                        spellDict.TryAdd(attribute.Id, instance as SpellScript);
                 }
             }
 
@@ -58,6 +63,7 @@ namespace NexusForever.WorldServer.Script
             plugScripts = plugDict.ToImmutable();
             questScripts = questDict.ToImmutable();
             mapScripts = mapDict.ToImmutable();
+            spellScripts = spellDict.ToImmutable();
         }
 
         public T GetScript<T>(uint id) where T : Script
@@ -73,6 +79,9 @@ namespace NexusForever.WorldServer.Script
 
             if (typeof(MapScript).IsAssignableFrom(typeof(T)))
                 return mapScripts.TryGetValue(id, out MapScript mapScript) ? mapScript as T : null;
+
+            if (typeof(SpellScript).IsAssignableFrom(typeof(T)))
+                return spellScripts.TryGetValue(id, out SpellScript spellScript) ? spellScript as T : null;
 
             log.Warn($"Unhandled ScriptType {typeof(T)}");
             return null;

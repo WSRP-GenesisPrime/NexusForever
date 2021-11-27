@@ -11,6 +11,7 @@ using NexusForever.WorldServer.Game.Spell.Event;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
+using NexusForever.WorldServer.Script;
 using NLog;
 
 namespace NexusForever.WorldServer.Game.Spell
@@ -182,6 +183,8 @@ namespace NexusForever.WorldServer.Game.Spell
                 SendSpellStart();
                 InitialiseCastMethod();
             }
+
+            ScriptManager.Instance.GetScript<SpellScript>(parameters.SpellInfo.BaseInfo.Entry.Id)?.OnCast(this, parameters, caster);
 
             status = SpellStatus.Casting;
             log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
@@ -472,16 +475,16 @@ namespace NexusForever.WorldServer.Game.Spell
             targets.ForEach(t => t.Effects.Clear());
 
             SelectTargets();
+
+            // Fire script prior to damage or other effects being applied so that entities won't be dead when checked.
+            ScriptManager.Instance.GetScript<SpellScript>(parameters.SpellInfo.BaseInfo.Entry.Id)?.OnExecute(this, parameters, caster, currentPhase, uniqueTargets.AsEnumerable());
+
             ExecuteEffects();
             // TODO: Below is not working properly. Investigate.
             //HandleVisual();
 
             if (caster is Player player && HasEsperCost())
                 caster.ModifyVital(Vital.Resource1, -caster.GetVitalValue(Vital.Resource1));
-
-            // TODO: Add back in with Vitals
-            //if (caster is Player player && HasEsperCost())
-            //    caster.ModifyVital(Vital.Resource1, -caster.GetVitalValue(Vital.Resource1));
 
             SendSpellGo();
 
@@ -492,6 +495,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
             if (parameters.ThresholdValue > 0 && parameters.RootSpellInfo.Thresholds.Count > 1)
                 SendThresholdUpdate();
+
         }
 
         private void SetCooldown()
