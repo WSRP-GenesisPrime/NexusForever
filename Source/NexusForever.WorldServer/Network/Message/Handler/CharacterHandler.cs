@@ -182,8 +182,6 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                         LastLoggedOutDays = (float)DateTime.UtcNow.Subtract(character.LastOnline ?? DateTime.UtcNow).TotalDays * -1f
                     };
 
-                    maxCharacterLevelAchieved = Math.Max(maxCharacterLevelAchieved, character.Level);
-
                     try
                     {
                         // create a temporary Inventory and CostumeManager to show equipped gear
@@ -224,6 +222,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                             if ((Stat)stat.Stat == Stat.Level)
                             {
                                 listCharacter.Level = (uint)stat.Value;
+                                maxCharacterLevelAchieved = Math.Max(maxCharacterLevelAchieved, (byte)stat.Value);
                                 break;
                             }
                         }
