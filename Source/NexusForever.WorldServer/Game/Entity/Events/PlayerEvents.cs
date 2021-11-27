@@ -151,7 +151,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (enduranceRemaining < GetPropertyValue(Property.ResourceMax0))
             {
                 float enduranceRegenAmount = GetPropertyValue(Property.ResourceMax0) * GetPropertyValue(Property.ResourceRegenMultiplier0);
-                SetStat(Stat.Resource0, (float)Math.Min(enduranceRemaining + enduranceRegenAmount, (float)GetPropertyValue(Property.ResourceMax0)));
+                Endurance += enduranceRegenAmount;
             }
 
             float dashRemaining = GetStatFloat(Stat.Dash) ?? 0f;
@@ -243,6 +243,13 @@ namespace NexusForever.WorldServer.Game.Entity
         protected override void OnDeath(UnitEntity killer)
         {
             base.OnDeath(killer);
+        }
+
+        public override void OnCombatStateChange(bool inCombat)
+        {
+            base.OnCombatStateChange(inCombat);
+            
+            HandleMovementSpeedApply();
         }
     }
 }

@@ -10,6 +10,7 @@ using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell.Event;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -179,17 +180,31 @@ namespace NexusForever.WorldServer.Game.Spell
                         for (int i = 1; i >= info.Entry.DurationTime / tickTime; i++)
                             events.EnqueueEvent(new SpellEvent(tickTime * i / 1000d, () =>
                             {
+                                if (target is Player playerTarget)
+                                    if (info.Entry.DataBits06 > 0 && !PrerequisiteManager.Instance.Meets(playerTarget, info.Entry.DataBits06))
+                                        return;
+
                                 caster.CastSpell(info.Entry.DataBits01, proxyParameters);
                             }));
                     }
                     else
                         TickingEvent(tickTime, () =>
                         {
+                            if (target is Player playerTarget)
+                                if (info.Entry.DataBits06 > 0 && !PrerequisiteManager.Instance.Meets(playerTarget, info.Entry.DataBits06))
+                                    return;
+
                             caster.CastSpell(info.Entry.DataBits01, proxyParameters);
                         });
                 }
                 else
+                {
+                    if (target is Player playerTarget)
+                        if (info.Entry.DataBits06 > 0 && !PrerequisiteManager.Instance.Meets(playerTarget, info.Entry.DataBits06))
+                            return;
+
                     caster.CastSpell(info.Entry.DataBits00, proxyParameters);
+                }
             }));
         }
 
@@ -236,28 +251,6 @@ namespace NexusForever.WorldServer.Game.Spell
 
             // TODO: There are other Riding Skills which need to be added when the player has them as known effects.
             player.CastSpell(52539, new SpellParameters
-            {
-                ParentSpellInfo        = parameters.SpellInfo,
-                RootSpellInfo          = parameters.RootSpellInfo,
-                UserInitiatedSpellCast = false,
-                IsProxy                = true
-            });
-
-            uint mountSpeedSpell4Id = 0;
-            switch (mount.MountType)
-            {
-                case PetType.GroundMount: // Cast 80530, Mount Sprint  - Tier 2, 36122
-                    mountSpeedSpell4Id = 80530;
-                    break;
-                case PetType.HoverBoard: // Cast 80531, Hoverboard Sprint  - Tier 2, 36122
-                    mountSpeedSpell4Id = 80531;
-                    break;
-                default:
-                    mountSpeedSpell4Id = 80530;
-                    break;
-
-            }
-            player.CastSpell(mountSpeedSpell4Id, new SpellParameters
             {
                 ParentSpellInfo        = parameters.SpellInfo,
                 RootSpellInfo          = parameters.RootSpellInfo,
@@ -495,7 +488,45 @@ namespace NexusForever.WorldServer.Game.Spell
         private void HandleEffectVitalModifier(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
             Vital vital = (Vital)info.Entry.DataBits00;
-            target.ModifyVital(vital, info.Entry.DataBits01);
+            float amount = info.Entry.DataBits01 > int.MaxValue ? -(uint.MaxValue - info.Entry.DataBits01 + 1) : info.Entry.DataBits01;
+            if (info.Entry.TickTime > 0)
+            {
+                events.EnqueueEvent(new SpellEvent(info.Entry.DelayTime / 1000d, () =>
+                {
+                    double tickTime = info.Entry.TickTime;
+                    if (info.Entry.DurationTime > 0)
+                    {
+                        for (int i = 1; i >= info.Entry.DurationTime / tickTime; i++)
+                            events.EnqueueEvent(new SpellEvent(tickTime * i / 1000d, () =>
+                            {
+                                if (caster is Player casterPlayer)
+                                    if (info.Entry.PrerequisiteIdCasterApply > 0 && !PrerequisiteManager.Instance.Meets(casterPlayer, info.Entry.PrerequisiteIdCasterApply))
+                                        return;
+
+                                if (target is Player targetPlayer)
+                                    if (info.Entry.PrerequisiteIdTargetApply > 0 && !PrerequisiteManager.Instance.Meets(targetPlayer, info.Entry.PrerequisiteIdTargetApply))
+                                        return;
+
+                                target.ModifyVital(vital, amount);
+                            }));
+                    }
+                    else
+                        TickingEvent(tickTime, () =>
+                        {
+                            if (caster is Player casterPlayer)
+                                if (info.Entry.PrerequisiteIdCasterApply > 0 && !PrerequisiteManager.Instance.Meets(casterPlayer, info.Entry.PrerequisiteIdCasterApply))
+                                    return;
+
+                            if (target is Player targetPlayer)
+                                if (info.Entry.PrerequisiteIdTargetApply > 0 && !PrerequisiteManager.Instance.Meets(targetPlayer, info.Entry.PrerequisiteIdTargetApply))
+                                    return;
+
+                            target.ModifyVital(vital, amount);
+                        });
+                }));
+            }
+            else
+                target.ModifyVital(vital, info.Entry.DataBits01);
         }
 
         [SpellEffectHandler(SpellEffectType.NpcExecutionDelay)]

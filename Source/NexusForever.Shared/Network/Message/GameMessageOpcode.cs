@@ -80,6 +80,7 @@ namespace NexusForever.Shared.Network.Message
         ServerTutorial                  = 0x0179,
         ServerSpellUpdate               = 0x017B,
         ClientItemSplit                 = 0x017D,
+        ClientMovementSpeedSprint       = 0x017E,
         ServerItemStackCountUpdate      = 0x017F,
         ClientItemMove                  = 0x0182,
         ClientItemMoveFromSupplySatchel = 0x0184,
@@ -278,7 +279,7 @@ namespace NexusForever.Shared.Network.Message
         ServerEntityCommand             = 0x0638, // bidirectional? packet has both read and write handlers
         Server0639                      = 0x0639, // mount up or something
         ClientZoneChange                = 0x063A,
-        ClientPlayerMovementSpeedUpdate = 0x063B,
+        ClientMovementSpeedUpdate       = 0x063B,
         ServerAuthDenied                = 0x063D,
         ServerOwnedCommodityOrders      = 0x064C,
         ServerOwnedItemAuctions         = 0x064D,

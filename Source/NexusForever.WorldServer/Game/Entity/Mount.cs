@@ -119,6 +119,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateVisuals(player);
+            player.HandleMovementSpeedApply();
         }
 
         protected override void OnPassengerRemove(Player player, VehicleSeatType seatType, byte seatPosition)
@@ -150,6 +151,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
             UpdateVisuals(player);
             RemoveSpells(player);
+            player.HandleMovementSpeedApply();
         }
 
         private void UpdateVisuals(Player player)

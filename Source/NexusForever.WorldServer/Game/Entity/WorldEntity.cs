@@ -107,6 +107,17 @@ namespace NexusForever.WorldServer.Game.Entity
             set => SetBaseProperty(Property.ShieldCapacityMax, value);
         }
 
+        [Vital(Vital.Endurance)]
+        public float Endurance
+        {
+            get => GetStatFloat(Stat.Resource0) ?? 0u;
+            set
+            {
+                float newVal = Math.Clamp(value, 0f, GetPropertyValue(Property.ResourceMax0));
+                SetStat(Stat.Resource0, newVal);
+            }
+        }
+
         [Vital(Vital.Focus)]
         public float Focus
         {

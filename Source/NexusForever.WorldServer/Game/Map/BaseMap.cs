@@ -433,6 +433,8 @@ namespace NexusForever.WorldServer.Game.Map
                 return;
 
             // non issue once all entities types are handled
+            if ((EntityType)model.Type == EntityType.Platform)
+                model.Type = (byte)EntityType.SimpleCollidable;
             WorldEntity entity = EntityManager.Instance.NewEntity((EntityType)model.Type) ?? EntityManager.Instance.NewEntity(EntityType.Simple);
             entity.Initialise(model);
 

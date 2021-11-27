@@ -534,6 +534,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         {
             foreach ((EntityCommand id, IEntityCommandModel command) in commands)
             {
+                bool canAdd = true;
                 switch (command)
                 {
                     case SetPositionCommand setPosition:
@@ -569,6 +570,23 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                         controlEntity.MovementManager.SetVelocity(setVelocity);
                         break;
                     case SetPlatformCommand setPlatform:
+                        if (GetPlatform() != null && GetPlatform() != 0u && setPlatform.UnitId != 0u)
+                        {
+                            // TODO: Handle platform commands sent by players when mounted
+                            WorldEntity potentialMount = owner.GetVisible<WorldEntity>((uint)GetPlatform());
+                            if (potentialMount is Mount mount)
+                            {
+                                potentialMount.MovementManager.SetPlatform(setPlatform.UnitId);
+
+                                WorldEntity platformEntity = owner.GetVisible<WorldEntity>(setPlatform.UnitId);
+                                if (platformEntity != null && platformEntity is Vehicle) // Vehicle with another Vehicle as platform?
+                                    break;
+
+                                canAdd = false;
+                                platformOffset = new Vector3(platformEntity.Position.X, platformEntity.Position.Y, platformEntity.Position.Z);
+                            }
+                        }
+
                         if (setPlatform.UnitId == 0u)
                         {
                             platformOffset = Vector3.Zero;
@@ -586,7 +604,8 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                         break;
                 }
 
-                AddCommand(command);
+                if (canAdd)
+                    AddCommand(command);
             }
 
             this.time = time;

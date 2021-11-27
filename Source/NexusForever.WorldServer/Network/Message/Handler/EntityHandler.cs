@@ -177,18 +177,16 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
         }
 
-        [MessageHandler(GameMessageOpcode.ClientPlayerMovementSpeedUpdate)]
-        public static void HandlePlayerMovementSpeedChange(WorldSession session, ClientPlayerMovementSpeedUpdate speedUpdate)
+        [MessageHandler(GameMessageOpcode.ClientMovementSpeedUpdate)]
+        public static void HandleMovementSpeedChange(WorldSession session, ClientMovementSpeedUpdate speedUpdate)
         {
-            if (speedUpdate.Speed == 2)
-            {
-                session.Player.CastSpell(80529, new SpellParameters
-                {
-                    UserInitiatedSpellCast = false
-                });
-            }
-            else
-                session.Player.GetActiveSpell(i => i.Spell4Id == 80529)?.Finish();
+            session.Player.HandleMovementSpeedApply(speedUpdate.Speed);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientMovementSpeedSprint)]
+        public static void HandleMovementSpeedSprint(WorldSession session, ClientMovementSpeedSprint speedSprint)
+        {
+            session.Player.HandleMovementSprintRequest(speedSprint.Sprint);
         }
 
         [MessageHandler(GameMessageOpcode.ClientDash)]

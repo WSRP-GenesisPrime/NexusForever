@@ -27,6 +27,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
@@ -36,11 +37,11 @@ using NexusForever.WorldServer.Game.Setting;
 using NexusForever.WorldServer.Game.Setting.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
+using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
-using NexusForever.WorldServer.Game.Loot;
 using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
@@ -237,6 +238,7 @@ namespace NexusForever.WorldServer.Game.Entity
         private List<Bone> characterBones = new List<Bone>();
         private HashSet<Bone> deletedCharacterBones = new HashSet<Bone>();
 
+        private MovementSpeed movementSpeed;
         private bool firstTimeLoggingIn;
 
         /// <summary>
@@ -1223,19 +1225,28 @@ namespace NexusForever.WorldServer.Game.Entity
             }, true);
         }
 
+        public bool GetVehicle(out Vehicle vehicle)
+        {
+            vehicle = null;
+
+            if (VehicleGuid == 0u)
+                return false;
+
+            WorldEntity platform = GetVisible<WorldEntity>(VehicleGuid);
+            if (platform is not Vehicle)
+                return false;
+
+            vehicle = (platform as Vehicle);
+            return true;
+        }
+
         /// <summary>
         /// Dismounts this <see cref="Player"/> from a vehicle that it's attached to
         /// </summary>
         public void Dismount()
         {
-            if (VehicleGuid != 0u)
-            {
-                WorldEntity platform = GetVisible<WorldEntity>(VehicleGuid);
-                if (platform is not Vehicle vehicle)
-                    return;
-
+            if (GetVehicle(out Vehicle vehicle))
                 vehicle.PassengerRemove(this);
-            }
         }
 
         /// <summary>
@@ -1410,6 +1421,116 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             base.OnDeathStateChange(newState);
+        }
+
+        /// <summary>
+        /// Applies Sprint Effects as necessary based on Combat and Mounted states.
+        /// </summary>
+        public void HandleMovementSpeedApply(MovementSpeed newSpeed = (MovementSpeed)(-1))
+        {
+            uint sprintSpellId = 80529; // TODO: Magic Number needs to move
+
+            if (newSpeed == (MovementSpeed)(-1))
+                newSpeed = movementSpeed;
+            else
+                movementSpeed = newSpeed;
+
+            switch (newSpeed)
+            {
+                case MovementSpeed.Walk:
+                case MovementSpeed.Run:
+                    FinishSpells(sprintSpellId);
+                    break;
+                case MovementSpeed.Sprint:
+                    if (InCombat)
+                        FinishSpells(sprintSpellId);
+                    else
+                    {
+                        CastSpell(sprintSpellId, new SpellParameters
+                        {
+                            UserInitiatedSpellCast = false,
+                            IsProxy = true
+                        });
+                        HandleMovementSprintRequest(false);
+                    }
+                    break;
+                default:
+                    log.Warn($"Unhandled Movement Speed {newSpeed}.");
+                    break;
+            }
+
+            HandleMountSprint(newSpeed);
+        }
+
+        private void HandleMountSprint(MovementSpeed newSpeed)
+        {
+            if (!GetVehicle(out Vehicle vehicle) || vehicle is not Mount mount || newSpeed < MovementSpeed.Sprint || InCombat)
+            {
+                FinishSpells(80530);
+                FinishSpells(80531);
+                return;
+            }
+
+            uint mountSpeedSpell4Id = 0;
+            switch (mount.MountType)
+            {
+                case PetType.GroundMount: // Cast 80530, Mount Sprint  - Tier 2, 36122
+                    mountSpeedSpell4Id = 80530;
+                    break;
+                case PetType.HoverBoard: // Cast 80531, Hoverboard Sprint  - Tier 2, 36122
+                    mountSpeedSpell4Id = 80531;
+                    break;
+                default:
+                    mountSpeedSpell4Id = 80530;
+                    break;
+
+            }
+            CastSpell(mountSpeedSpell4Id, new SpellParameters
+            {
+                UserInitiatedSpellCast = false,
+                IsProxy = true
+            });
+        }
+
+        public void HandleMovementSprintRequest(bool sprint)
+        {
+            uint nonMountSprintId = 1316;
+            uint mountSprintId = 56476;
+            uint hoverboardSprintId = 56621;
+
+            switch (sprint)
+            {
+                case true:
+                    if (GetVehicle(out Vehicle vehicle) && vehicle is Mount mount)
+                    {
+                        if (mount.MountType == PetType.GroundMount)
+                            CastSpell(mountSprintId, new SpellParameters
+                            {
+                                IsProxy = true,
+                                UserInitiatedSpellCast = false
+                            });
+                        else if (mount.MountType == PetType.HoverBoard)
+                            CastSpell(hoverboardSprintId, new SpellParameters
+                            {
+                                IsProxy = true,
+                                UserInitiatedSpellCast = false
+                            });
+                    }
+                    CastSpell(nonMountSprintId, new SpellParameters
+                    {
+                        IsProxy = true,
+                        UserInitiatedSpellCast = false
+                    });
+                    break;
+                case false:
+                    if (GetVehicle(out Vehicle cancelVehicle) && cancelVehicle is Mount)
+                    {
+                        FinishSpells(56476);
+                        FinishSpells(56621);
+                    }
+                    FinishSpells(nonMountSprintId);
+                    break;
+            }
         }
     }
 }
