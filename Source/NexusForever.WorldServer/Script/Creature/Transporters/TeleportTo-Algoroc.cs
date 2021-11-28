@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace NexusForever.WorldServer.Script.Creature.Transporters
 {
     [Script(27196)] // Ship Controls - Northern Wilds
-    public class ShipControls_Algoroc : CreatureScript
+    public class TeleportTo_TremorRidge : CreatureScript
     {
         const uint WLOC_TREMOR_RIDGE = 9801;
 

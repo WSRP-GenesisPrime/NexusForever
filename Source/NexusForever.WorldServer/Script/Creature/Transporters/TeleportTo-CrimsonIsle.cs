@@ -6,7 +6,7 @@ namespace NexusForever.WorldServer.Script.Creature.Transporters
 {
     [Script(45366)] // Deradune - Bloodfire Village
     [Script(70174)] // Levian Bay - Stormscale Landing
-    public class ShipControls_CrimsonIsle : CreatureScript
+    public class TeleportTo_MondosBeachhead : CreatureScript
     {
         const ushort WORLD_CRIMSON_ISLE = 870;
         private Vector3 LOC_MONDOS_BEACHHEAD = new Vector3(-8267.476f, -995.66176f, -239.02145f);
