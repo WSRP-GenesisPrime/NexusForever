@@ -121,6 +121,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientCharacterList)]
         public static void HandleCharacterList(WorldSession session, ClientCharacterList characterList)
         {
+            LoginQueueManager.Instance.HandleNewConnection(session);
+
+            if (!session.InWorld)
+                return;
+
             session.Events.EnqueueEvent(new TaskGenericEvent<List<CharacterModel>>(DatabaseManager.Instance.CharacterDatabase.GetCharacters(session.Account.Id),
                 characters =>
             {
@@ -242,13 +247,15 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 });
 
                 session.EnqueueMessageEncrypted(serverCharacterList);
-                LoginQueueManager.Instance.HandleNewConnection(session);
             }));
         }
 
         [MessageHandler(GameMessageOpcode.ClientCharacterCreate)]
         public static void HandleCharacterCreate(WorldSession session, ClientCharacterCreate characterCreate)
         {
+            if (!session.InWorld)
+                return;
+
             CharacterModifyResult? GetResult()
             {
                 // TODO: validate name and path
@@ -557,6 +564,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientCharacterSelect)]
         public static void HandleCharacterSelect(WorldSession session, ClientCharacterSelect characterSelect)
         {
+            if (!session.InWorld)
+                return;
+
             CharacterModel character = session.Characters.SingleOrDefault(c => c.Id == characterSelect.CharacterId);
             if (character == null)
             {

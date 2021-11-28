@@ -4,6 +4,7 @@ using NexusForever.Shared.Game;
 using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.RBAC;
 using NexusForever.WorldServer.Network;
+using NexusForever.WorldServer.Network.Message.Handler;
 using NexusForever.WorldServer.Network.Message.Model;
 using System;
 using System.Collections.Generic;
@@ -97,6 +98,7 @@ namespace NexusForever.WorldServer.Game
         {
             connectedPlayers += 1;
             session.InWorld = true;
+            CharacterHandler.HandleCharacterList(session, new ClientCharacterList());
             session.EnqueueMessageEncrypted(new ServerQueueFinish());
         }
 
