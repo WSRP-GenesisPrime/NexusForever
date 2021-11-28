@@ -34,12 +34,21 @@ using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Script;
 using NLog;
+using Microsoft.Extensions.Hosting.WindowsServices;
+using Microsoft.Extensions.Hosting.Systemd;
+using System;
 
 namespace NexusForever.WorldServer
 {
     public class HostedService : IHostedService
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
+#if DEBUG
+        private const string Title = "NexusForever: World Server (DEBUG)";
+#else
+        private const string Title = "NexusForever: World Server (RELEASE)";
+#endif
 
         /// <summary>
         /// Start <see cref="WorldServer"/> and any related resources.
@@ -108,6 +117,9 @@ namespace NexusForever.WorldServer
 
                 // process commands after everything else in the tick has processed
                 CommandManager.Instance.Update(lastTick);
+
+                if (!WindowsServiceHelpers.IsWindowsService() && !SystemdHelpers.IsSystemdService())
+                    Console.Title = $"{Title} | Users: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.Account != null)} (Queued: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.IsQueued != false)})";
             });
 
             // initialise network and command managers last to make sure the rest of the server is ready for invoked handlers
