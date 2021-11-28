@@ -243,6 +243,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return player.Session.AccountCurrencyManager.GetAmount(Account.Static.AccountCurrencyType.CosmicReward) != value;
                 case PrerequisiteComparison.Equal:
                     return player.Session.AccountCurrencyManager.GetAmount(Account.Static.AccountCurrencyType.CosmicReward) == value;
+                case PrerequisiteComparison.GreaterThan:
                 case PrerequisiteComparison.LessThanOrEqual: 
                     // The conditional below is intentionally "incorrect". It's possible PrerequisiteComparison 4 is actually GreaterThanOrEqual
                     return player.Session.AccountCurrencyManager.GetAmount(Account.Static.AccountCurrencyType.CosmicReward) >= value;
@@ -308,22 +309,6 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Unhealthy)]
-        private static bool PrerequesiteCheckUnhealthy(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
-        {
-            // TODO: Investigate further. Unknown what the value and objectId refers to at this time.
-
-            // Error message is "Cannot recall while in Unhealthy Time" when trying to use Rapid Transport & other recall spells
-            switch (comparison)
-            {
-                case PrerequisiteComparison.NotEqual:
-                    return !player.InCombat;
-                default:
-                    log.Warn($"Unhandled {comparison} for {PrerequisiteType.Unhealthy}!");
-                    return true;
-            }
-        }
-
         [PrerequisiteCheck(PrerequisiteType.SpellObj)]
         private static bool PrerequisiteCheckSpellObj(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
@@ -357,6 +342,22 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                 default:
                     log.Warn($"Unhandled {comparison} for {PrerequisiteType.TargetIsPlayer}!");
                     return false;
+            }
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.Unhealthy)]
+        private static bool PrerequesiteCheckUnhealthy(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            // TODO: Investigate further. Unknown what the value and objectId refers to at this time.
+
+            // Error message is "Cannot recall while in Unhealthy Time" when trying to use Rapid Transport & other recall spells
+            switch (comparison)
+            {
+                case PrerequisiteComparison.NotEqual:
+                    return !player.InCombat;
+                default:
+                    log.Warn($"Unhandled {comparison} for {PrerequisiteType.Unhealthy}!");
+                    return true;
             }
         }
 

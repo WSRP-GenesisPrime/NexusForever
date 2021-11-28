@@ -1,4 +1,5 @@
-﻿using NexusForever.Shared.GameTable.Model;
+﻿using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RewardTrack.Static;
 using NexusForever.WorldServer.Game.Static;
@@ -31,7 +32,7 @@ namespace NexusForever.WorldServer.Game.RewardTrack
         protected void SetChoice(int choice)
         {
             if (Choice != -1 && choice != -1)
-                throw new InvalidOperationException($"Choice is already set for this RewardTrackMilestone. Cannot set again!");
+                return;
 
             Choice = choice;
             SaveMask |= RewardTrackSaveMask.Modify;
@@ -88,8 +89,13 @@ namespace NexusForever.WorldServer.Game.RewardTrack
             switch (type)
             {
                 case RewardTrackRewardType.AccountItem:
-                    // Handle.
-                    return false;
+                    AccountItemEntry accountItem = GameTableManager.Instance.AccountItem.GetEntry(itemId);
+                    if (accountItem == null)
+                        throw new ArgumentNullException(nameof(itemId));
+
+                    session.AccountInventory.ItemCreate(accountItem);
+
+                    return true;
                 case RewardTrackRewardType.Item:
                     if (session.Player == null)
                         throw new NotImplementedException();

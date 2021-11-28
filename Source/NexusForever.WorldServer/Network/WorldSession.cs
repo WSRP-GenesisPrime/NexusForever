@@ -83,8 +83,8 @@ namespace NexusForever.WorldServer.Network
             GenericUnlockManager   = new GenericUnlockManager(this, account);
             AccountCurrencyManager = new AccountCurrencyManager(this, account);
             EntitlementManager     = new EntitlementManager(this, account);
+            AccountInventory       = new AccountInventory(this, account); // Must be initialised before RewardTrackManager
             RewardTrackManager     = new RewardTrackManager(this, account);
-            AccountInventory       = new AccountInventory(this, account);
         }
 
         public void SetEncryptionKey(byte[] sessionKey)
