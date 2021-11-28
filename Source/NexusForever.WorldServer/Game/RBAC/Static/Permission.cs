@@ -21,6 +21,8 @@
         AccountDelete               = 3,
         AccountInventory            = 102,
         AccountInventoryItemAdd     = 103,
+        AccountPassword             = 112,
+        AccountAdminPassword        = 113,
 
         // rbac
         RBAC                        = 7,

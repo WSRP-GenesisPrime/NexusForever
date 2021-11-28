@@ -966,8 +966,18 @@ namespace NexusForever.Database.Auth
                     },
                     new PermissionModel
                     {
-                        Id = 111,
+                        Id   = 111,
                         Name = "Command: RealmMaxPlayers"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 112,
+                        Name = "Command: AccountPassword"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 113,
+                        Name = "Command: AccountAdminPassword"
                     },
                     new PermissionModel 
                     {

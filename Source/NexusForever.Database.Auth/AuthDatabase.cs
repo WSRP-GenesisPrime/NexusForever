@@ -140,6 +140,26 @@ namespace NexusForever.Database.Auth
         }
 
         /// <summary>
+        /// Set the password combination of salt and verifier for a given account.
+        /// </summary>
+        public void SetPasswordForAccount(string email, string s, string v)
+        {
+            if (!AccountExists(email))
+                throw new InvalidOperationException($"Account with that username already exists.");
+
+            using var context = new AuthContext(config);
+            AccountModel account = context.Account.FirstOrDefault(a => a.Email == email);
+            account.S = s;
+            account.V = v;
+
+            EntityEntry<AccountModel> entity = context.Attach(account);
+            entity.Property(p => p.S).IsModified = true;
+            entity.Property(p => p.V).IsModified = true;
+            
+            context.SaveChanges();
+        }
+
+        /// <summary>
         /// Update <see cref="AccountModel"/> with supplied session key asynchronously.
         /// </summary>
         public async Task UpdateAccountSessionKey(AccountModel account, string sessionKey)

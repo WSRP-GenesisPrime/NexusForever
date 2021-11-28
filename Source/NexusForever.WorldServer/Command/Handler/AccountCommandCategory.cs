@@ -42,6 +42,65 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendMessage($"Cannot find account with Email: {email}");
         }
 
+        [Command(Permission.AccountPassword, "Change a password for this account.", "password")]
+        public void HandleAccountPassword(ICommandContext context,
+            [Parameter("Password for the account.")]
+            string password,
+            [Parameter("Confirm password for the account.")]
+            string confirm)
+        {
+            if (password != confirm)
+            {
+                context.SendMessage("Password and confirmation must match. Please try again.");
+                return;
+            }
+
+            if (password.Length < 8)
+            {
+                context.SendMessage("Password must be at least 8 characters long. Please try another.");
+                return;
+            }
+
+            string email = (context.Invoker as Player).Session.Account.Email;
+            (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            DatabaseManager.Instance.AuthDatabase.SetPasswordForAccount(email, salt, verifier);
+
+            context.SendMessage($"Account password changed.");
+        }
+
+        [Command(Permission.AccountAdminPassword, "Change a password for a given account.", "password")]
+        public void HandleAccountPassword(ICommandContext context,
+            [Parameter("Username of the account.")]
+            string email,
+            [Parameter("Password for the account.")]
+            string password,
+            [Parameter("Confirm password for the account.")]
+            string confirm)
+        {
+            if (!DatabaseManager.Instance.AuthDatabase.AccountExists(email))
+            {
+                context.SendMessage("Account not found. Please confirm username and try again.");
+                return;
+            }
+
+            if (password != confirm)
+            {
+                context.SendMessage("Password and confirmation must match. Please try again.");
+                return;
+            }
+
+            if (password.Length < 8)
+            {
+                context.SendMessage("Password must be at least 8 characters long. Please try another.");
+                return;
+            }
+
+            (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            DatabaseManager.Instance.AuthDatabase.SetPasswordForAccount(email, salt, verifier);
+
+            context.SendMessage($"Account password changed.");
+        }
+
         [Command(Permission.AccountInventory, "A collection of commands to manage account inventory.", "inventory")]
         public class AccountInventoryCommandCategory : CommandCategory
         {
