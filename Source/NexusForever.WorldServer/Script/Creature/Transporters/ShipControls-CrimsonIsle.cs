@@ -2,9 +2,10 @@
 using NexusForever.WorldServer.Game.Entity.Static;
 using System.Numerics;
 
-namespace NexusForever.WorldServer.Script.Creature.Deradune
+namespace NexusForever.WorldServer.Script.Creature.Transporters
 {
-    [Script(45366)]
+    [Script(45366)] // Deradune - Bloodfire Village
+    [Script(70174)] // Levian Bay - Stormscale Landing
     public class ShipControls_CrimsonIsle : CreatureScript
     {
         const ushort WORLD_CRIMSON_ISLE = 870;

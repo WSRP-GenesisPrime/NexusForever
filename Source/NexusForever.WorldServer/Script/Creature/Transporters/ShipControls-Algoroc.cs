@@ -10,10 +10,10 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NexusForever.WorldServer.Script.Creature.NorthernWilds
+namespace NexusForever.WorldServer.Script.Creature.Transporters
 {
-    [Script(27196)]
-    public class ShipControls : CreatureScript
+    [Script(27196)] // Ship Controls - Northern Wilds
+    public class ShipControls_Algoroc : CreatureScript
     {
         const uint WLOC_TREMOR_RIDGE = 9801;
 

@@ -4,10 +4,10 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
 using System.Numerics;
 
-namespace NexusForever.WorldServer.Script.Creature.Algoroc
+namespace NexusForever.WorldServer.Script.Creature.Transporters
 {
-    [Script(45102)]
-    public class ShipControls_TremorRidge : CreatureScript
+    [Script(45102)] // Ship Controls - Tremor Ridge
+    public class ShipControls_NorthernWilds : CreatureScript
     {
         const uint WLOC_TREMOR_RIDGE = 1594;
 

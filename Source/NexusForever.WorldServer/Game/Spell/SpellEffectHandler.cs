@@ -9,6 +9,7 @@ using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell.Event;
@@ -291,6 +292,21 @@ namespace NexusForever.WorldServer.Game.Spell
                 player.Rotation = new Quaternion(locationEntry.Facing0, locationEntry.Facing1, locationEntry.Facing2, locationEntry.Facing3).ToEulerDegrees();
                 player.TeleportTo((ushort)locationEntry.WorldId, locationEntry.Position0, locationEntry.Position1, locationEntry.Position2);
             }
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingTeleport)]
+        private void HandleEffectHousingTeleport(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
+            if (residence == null)
+                residence = GlobalResidenceManager.Instance.CreateResidence(player);
+
+            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
         }
 
         [SpellEffectHandler(SpellEffectType.FullScreenEffect)]
