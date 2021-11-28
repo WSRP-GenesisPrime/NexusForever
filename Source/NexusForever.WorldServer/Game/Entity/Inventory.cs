@@ -888,9 +888,12 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             foreach (Bag bag in bags.Values)
             {
+                if (bag.Location == InventoryLocation.Ability)
+                    continue;
+
                 foreach (Item item in bag)
                 {
-                    if (item.Info.Entry?.Id == item2Id) 
+                    if (item.Info != null && item.Info.Entry?.Id == item2Id) 
                         return true;
                 }
             }
