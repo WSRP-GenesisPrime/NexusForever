@@ -27,6 +27,10 @@ namespace NexusForever.WorldServer.Command.Handler
             ushort? worldId)
         {
             Player target = context.GetTargetOrInvoker<Player>();
+            if (target != context.Invoker)
+                if (!(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
+                    target = (context.Invoker as Player);
+
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
@@ -50,6 +54,10 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             Player target = context.GetTargetOrInvoker<Player>();
+            if (target != context.Invoker)
+                if (!(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
+                    target = (context.Invoker as Player);
+
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
@@ -67,6 +75,10 @@ namespace NexusForever.WorldServer.Command.Handler
             string name)
         {
             Player target = context.GetTargetOrInvoker<Player>();
+            if (target != context.Invoker)
+                if (!(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
+                    target = (context.Invoker as Player);
+
             if (!target.CanTeleport())
             {
                 context.SendMessage("You have a pending teleport! Please wait to use this command.");
