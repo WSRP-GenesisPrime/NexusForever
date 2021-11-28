@@ -30,6 +30,7 @@ using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Quest.Static;
+using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Reputation;
 using NexusForever.WorldServer.Game.Reputation.Static;
@@ -705,6 +706,9 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public override void AddVisible(GridEntity entity)
         {
+            if (!CanSeeEntity(entity) || !entity.CanSeeEntity(this))
+                return;
+
             base.AddVisible(entity);
             Session.EnqueueMessageEncrypted(((WorldEntity)entity).BuildCreatePacket());
 
@@ -1531,6 +1535,25 @@ namespace NexusForever.WorldServer.Game.Entity
                     FinishSpells(nonMountSprintId);
                     break;
             }
+        }
+
+        public override bool CanSeeEntity(GridEntity entity)
+        {
+            if (Map != null && Map.Entry.Id == 1229)
+            {
+                if (entity is UnitEntity unit && entity is not Player)
+                {
+                    if (unit.CreatureId > 0)
+                    {
+                        Creature2Entry creatureEntry = GameTableManager.Instance.Creature2.GetEntry(unit.CreatureId);
+                        if (creatureEntry != null && creatureEntry.PrerequisiteIdVisibility > 0u)
+                            if (!PrerequisiteManager.Instance.Meets(this, creatureEntry.PrerequisiteIdVisibility))
+                                return false;
+                    }
+                }
+            }
+
+            return base.CanSeeEntity(entity);
         }
     }
 }

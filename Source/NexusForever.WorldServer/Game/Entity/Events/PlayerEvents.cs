@@ -110,11 +110,13 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (Zone != null)
             {
+#if DEBUG
                 TextTable tt = GameTableManager.Instance.GetTextTable(Language.English);
                 if (tt != null)
                 {
                     GlobalChatManager.Instance.SendMessage(Session, $"New Zone: ({Zone.Id}){tt.GetEntry(Zone.LocalizedTextIdName)}");
                 }
+#endif
 
                 uint tutorialId = AssetManager.Instance.GetTutorialIdForZone(Zone.Id);
                 if (tutorialId > 0)

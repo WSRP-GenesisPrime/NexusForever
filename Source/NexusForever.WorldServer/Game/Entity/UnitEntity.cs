@@ -344,6 +344,9 @@ namespace NexusForever.WorldServer.Game.Entity
             if (!target.IsValidAttackTarget() || !IsValidAttackTarget())
                 return false;
 
+            if (!CanSeeEntity(target))
+                return false;
+
             // TODO: Support PvP. For now, don't let this entity count as attackable
             if (this is Player && target is Player)
                 return false;

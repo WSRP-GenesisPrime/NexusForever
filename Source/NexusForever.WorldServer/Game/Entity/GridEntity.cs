@@ -136,7 +136,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void AddVisible(GridEntity entity)
         {
-            if (!CanSeeEntity(entity))
+            if (!CanSeeEntity(entity) || !entity.CanSeeEntity(this))
                 return;
 
             visibleEntities.Add(entity.Guid, entity);
