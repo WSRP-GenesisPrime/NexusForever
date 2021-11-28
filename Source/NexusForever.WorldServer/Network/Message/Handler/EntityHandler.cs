@@ -31,6 +31,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (mover == null)
                 return;
 
+            if (session.Player.IsEmoting)
+                session.Player.IsEmoting = false;
+
             try
             {
                 mover.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);
