@@ -186,7 +186,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Create a new <see cref="Item"/> from an <see cref="ItemInfo"/> template.
         /// </summary>
-        public Item(ulong? owner, ItemInfo info, uint count = 1u, uint initialCharges = 0)
+        public Item(ulong? owner, ItemInfo info, uint count = 1u, uint? initialCharges = null)
         {
             Guid             = ItemManager.Instance.NextItemId;
             characterId      = owner;
@@ -194,7 +194,7 @@ namespace NexusForever.WorldServer.Game.Entity
             PreviousLocation = InventoryLocation.None;
             bagIndex         = 0u;
             stackCount       = count;
-            charges          = initialCharges;
+            charges          = initialCharges == null ? info.Entry.MaxCharges : (uint)initialCharges;
             durability       = 1.0f;
             Info             = info;
 
