@@ -113,7 +113,6 @@ namespace NexusForever.WorldServer
             // initialise network and command managers last to make sure the rest of the server is ready for invoked handlers
             MessageManager.Instance.Initialise();
             NetworkManager<WorldSession>.Instance.Initialise(ConfigurationManager<WorldServerConfiguration>.Instance.Config.Network);
-            LoginQueueManager.Instance.Initialise();
 
             CommandManager.Instance.Initialise();
 
