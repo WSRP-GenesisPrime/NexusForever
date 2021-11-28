@@ -115,10 +115,12 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             if (newAmps.Count > 0)
             {
-                foreach (ushort id in newAmps)
-                    actionSet.AddAmp(id);
+               // TODO: Look into AMP Support
 
-               session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());
+               // foreach (ushort id in newAmps)
+               //     actionSet.AddAmp(id);
+
+               //session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());
             }
         }
 

@@ -601,8 +601,8 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             player.Session.EnqueueMessageEncrypted(new ServerAbilityPoints
             {
-                AbilityPoints      = actionSets[ActiveActionSet].TierPoints,
-                TotalAbilityPoints = ActionSet.MaxTierPoints
+                AbilityPoints      = 0, //actionSets[ActiveActionSet].TierPoints,
+                TotalAbilityPoints = 0 //ActionSet.MaxTierPoints
             });
         }
 

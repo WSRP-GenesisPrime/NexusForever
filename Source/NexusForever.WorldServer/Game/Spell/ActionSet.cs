@@ -52,8 +52,8 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             Owner      = player.CharacterId;
             Index      = index;
-            TierPoints = MaxTierPoints;
-            AmpPoints  = MaxAmpPoints - 10;
+            TierPoints = 0;
+            AmpPoints  = 0; // MaxAmpPoints - 10;
         }
 
         public void Save(CharacterContext context)
