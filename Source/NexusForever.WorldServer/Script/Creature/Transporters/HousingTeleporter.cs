@@ -45,6 +45,9 @@ namespace NexusForever.WorldServer.Script.Creature.Transporters
             if (!player.CanTeleport())
                 return;
 
+            if (me.Position.Y - 1f > activator.Position.Y)
+                return;
+
             if (cityLocations.TryGetValue(player.Faction, out MapPosition destination))
                 player.TeleportTo(destination);
         }
