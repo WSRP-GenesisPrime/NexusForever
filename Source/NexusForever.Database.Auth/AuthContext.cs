@@ -1184,6 +1184,233 @@ namespace NexusForever.Database.Auth
                     .WithMany(f => f.RolePermission)
                     .HasForeignKey(e => e.PermissionId)
                     .HasConstraintName("FK__role_permission_permission_id__permission_id");
+
+                entity.HasData(
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 4
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 1
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 112
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 20
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 21
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 22
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 5
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 23
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 24
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 25
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 26
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 27
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 28
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 29
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 33
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 34
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 35
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 36
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 37
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 38
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 39
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 40
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 41
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 42
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 43
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 44
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 46
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 47
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 48
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 49
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 50
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 51
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 52
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 53
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 54
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 55
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 56
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 57
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 58
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 59
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 6
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 92
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 76
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 110
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 78
+                    });
             });
 
             modelBuilder.Entity<ServerModel>(entity =>
