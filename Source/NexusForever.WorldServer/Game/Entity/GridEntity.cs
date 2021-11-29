@@ -110,15 +110,16 @@ namespace NexusForever.WorldServer.Game.Entity
             uint? worldAreaId = Map.File.GetWorldAreaId(vector);
             if (worldAreaId.HasValue && Zone?.Id != worldAreaId)
             {
+                var oldZone = Zone;
                 Zone = GameTableManager.Instance.WorldZone.GetEntry(worldAreaId.Value);
-                OnZoneUpdate();
+                OnZoneUpdate(oldZone);
             }
         }
 
         /// <summary>
         /// Invoked when <see cref="GridEntity"/> changes zone in the current <see cref="BaseMap"/>.
         /// </summary>
-        protected virtual void OnZoneUpdate()
+        protected virtual void OnZoneUpdate(WorldZoneEntry oldZone)
         {
             // deliberately empty
         }

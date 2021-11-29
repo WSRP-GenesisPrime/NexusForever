@@ -1,5 +1,6 @@
 ﻿using NexusForever.Shared.Game.Events;
 using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.GameTable.Static;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
@@ -106,8 +107,11 @@ namespace NexusForever.WorldServer.Game.Entity
             ZoneMapManager.OnRelocate(vector);
         }
 
-        protected override void OnZoneUpdate()
+        protected override void OnZoneUpdate(WorldZoneEntry oldZone)
         {
+            if (oldZone != null && oldZone != Zone)
+                PreviousZone = oldZone;
+
             if (Zone != null)
             {
 #if DEBUG

@@ -61,6 +61,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public Class Class { get; }
         public Faction Faction { get; }
         public List<float> Bones { get; } = new();
+        public WorldZoneEntry PreviousZone { get; private set; }
 
         public CharacterFlag Flags
         {
@@ -240,6 +241,7 @@ namespace NexusForever.WorldServer.Game.Entity
         private HashSet<Bone> deletedCharacterBones = new HashSet<Bone>();
 
         private MovementSpeed movementSpeed;
+
         private bool firstTimeLoggingIn;
 
         /// <summary>

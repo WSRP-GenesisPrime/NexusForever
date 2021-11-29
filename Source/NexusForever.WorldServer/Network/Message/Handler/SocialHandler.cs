@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Command;
 using NexusForever.WorldServer.Command.Context;
+using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Social;
@@ -87,20 +89,21 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientWhoRequest)]
         public static void HandleWhoRequest(WorldSession session, ClientWhoRequest request)
         {
-            var players = new List<ServerWhoResponse.WhoPlayer>
-            {
-                new()
+            var players = new List<ServerWhoResponse.WhoPlayer>();
+
+            foreach (Player player in CharacterManager.Instance.GetOnlinePlayers())
+                players.Add(new()
                 {
-                    Name = session.Player.Name,
-                    Level = session.Player.Level,
-                    Race = session.Player.Race,
-                    Class = session.Player.Class,
-                    Path = session.Player.Path,
-                    Faction = session.Player.Faction1,
-                    Sex = session.Player.Sex,
-                    Zone = session.Player.Zone.Id
-                }
-            };
+                    Name = player.Name,
+                    Level = player.Level,
+                    Race = player.Race,
+                    Class = player.Class,
+                    Path = player.Path,
+                    Faction = player.Faction1,
+                    Sex = player.Sex,
+                    Zone = player.Zone?.Id ?? player.PreviousZone?.Id ?? 0u,
+                    Realm = ServerManager.Instance.Servers.FirstOrDefault(s => s.Model.Id == WorldServer.RealmId).Model.Name
+                });
 
             session.EnqueueMessageEncrypted(new ServerWhoResponse
             {
