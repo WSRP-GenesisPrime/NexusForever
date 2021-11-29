@@ -6,6 +6,31 @@ namespace NexusForever.Database.Auth.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DeleteData(
+                table: "permission",
+                keyColumn: "id",
+                keyValue: 105);
+            migrationBuilder.DeleteData(
+                table: "permission",
+                keyColumn: "id",
+                keyValue: 106);
+            migrationBuilder.DeleteData(
+                table: "permission",
+                keyColumn: "id",
+                keyValue: 107);
+            migrationBuilder.DeleteData(
+                table: "permission",
+                keyColumn: "id",
+                keyValue: 108);
+            migrationBuilder.DeleteData(
+                table: "permission",
+                keyColumn: "id",
+                keyValue: 109);
+            migrationBuilder.DeleteData(
+                table: "permission",
+                keyColumn: "id",
+                keyValue: 110);
+
             migrationBuilder.InsertData(
                 table: "permission",
                 columns: new[] { "id", "name" },

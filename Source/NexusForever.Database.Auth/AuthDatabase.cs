@@ -210,9 +210,9 @@ namespace NexusForever.Database.Auth
             using var context = new AuthContext(config);
 
             return context.AccountItem
-                .GroupBy(i => 1)
-                .Select(g => g.Max(s => s.Id))
-                .ToList()[0];
+                .Select(r => r.Id)
+                .DefaultIfEmpty()
+                .Max();
         }
     }
 }
