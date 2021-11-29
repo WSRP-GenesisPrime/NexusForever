@@ -1,4 +1,5 @@
-﻿using NexusForever.Shared.Cryptography;
+﻿using NexusForever.Shared.Configuration;
+using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Database;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
@@ -17,7 +18,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Email address for the new account", converter: typeof(StringLowerParameterConverter))]
             string email,
             [Parameter("Password for the new account")]
-            string password)
+            string password,
+            [Parameter("Role")]
+            uint? role = null)
         {
             if (DatabaseManager.Instance.AuthDatabase.AccountExists(email))
             {
@@ -25,8 +28,11 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
+            if (role == null)
+                role = (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? 1u);
+
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
-            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier);
+            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role);
 
             context.SendMessage($"Account {email} created successfully");
         }

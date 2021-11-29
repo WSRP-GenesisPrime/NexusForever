@@ -36,5 +36,6 @@ namespace NexusForever.WorldServer
         public bool CrossFactionChat { get; set; } = true;
         public ContactLimits Contacts { get; set; }
         public uint MaxPlayers { get; set; } = 50u;
+        public uint? DefaultRole { get; set; } = null;
     }
 }
