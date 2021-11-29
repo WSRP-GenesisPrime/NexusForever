@@ -310,6 +310,16 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Returns an active <see cref="Spell.Spell"/> that is affecting this <see cref="UnitEntity"/>
         /// </summary>
+        public int GetActiveSpellCount(Func<Spell.Spell, bool> func)
+        {
+            // TODO: Should return a single spell if looking for ActiveSpell?
+
+            return pendingSpells.Where(func).Count();
+        }
+
+        /// <summary>
+        /// Returns an active <see cref="Spell.Spell"/> that is affecting this <see cref="UnitEntity"/>
+        /// </summary>
         public Spell.Spell GetActiveSpell(Func<Spell.Spell, bool> func)
         {
             // TODO: Should return a single spell if looking for ActiveSpell?

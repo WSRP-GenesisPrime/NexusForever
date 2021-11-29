@@ -46,6 +46,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private readonly List<SpellTargetInfo> targets = new();
         private readonly List<Telegraph> telegraphs = new();
+        private readonly List<Proxy> proxies = new();
 
         private readonly SpellEventManager events = new();
         private Dictionary<uint /*effectId*/, uint/*count*/> effectTriggerCount = new();
@@ -188,6 +189,11 @@ namespace NexusForever.WorldServer.Game.Spell
 
             status = SpellStatus.Casting;
             log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
+
+            if (Spell4Id == 58832)
+                log.Info($"Casting Spell 58832!");
+            if (Spell4Id == 80382)
+                log.Info($"Casting Spell 80382!");
         }
 
         private CastResult CheckCast()
@@ -486,6 +492,8 @@ namespace NexusForever.WorldServer.Game.Spell
             if (caster is Player player && HasEsperCost())
                 caster.ModifyVital(Vital.Resource1, -caster.GetVitalValue(Vital.Resource1));
 
+            HandleProxies();
+
             SendSpellGo();
 
             // TODO: Confirm whether RapidTap spells cancel another out, and add logic as necessary
@@ -496,6 +504,17 @@ namespace NexusForever.WorldServer.Game.Spell
             if (parameters.ThresholdValue > 0 && parameters.RootSpellInfo.Thresholds.Count > 1)
                 SendThresholdUpdate();
 
+        }
+
+        private void HandleProxies()
+        {
+            foreach (Proxy proxy in proxies)
+                proxy.Evaluate();
+
+            foreach (Proxy proxy in proxies)
+                proxy.Cast(caster, events);
+
+            proxies.Clear();
         }
 
         private void SetCooldown()
@@ -633,7 +652,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 if (CastMethod == CastMethod.Multiphase && currentPhase < 255)
                 {
                     int phaseMask = 1 << currentPhase;
-                    if (spell4EffectsEntry.PhaseFlags != 1 && (phaseMask & spell4EffectsEntry.PhaseFlags) == 0)
+                    if ((spell4EffectsEntry.PhaseFlags != 1 && spell4EffectsEntry.PhaseFlags != uint.MaxValue) && (phaseMask & spell4EffectsEntry.PhaseFlags) == 0)
                         continue;
                 }
 

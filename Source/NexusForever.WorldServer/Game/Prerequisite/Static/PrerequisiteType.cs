@@ -26,6 +26,10 @@
         /// </summary>
         HasBuff             = 50,
         Path                = 52,
+        /// <summary>
+        /// Checks the amount of a Spell4Id is applied.
+        /// </summary>
+        ActiveSpellCount    = 59,
         Vital               = 73,
         /// <summary>
         /// Checks for an objectId. Used in the "RavelSignal" SpellEffectType at minimum. Error: World requirement not met

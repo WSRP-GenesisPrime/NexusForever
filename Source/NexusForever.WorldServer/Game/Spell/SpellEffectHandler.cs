@@ -158,55 +158,7 @@ namespace NexusForever.WorldServer.Game.Spell
         [SpellEffectHandler(SpellEffectType.Proxy)]
         private void HandleEffectProxy(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
-            if (effectTriggerCount.TryGetValue(info.Entry.Id, out uint count))
-                if (count >= info.Entry.DataBits04)
-                    return;
-
-            SpellParameters proxyParameters = new SpellParameters
-            {
-                ParentSpellInfo = parameters.SpellInfo,
-                RootSpellInfo = parameters.RootSpellInfo,
-                PrimaryTargetId = target.Guid,
-                UserInitiatedSpellCast = parameters.UserInitiatedSpellCast,
-                IsProxy = true
-            };
-
-            events.EnqueueEvent(new SpellEvent(info.Entry.DelayTime / 1000d, () =>
-            {
-                if (info.Entry.TickTime > 0)
-                {
-                    double tickTime = info.Entry.TickTime;
-                    if (info.Entry.DurationTime > 0)
-                    {
-                        for (int i = 1; i >= info.Entry.DurationTime / tickTime; i++)
-                            events.EnqueueEvent(new SpellEvent(tickTime * i / 1000d, () =>
-                            {
-                                if (target is Player playerTarget)
-                                    if (info.Entry.DataBits06 > 0 && !PrerequisiteManager.Instance.Meets(playerTarget, info.Entry.DataBits06))
-                                        return;
-
-                                caster.CastSpell(info.Entry.DataBits01, proxyParameters);
-                            }));
-                    }
-                    else
-                        TickingEvent(tickTime, () =>
-                        {
-                            if (target is Player playerTarget)
-                                if (info.Entry.DataBits06 > 0 && !PrerequisiteManager.Instance.Meets(playerTarget, info.Entry.DataBits06))
-                                    return;
-
-                            caster.CastSpell(info.Entry.DataBits01, proxyParameters);
-                        });
-                }
-                else
-                {
-                    if (target is Player playerTarget)
-                        if (info.Entry.DataBits06 > 0 && !PrerequisiteManager.Instance.Meets(playerTarget, info.Entry.DataBits06))
-                            return;
-
-                    caster.CastSpell(info.Entry.DataBits00, proxyParameters);
-                }
-            }));
+            proxies.Add(new Proxy(target, info.Entry, this, parameters));
         }
 
         [SpellEffectHandler(SpellEffectType.Disguise)]
@@ -465,9 +417,7 @@ namespace NexusForever.WorldServer.Game.Spell
             switch ((EffectForceSpellRemoveType)info.Entry.DataBits00)
             {
                 case EffectForceSpellRemoveType.Spell4:
-                    Spell activeSpell4 = target.GetActiveSpell(i => i.parameters.SpellInfo.Entry.Id == info.Entry.DataBits01);
-                    if (activeSpell4 != null)
-                        activeSpell4.Finish();
+                    target.FinishSpells(info.Entry.DataBits01);
                     break;
                 case EffectForceSpellRemoveType.SpellBase:
                     Spell activeSpellBase = target.GetActiveSpell(i => i.parameters.SpellInfo.Entry.Spell4BaseIdBaseSpell == info.Entry.DataBits01);

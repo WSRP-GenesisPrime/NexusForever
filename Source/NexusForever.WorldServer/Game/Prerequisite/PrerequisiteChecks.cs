@@ -399,5 +399,20 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return false;
             }
         }
+
+        [PrerequisiteCheck(PrerequisiteType.ActiveSpellCount)]
+        private static bool PrerequisiteCheckSpellActiveSpellCount(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return player.GetActiveSpellCount(s => s.Spell4Id == objectId && !s.IsFinished) == value;
+                case PrerequisiteComparison.LessThanOrEqual:
+                    return player.GetActiveSpellCount(s => s.Spell4Id == objectId && !s.IsFinished) <= value;
+                default:
+                    log.Warn($"Unhandled {comparison} for {PrerequisiteType.ActiveSpellCount}");
+                    return false;
+            }
+        }
     }
 }
