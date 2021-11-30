@@ -189,11 +189,6 @@ namespace NexusForever.WorldServer.Game.Spell
 
             status = SpellStatus.Casting;
             log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
-
-            if (Spell4Id == 58832)
-                log.Info($"Casting Spell 58832!");
-            if (Spell4Id == 80382)
-                log.Info($"Casting Spell 80382!");
         }
 
         private CastResult CheckCast()
