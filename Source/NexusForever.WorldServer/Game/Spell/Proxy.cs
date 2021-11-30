@@ -2,15 +2,12 @@
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell.Event;
-using NLog;
 using System;
 
 namespace NexusForever.WorldServer.Game.Spell
 {
     public class Proxy
     {
-        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
-
         public UnitEntity Target { get; }
         public Spell4EffectsEntry Entry { get; }
         public Spell ParentSpell { get; }
@@ -47,9 +44,6 @@ namespace NexusForever.WorldServer.Game.Spell
 
             if (PrerequisiteManager.Instance.Meets(Target as Player, Entry.DataBits06))
                 CanCast = true;
-
-            if (CanCast)
-                log.Info($"Proxy for {Entry.DataBits01} is ready to cast!");
         }
 
         public void Cast(UnitEntity caster, SpellEventManager events)

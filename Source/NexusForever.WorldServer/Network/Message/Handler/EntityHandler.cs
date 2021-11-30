@@ -155,7 +155,6 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientInteractionResult)]
         public static void HandleSpellDeferredResult(WorldSession session, ClientSpellInteractionResult result)
         {
-            log.Info($"{result.CastingId}, {result.Result}, {result.Validation}");
             Spell spell = session.Player.GetPendingSpell(result.CastingId);
             if (spell == null)
                 throw new ArgumentNullException($"Spell cast {result.CastingId} not found.");

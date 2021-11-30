@@ -158,6 +158,10 @@ namespace NexusForever.WorldServer.Game.Spell
         [SpellEffectHandler(SpellEffectType.Proxy)]
         private void HandleEffectProxy(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
+            if (effectTriggerCount.TryGetValue(info.Entry.Id, out uint count))
+                if (count >= info.Entry.DataBits04)
+                    return;
+
             proxies.Add(new Proxy(target, info.Entry, this, parameters));
         }
 

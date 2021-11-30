@@ -36,6 +36,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 events.EnqueueEvent(new SpellEvent(spellDelay / 1000d, () =>
                 {
                     currentPhase = (byte)spellPhase.OrderIndex;
+                    effectTriggerCount.Clear();
                     Execute();
 
                     //targets.ForEach(t => t.Effects.Clear());
@@ -81,6 +82,7 @@ namespace NexusForever.WorldServer.Game.Spell
                         return;
                     }
 
+                    effectTriggerCount.Clear();
                     Execute();
 
                     targets.ForEach(t => t.Effects.Clear());
