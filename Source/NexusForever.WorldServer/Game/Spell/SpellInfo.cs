@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
@@ -29,6 +30,9 @@ namespace NexusForever.WorldServer.Game.Spell
         public List<Spell4ThresholdsEntry> Thresholds { get; }
         public List<SpellPhaseEntry> Phases { get; }
         public List<Spell4VisualEntry> Visuals { get; } = new List<Spell4VisualEntry>();
+
+        private Dictionary<int /* orderIndex */, SpellInfo /* spell4Id */> thresholdCache = new();
+        private (SpellInfo, Spell4ThresholdsEntry) maxThresholdSpell;
 
         public SpellInfo(SpellBaseInfo spellBaseBaseInfo, Spell4Entry spell4Entry)
         {
@@ -64,6 +68,42 @@ namespace NexusForever.WorldServer.Game.Spell
             // Add all Prerequisites that allow the Caster to cast this Spell
             foreach (uint runnerId in spell4Entry.PrerequisiteIdRunners.Where(r => r != 0))
                 PrerequisiteRunners.Add(GameTableManager.Instance.Prerequisite.GetEntry(runnerId));
+        }
+
+        public void Initialise()
+        {
+            InitialiseThresholdCache();
+        }
+
+        private void InitialiseThresholdCache()
+        {
+            foreach (Spell4ThresholdsEntry thresholdsEntry in Thresholds)
+            {
+                Spell4Entry spell4Entry = GameTableManager.Instance.Spell4.GetEntry(thresholdsEntry.Spell4IdToCast);
+                if (spell4Entry == null)
+                    continue;
+
+                SpellBaseInfo spellBaseInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(spell4Entry.Spell4BaseIdBaseSpell);
+                if (spellBaseInfo == null)
+                    throw new ArgumentOutOfRangeException();
+
+                SpellInfo spellInfo = spellBaseInfo.GetSpellInfo((byte)spell4Entry.TierIndex);
+                if (spellInfo == null)
+                    throw new ArgumentOutOfRangeException();
+
+                thresholdCache.TryAdd((int)thresholdsEntry.OrderIndex, spellInfo);
+            }
+
+            if (thresholdCache.Keys.Count > 0)
+                maxThresholdSpell = (thresholdCache.Last().Value, Thresholds.MaxBy(x => x.OrderIndex));
+        }
+
+        /// <summary>
+        /// Return <see cref="SpellInfo"/> for a given Threshold Index.
+        /// </summary>
+        public (SpellInfo, Spell4ThresholdsEntry) GetThresholdSpellInfo(int index)
+        {
+            return thresholdCache.TryGetValue(index, out SpellInfo value) ? (value, Thresholds[index]) : maxThresholdSpell;
         }
     }
 }

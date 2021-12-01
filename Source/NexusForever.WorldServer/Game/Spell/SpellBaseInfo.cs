@@ -72,5 +72,22 @@ namespace NexusForever.WorldServer.Game.Spell
                 tier = 1;
             return spellInfoStore[tier - 1];
         }
+
+        /// <summary>
+        /// Initialise this <see cref="SpellBaseInfo"/>.
+        /// </summary>
+        public void Intitialise()
+        {
+            if (spellInfoStore == null)
+                return;
+
+            foreach (SpellInfo spell in spellInfoStore)
+            {
+                if (spell == null)
+                    continue;
+
+                spell.Initialise();
+            }
+        }
     }
 }

@@ -22,7 +22,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
         public uint CastingId { get; }
         public bool IsCasting => _IsCasting();
-        public bool IsFinished => status == SpellStatus.Finished;
+        public bool IsFinished => status == SpellStatus.Finished || status == SpellStatus.Failed;
         public bool IsFailed => status == SpellStatus.Failed;
         public bool IsWaiting => status == SpellStatus.Waiting;
         public uint Spell4Id => parameters.SpellInfo.Entry.Id;
@@ -357,29 +357,18 @@ namespace NexusForever.WorldServer.Game.Spell
             if (parameters.SpellInfo.Thresholds.Count == 0)
                 return null;
 
-            Spell4ThresholdsEntry thresholdsEntry = parameters.SpellInfo.Thresholds.FirstOrDefault(i => i.OrderIndex == thresholdValue);
-            if (thresholdsEntry == null)
-                throw new InvalidOperationException($"ThresholdsEntry should exist at index {thresholdValue} but doesn't for Spell4ID {Spell4Id}!");
-
-            Spell4Entry spell4Entry = GameTableManager.Instance.Spell4.GetEntry(thresholdsEntry.Spell4IdToCast);
-            if (spell4Entry == null)
-                throw new ArgumentOutOfRangeException();
-
-            SpellBaseInfo spellBaseInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(spell4Entry.Spell4BaseIdBaseSpell);
-            if (spellBaseInfo == null)
-                throw new ArgumentOutOfRangeException();
-
-            SpellInfo spellInfo = spellBaseInfo.GetSpellInfo((byte)spell4Entry.TierIndex);
-            if (spellInfo == null)
-                throw new ArgumentOutOfRangeException();
+            (SpellInfo spellInfo, Spell4ThresholdsEntry thresholdsEntry) = parameters.SpellInfo.GetThresholdSpellInfo((int)thresholdValue);
+            if (spellInfo == null || thresholdsEntry == null)
+                throw new InvalidOperationException($"{spellInfo} or {thresholdsEntry} is null!");
 
             Spell thresholdSpell = new Spell(caster, new SpellParameters
                 {
-                    SpellInfo = spellInfo,
+                    SpellInfo      = spellInfo,
                     ParentSpellInfo = parameters.SpellInfo,
-                    RootSpellInfo = parameters.SpellInfo,
+                    RootSpellInfo  = parameters.SpellInfo,
                     UserInitiatedSpellCast = parameters.UserInitiatedSpellCast,
-                    ThresholdValue = thresholdsEntry.OrderIndex + 1
+                    ThresholdValue = thresholdsEntry.OrderIndex + 1,
+                    IsProxy        = CastMethod == CastMethod.ChargeRelease
                 });
 
             log.Trace($"Added Child Spell {thresholdSpell.Spell4Id} with casting ID {thresholdSpell.CastingId} to parent casting ID {CastingId}");
@@ -816,6 +805,8 @@ namespace NexusForever.WorldServer.Game.Spell
 
             switch (CastMethod)
             {
+                case CastMethod.ChargeRelease:
+                    return PassEntityChecks() && (status == SpellStatus.Casting || status == SpellStatus.Executing || status == SpellStatus.Waiting);
                 case CastMethod.Channeled:
                 case CastMethod.ChanneledField:
                 case CastMethod.Multiphase:

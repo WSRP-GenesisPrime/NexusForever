@@ -40,6 +40,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private UpdateTimer rechargeTimer;
         private bool buttonPressed;
+        private CastMethod castMethod;
         private bool noCooldown => SpellInfo.Entry.SpellCoolDown == 0 && SpellInfo.Entry.SpellCoolDownIds.Where(x => x != 0).Count() == 0u;
 
         /// <summary>
@@ -47,11 +48,12 @@ namespace NexusForever.WorldServer.Game.Spell
         /// </summary>
         public CharacterSpell(Player player, CharacterSpellModel model, SpellBaseInfo baseInfo, ItemEntity item)
         {
-            Owner     = player;
-            BaseInfo  = baseInfo;
-            SpellInfo = baseInfo.GetSpellInfo(tier);
-            Item      = item;
-            tier      = model.Tier;
+            Owner      = player;
+            BaseInfo   = baseInfo;
+            SpellInfo  = baseInfo.GetSpellInfo(tier);
+            Item       = item;
+            tier       = model.Tier;
+            castMethod = (CastMethod)baseInfo.Entry.CastMethod;
 
             InitialiseAbilityCharges();
         }
@@ -61,11 +63,12 @@ namespace NexusForever.WorldServer.Game.Spell
         /// </summary>
         public CharacterSpell(Player player, SpellBaseInfo baseInfo, byte tier, ItemEntity item)
         {
-            Owner     = player;
-            BaseInfo  = baseInfo ?? throw new ArgumentNullException();
-            SpellInfo = baseInfo.GetSpellInfo(tier);
-            Item      = item;
-            this.tier = tier;
+            Owner      = player;
+            BaseInfo   = baseInfo ?? throw new ArgumentNullException();
+            SpellInfo  = baseInfo.GetSpellInfo(tier);
+            Item       = item;
+            this.tier  = tier;
+            castMethod = (CastMethod)baseInfo.Entry.CastMethod;
 
             InitialiseAbilityCharges();
 
@@ -150,16 +153,9 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             Owner.SpellManager.SetAsContinuousCast(null);
 
-            if (Owner.HasSpell(BaseInfo.GetSpellInfo(Tier).Entry.Id, out Spell spell))
-            {
-                if ((spell.CastMethod == CastMethod.RapidTap || spell.CastMethod == CastMethod.ChargeRelease) && !spell.IsFinished)
-                {
-                    spell.Cast();
-                    return;
-                }
-            }
-
+            buttonPressed = true;
             CastSpell();
+            buttonPressed = false;
         }
 
         /// <summary>
@@ -171,9 +167,9 @@ namespace NexusForever.WorldServer.Game.Spell
             this.buttonPressed = buttonPressed;
 
             // If the player depresses button after the spell had exceeded its threshold, don't try and recast the spell until button is pressed down again.
-            if (buttonPressed && noCooldown && (CastMethod)BaseInfo.Entry.CastMethod != CastMethod.ChargeRelease)
+            if (buttonPressed && castMethod != CastMethod.ChargeRelease)
                 Owner.SpellManager.SetAsContinuousCast(this);
-            else if (!buttonPressed && (CastMethod)BaseInfo.Entry.CastMethod != CastMethod.ChargeRelease)
+            else if (!buttonPressed && castMethod != CastMethod.ChargeRelease)
             {
                 Owner.SpellManager.SetAsContinuousCast(null);
                 return;
@@ -186,7 +182,8 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private void CastSpell()
         {
-            if (Owner.HasSpell(BaseInfo.GetSpellInfo(Tier).Entry.Id, out Spell spell))
+            // For Threshold Spells
+            if (Owner.HasSpell(BaseInfo.GetSpellInfo(Tier).Entry.Id, out Spell spell, isCasting: castMethod == CastMethod.ChargeRelease))
             {
                 if ((spell.CastMethod == CastMethod.RapidTap || spell.CastMethod == CastMethod.ChargeRelease) && !spell.IsFinished)
                 {
@@ -194,6 +191,9 @@ namespace NexusForever.WorldServer.Game.Spell
                     return;
                 }
             }
+
+            if (!buttonPressed)
+                return;
 
             Owner.CastSpell(new SpellParameters
             {

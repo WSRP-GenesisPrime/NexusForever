@@ -100,6 +100,9 @@ namespace NexusForever.WorldServer.Game.Spell
             foreach (Spell4BaseEntry entry in GameTableManager.Instance.Spell4Base.Entries)
                 spellBaseInfoStore.Add(entry.Id, new SpellBaseInfo(entry));
 
+            foreach (SpellBaseInfo spellBaseInfo in spellBaseInfoStore.Values)
+                spellBaseInfo.Intitialise();
+
             log.Info($"Cached {spellBaseInfoStore.Count} spells in {sw.ElapsedMilliseconds}ms.");
         }
 
