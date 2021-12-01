@@ -50,13 +50,22 @@ namespace NexusForever.WorldServer
         private const string Title = "NexusForever: World Server (RELEASE)";
 #endif
 
+        private UpdateTimer titleUpdate = new(TimeSpan.FromSeconds(1));
+        private double tickCount = 0u;
+        private bool isService = false;
+
+        public HostedService()
+        {
+            isService = WindowsServiceHelpers.IsWindowsService() || SystemdHelpers.IsSystemdService();
+        }
+
         /// <summary>
         /// Start <see cref="WorldServer"/> and any related resources.
         /// </summary>
         public Task StartAsync(CancellationToken cancellationToken)
         {
             log.Info("Starting...");
-            
+
             DatabaseManager.Instance.Initialise(ConfigurationManager<WorldServerConfiguration>.Instance.Config.Database);
             DatabaseManager.Instance.Migrate();
 
@@ -101,6 +110,8 @@ namespace NexusForever.WorldServer
             // initialise world after all assets have loaded but before any network or command handlers might be invoked
             WorldManager.Instance.Initialise(lastTick =>
             {
+                tickCount += lastTick;
+
                 // NetworkManager must be first and MapManager must come before everything else
                 NetworkManager<WorldSession>.Instance.Update(lastTick);
                 MapManager.Instance.Update(lastTick);
@@ -118,8 +129,15 @@ namespace NexusForever.WorldServer
                 // process commands after everything else in the tick has processed
                 CommandManager.Instance.Update(lastTick);
 
-                if (!WindowsServiceHelpers.IsWindowsService() && !SystemdHelpers.IsSystemdService())
-                    Console.Title = $"{Title} | Users: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.Account != null)} (Queued: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.IsQueued != false)})";
+                if (isService)
+                    return;
+
+                titleUpdate.Update(lastTick);
+                if (titleUpdate.HasElapsed)
+                {
+                    Console.Title = $"{Title} | Users: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.Account != null)} (Queued: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.IsQueued != false)}) | Uptime {TimeSpan.FromSeconds(tickCount).ToString(@"dd\:hh\:mm\:ss")}";
+                    titleUpdate.Reset();
+                }
             });
 
             // initialise network and command managers last to make sure the rest of the server is ready for invoked handlers
