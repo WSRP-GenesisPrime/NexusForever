@@ -67,25 +67,22 @@ namespace NexusForever.Database.Auth
         /// </summary>
         public async Task<AccountModel> GetAccountBySessionKeyAsync(string email, string sessionKey)
         {
-            await using var context = new AuthContext(config);
-            IQueryable<AccountModel> query = context.Account.Where(a => a.Email == email && a.SessionKey == sessionKey);
-
-            await query.SelectMany(a => a.AccountCostumeUnlock).LoadAsync();
-            await query.SelectMany(a => a.AccountCurrency).LoadAsync();
-            await query.SelectMany(a => a.AccountEntitlement).LoadAsync();
-            await query.SelectMany(a => a.AccountGenericUnlock).LoadAsync();
-            await query.SelectMany(a => a.AccountItem).LoadAsync();
-            await query.SelectMany(a => a.AccountItemCooldown).LoadAsync();
-            await query.SelectMany(a => a.AccountKeybinding).LoadAsync();
-            await query.SelectMany(a => a.AccountEntitlement).LoadAsync();
-            await query.SelectMany(a => a.AccountPermission).LoadAsync();
-            await query.SelectMany(a => a.AccountRole).LoadAsync();
-
-            await query.SelectMany(a => a.AccountRewardTrack)
-                    .Include(b => b.Milestone)
-                    .LoadAsync();
-
-            return await query.FirstOrDefaultAsync();
+            using var context = new AuthContext(config);
+            return await context.Account
+                .AsSplitQuery()
+                .Include(a => a.AccountCostumeUnlock)
+                .Include(a => a.AccountCurrency)
+                .Include(a => a.AccountEntitlement)
+                .Include(a => a.AccountGenericUnlock)
+                .Include(a => a.AccountItem)
+                .Include(a => a.AccountItemCooldown)
+                .Include(a => a.AccountKeybinding)
+                .Include(a => a.AccountEntitlement)
+                .Include(a => a.AccountPermission)
+                .Include(a => a.AccountRole)
+                .Include(a => a.AccountRewardTrack)
+                    .ThenInclude(b => b.Milestone)
+                .SingleOrDefaultAsync(a => a.Email == email && a.SessionKey == sessionKey);
         }
 
         /// <summary>
