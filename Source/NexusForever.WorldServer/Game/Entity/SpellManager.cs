@@ -52,7 +52,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private readonly Dictionary<uint /*spell4BaseId*/, CharacterSpell> spells = new();
         private readonly Dictionary<uint /*spell4Id*/, double /*cooldown*/> spellCooldowns = new();
-        private double globalSpellCooldown;
+        private readonly Dictionary<uint /*globalCooldownEnum*/, double /*cooldown*/> globalSpellCooldowns = new();
+        private uint maxGlobalSpellCooldownEnum = 3; // TODO: Read value from GameTables?
 
         private readonly ActionSet[] actionSets = new ActionSet[ActionSet.MaxActionSets];
 
@@ -81,6 +82,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 Item item = player.Inventory.SpellCreate(spellBaseInfo.Entry, ItemUpdateReason.NoReason);
                 spells.Add(spellModel.Spell4BaseId, new CharacterSpell(owner, spellModel, spellBaseInfo, item));
             }
+
+            for (uint i = 0; i <= maxGlobalSpellCooldownEnum; i++)
+                globalSpellCooldowns.Add(i, 0d);
 
             GrantSpells();
 
@@ -150,15 +154,13 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void Update(double lastTick)
         {
-            // update global cooldown
-            if (globalSpellCooldown > 0d)
+            // update global cooldowns
+            foreach ((uint globalEnum, double cooldown) in globalSpellCooldowns.ToArray())
             {
-                globalSpellCooldown -= lastTick;
-                if (globalSpellCooldown <= 0d)
-                {
-                    globalSpellCooldown = 0d;
-                    log.Trace("Global spell cooldown has reset.");
-                }
+                if (cooldown <= 0d)
+                    continue;
+
+                globalSpellCooldowns[globalEnum] = cooldown - lastTick;
             }
 
             // update spell cooldowns
@@ -176,7 +178,7 @@ namespace NexusForever.WorldServer.Game.Entity
             foreach (CharacterSpell unlockedSpell in spells.Values)
                 unlockedSpell.Update(lastTick);
 
-            if (globalSpellCooldown <= 0d && !player.IsCasting())
+            if (continuousSpell != null && globalSpellCooldowns[continuousSpell.GlobalCooldownEnum] <= 0d && !player.IsCasting())
                 continuousSpell?.SpellManagerCast();
         }
 
@@ -400,15 +402,15 @@ namespace NexusForever.WorldServer.Game.Entity
                 SetSpellCooldown(spell4Id, 0d);
         }
 
-        public double GetGlobalSpellCooldown()
+        public double GetGlobalSpellCooldown(uint globalEnum)
         {
-            return globalSpellCooldown;
+            return globalSpellCooldowns[globalEnum];
         }
 
-        public void SetGlobalSpellCooldown(double cooldown)
+        public void SetGlobalSpellCooldown(uint globalEnum, double cooldown)
         {
-            globalSpellCooldown = cooldown;
-            log.Trace($"Global spell cooldown set to {cooldown} seconds.");
+            globalSpellCooldowns[globalEnum] = cooldown;
+            log.Trace($"Global spell cooldown {globalEnum} set to {cooldown} seconds.");
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public SpellBaseInfo BaseInfo { get; }
         public SpellInfo SpellInfo { get; private set; }
         public ItemEntity Item { get; }
+        public uint GlobalCooldownEnum => SpellInfo.Entry.GlobalCooldownEnum;
 
         public byte Tier
         {

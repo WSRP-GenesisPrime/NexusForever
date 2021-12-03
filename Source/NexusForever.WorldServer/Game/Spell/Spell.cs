@@ -160,8 +160,8 @@ namespace NexusForever.WorldServer.Game.Spell
             // TODO: Handle all GlobalCooldownEnums. It looks like it's just a "Type" that the GCD is stored against. Each spell checks the GCD for its type.
             if (caster is Player player)
             {
-                if (parameters.SpellInfo.GlobalCooldown != null && parameters.SpellInfo.Entry.GlobalCooldownEnum == 0 && !parameters.IsProxy)
-                    player.SpellManager.SetGlobalSpellCooldown(parameters.SpellInfo.GlobalCooldown.CooldownTime / 1000d);
+                if (parameters.SpellInfo.GlobalCooldown != null && !parameters.IsProxy)
+                    player.SpellManager.SetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum, parameters.SpellInfo.GlobalCooldown.CooldownTime / 1000d);
                 else if (parameters.IsProxy)
                     player.SpellManager.SetSpellCooldown(Spell4Id, parameters.CooldownOverride / 1000d);
             }
@@ -215,9 +215,7 @@ namespace NexusForever.WorldServer.Game.Spell
                     !parameters.IsProxy)
                     return CastResult.SpellCooldown;
 
-                // this isn't entirely correct, research GlobalCooldownEnum
-                if (parameters.SpellInfo.Entry.GlobalCooldownEnum == 0 && 
-                    player.SpellManager.GetGlobalSpellCooldown() > 0d && 
+                if (player.SpellManager.GetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum) > 0d && 
                     !parameters.IsProxy && 
                     parameters.UserInitiatedSpellCast)
                 {
@@ -438,7 +436,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 });
 
                 if (result == CastResult.CasterMovement)
-                    player.SpellManager.SetGlobalSpellCooldown(0d);
+                    player.SpellManager.SetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum, 0d);
 
                 player.SpellManager.SetAsContinuousCast(null);
 
