@@ -1,28 +1,27 @@
-﻿using NexusForever.Shared.GameTable;
+﻿using NexusForever.Database.World.Model;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using System.Collections.Generic;
-using NexusForever.Database.World.Model;
+using System;
+using NexusForever.WorldServer.Game;
 
 namespace NexusForever.WorldServer.Network.Message.Handler
 {
     public static class VendorHandler
     {   
+        private static float clientPurchaseMod = 0.14966f;
         public static void HandleClientVendor(WorldSession session, ClientEntityInteract vendor)
         {
             var vendorEntity = session.Player.Map.GetEntity<NonPlayer>(vendor.Guid);
             if (vendorEntity == null)
-            {
-                return;
-            }
+                throw new InvalidOperationException();
 
             if (vendorEntity.VendorInfo == null)
-            {
-                return;
-            }
+                throw new InvalidOperationException();
 
             session.Player.SelectedVendorInfo = vendorEntity.VendorInfo;
             var serverVendor = new ServerVendorItemsUpdated
@@ -75,6 +74,10 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             Item2Entry itemEntry = GameTableManager.Instance.Item.GetEntry(vendorItem.ItemId);
             float costMultiplier = vendorInfo.BuyPriceMultiplier * vendorPurchase.VendorItemQty;
 
+            ItemInfo info = ItemManager.Instance.GetItemInfo(itemEntry.Id);
+            if (info == null)
+                return;
+
             // do all sanity checks before modifying currency
             var currencyChanges = new List<(CurrencyType CurrencyTypeId, ulong CurrencyAmount)>();
             for (int i = 0; i < itemEntry.CurrencyTypeId.Length; i++)
@@ -89,7 +92,12 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
                 currencyChanges.Add((currencyId, currencyAmount));
             }
-            
+
+            // TODO Calculate values appropriately.
+            // clientPurchaseMod was confirmed by in-game vendor values. Need to find GameTable it's associated with.
+            ulong amount = (ulong)Math.Ceiling((info.GetVendorSellAmount(0) * costMultiplier) / clientPurchaseMod);
+            currencyChanges.Add((CurrencyType.Credits, amount));
+
             foreach ((CurrencyType currencyTypeId, ulong currencyAmount) in currencyChanges)
                 session.Player.CurrencyManager.CurrencySubtractAmount(currencyTypeId, currencyAmount);
 
@@ -103,7 +111,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (vendorInfo == null)
                 return;
 
-            ItemInfo info = session.Player.Inventory.GetItem(vendorSell.ItemLocation).Info;
+            Item item = session.Player.Inventory.GetItem(vendorSell.ItemLocation);
+            if (item == null)
+                return;
+
+            ItemInfo info = item.Info;
             if (info == null)
                 return;
 
@@ -122,12 +134,13 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
 
             // TODO Insert calculation for cost here
+            currencyChange.Add((CurrencyType.Credits, (ulong)(item.GetVendorSellAmount(0) * costMultiplier)));
 
             foreach ((CurrencyType currencyTypeId, ulong currencyAmount) in currencyChange)
                 session.Player.CurrencyManager.CurrencyAddAmount(currencyTypeId, currencyAmount);
 
             // TODO Figure out why this is showing "You deleted [item]"
-            Item soldItem = session.Player.Inventory.ItemDelete(vendorSell.ItemLocation);
+            Item soldItem = session.Player.Inventory.ItemDelete(vendorSell.ItemLocation, ItemUpdateReason.Vendor);
             BuybackManager.Instance.AddItem(session.Player, soldItem, vendorSell.Quantity, currencyChange);
         }
 
@@ -139,6 +152,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return;
 
             //TODO Ensure player has room in inventory
+            if (session.Player.Inventory.GetInventorySlotsRemaining(InventoryLocation.Inventory) < 1)
+            {
+                session.Player.SendGenericError(Game.Static.GenericError.ItemInventoryFull);
+                return;
+            }
 
             // do all sanity checks before modifying currency
             foreach ((CurrencyType currencyTypeId, ulong currencyAmount) in buybackItem.CurrencyChange)
