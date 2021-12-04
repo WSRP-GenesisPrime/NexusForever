@@ -127,7 +127,7 @@ namespace NexusForever.WorldServer.Game.Account
                 
 
             if (Entry.EntitlementId != 0u)
-                session.EntitlementManager.SetAccountEntitlement((EntitlementType)Entry.EntitlementId, (int)Entry.EntitlementCount);
+                session.EntitlementManager.AddEntitlement((EntitlementType)Entry.EntitlementId, (int)Entry.EntitlementCount);
 
             if (Entry.AccountCurrencyEnum != 0u)
                 session.AccountCurrencyManager.CurrencyAddAmount((AccountCurrencyType)Entry.AccountCurrencyEnum, Entry.AccountCurrencyAmount);
