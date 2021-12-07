@@ -38,7 +38,7 @@ namespace NexusForever.WorldServer.Network.Message.Model.Shared
         public ItemLocation LocationData { get; set; }
         public uint StackCount { get; set; }
         public uint Charges { get; set; }
-        public ulong RandomCircuitData { get; set; }
+        public double RandomCircuitData { get; set; }
         public uint RandomGlyphData { get; set; }
         public ulong ThresholdData { get; set; }
         public float Durability { get; set; }

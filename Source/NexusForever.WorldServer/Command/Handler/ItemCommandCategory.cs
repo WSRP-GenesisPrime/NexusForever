@@ -24,8 +24,15 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount of charges to add to the item.")]
             uint? charges)
         {
+            ItemInfo info = ItemManager.Instance.GetItemInfo(itemId);
+            if (info == null)
+            {
+                context.SendMessage("Unrecognised Item ID. Please try again.");
+                return;
+            }
+
             quantity ??= 1u;
-            charges ??= 1u;
+            charges ??= info.Entry.MaxCharges;
             context.GetTargetOrInvoker<Player>().Inventory.ItemCreate(InventoryLocation.Inventory, itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
         }
 
