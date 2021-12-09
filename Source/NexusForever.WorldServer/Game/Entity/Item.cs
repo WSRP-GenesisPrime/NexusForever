@@ -153,9 +153,15 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public bool PendingCreate => (saveMask & ItemSaveMask.Create) != 0;
 
+        public double RandomCircuitData => Info != null && (Info.IsEquippable() || Info.IsRune()) ? 1d : 0d;
+        public uint RandomGlyphData => Info != null && (Info.IsEquippable() || Info.IsRune()) ? 
+            RuneSlotHelper.Instance.GetRuneSlotMask(Runes.Values.Select(i => i.RuneType).ToList(), Runes.Keys.Count == maxRuneCount) : 0u;
+
         private ItemSaveMask saveMask;
 
-        public Dictionary<Property, float> InnateProperties { get; private set; } = new Dictionary<Property, float>();
+        public Dictionary<Property, float> InnateProperties { get; private set; } = new();
+        public Dictionary<uint /* index*/, ItemRune> Runes { get; private set; } = new();
+        private uint maxRuneCount => Info != null && Info.RuneInstanceEntry != null ? Info.RuneInstanceEntry.SocketCountMax : Info.QualityEntry.MaxRunes;
 
         /// <summary>
         /// Create a new <see cref="Item"/> from an existing database model.
@@ -179,6 +185,12 @@ namespace NexusForever.WorldServer.Game.Entity
             }
             else
                 SpellEntry = GameTableManager.Instance.Spell4Base.GetEntry(model.ItemId);
+
+            foreach (ItemRuneModel runeModel in model.Runes)
+                Runes.Add(runeModel.Index, new ItemRune(runeModel));
+
+            // We re-attempt Initialisation in case an item that should have runes was not instantiated with them.
+            InitialiseRunes();
             
             saveMask = ItemSaveMask.None;
         }
@@ -199,6 +211,7 @@ namespace NexusForever.WorldServer.Game.Entity
             Info             = info;
 
             InnateProperties = AssetManager.Instance.GetInnateProperties((ItemSlot)Info.TypeEntry.ItemSlotId, Info.Entry.PowerLevel, Info.Entry.Item2CategoryId, Info.Entry.SupportPowerPercentage);
+            InitialiseRunes();
 
             saveMask         = ItemSaveMask.Create;
         }
@@ -232,9 +245,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void Save(CharacterContext context)
         {
-            if (saveMask == ItemSaveMask.None)
-                return;
-
             if ((saveMask & ItemSaveMask.Create) != 0)
             {
                 // item doesn't exist in database, all information must be saved
@@ -307,6 +317,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 }
             }
 
+            foreach (var rune in Runes.Values)
+                rune.Save(context);
+
             saveMask = ItemSaveMask.None;
         }
 
@@ -331,8 +344,13 @@ namespace NexusForever.WorldServer.Game.Entity
                 {
                     new NetworkItem.UnknownStructure(),
                     new NetworkItem.UnknownStructure()
-                }
+                },
+                RandomCircuitData = RandomCircuitData,
+                RandomGlyphData = RandomGlyphData
             };
+
+            foreach (ItemRune rune in Runes.Values)
+                networkItem.Glyphs.Add(rune.RuneItem ?? 0u);
 
             return networkItem;
         }
@@ -364,6 +382,78 @@ namespace NexusForever.WorldServer.Game.Entity
 
             // TODO: Add calculations for Runes or other things that would increase worth amount.
             return Info.CalculateVendorSellAmount();
+        }
+
+        private void InitialiseRunes()
+        {
+            if (Info == null)
+                return;
+
+            if (Runes.Count > 0)
+                return;
+
+            if (Info.Entry.PowerLevel < 5)
+                return;
+
+            if (Info.RuneInstanceEntry != null)
+            {
+                for (uint i = 0; i < Info.RuneInstanceEntry.DefinedSocketCount; i++)
+                    SetRuneSlot(i, (RuneType)Info.RuneInstanceEntry.DefinedSocketTypes[i]);
+            }
+            else
+            {
+                uint runeCount = Info.QualityEntry.DefaultRunes;
+
+                for (uint i = (uint)Runes.Count; i < runeCount; i++)
+                    SetRuneSlot(i, RuneType.Random);
+            }
+
+        }
+
+        private void SetRuneSlot(uint index, RuneType newType)
+        {
+            if (Runes.TryGetValue(index, out ItemRune rune))
+            {
+                rune.RuneType = newType;
+            }
+            else
+                Runes.Add(index, new ItemRune(Guid, index, newType, null));
+        }
+
+        /// <summary>
+        /// Returns whether this <see cref="Item"/> can unlock a Rune Slot.
+        /// </summary>
+        private bool CanUnlockRuneSlot()
+        {
+            return Info != null && Info.IsEquippable() && Runes.Count < maxRuneCount;
+        }
+
+        /// <summary>
+        /// Unlocks a Rune Slot with the given <see cref="RuneType"/> for this item. Returns true if successful.
+        /// </summary>
+        public bool UnlockRuneSlot(RuneType runeType)
+        {
+            if (!CanUnlockRuneSlot())
+                return false;
+
+            SetRuneSlot((byte)Runes.Count, runeType);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Rerolls a Rune Slot at the given index with the supplied <see cref="RuneType"/>. Returns true if successful.
+        /// </summary>
+        public bool RerollRuneSlot(uint index, RuneType runeType)
+        {
+            if (!Runes.TryGetValue(index, out ItemRune runeSlot))
+                return false;
+
+            if (runeSlot.RuneItem.HasValue)
+                return false;
+
+            SetRuneSlot(index, runeType);
+            return true;
         }
     }
 }

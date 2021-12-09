@@ -901,12 +901,159 @@ namespace NexusForever.WorldServer.Game.Entity
             return false;
         }
 
+        /// <summary>
+        /// Used to unlock the extra rune socket for an <see cref="Item"/>.
+        /// </summary>
+        public void RuneSlotUnlock(ulong itemGuid, RuneType newType, bool useServiceTokens)
+        {
+            Item item = GetItem(itemGuid);
+            if (item == null)
+                throw new ArgumentException();
+
+            if (item.UnlockRuneSlot(newType))
+            {
+                // TODO: Calculate Cost
+
+                SendItemModify(item);
+            }
+            else
+                player.Session.EnqueueMessageEncrypted(new ServerItemError
+                {
+                    ItemGuid = itemGuid,
+                    ErrorCode = GenericError.UnlockItemFailed
+                });
+        }
+        
+        /// <summary>
+        /// USed to reroll a rune socket for an <see cref="Item"/>.
+        /// </summary>
+        public void RuneSlotReroll(ulong itemGuid, uint index, RuneType runeType)
+        {
+            Item item = GetItem(itemGuid);
+            if (item == null)
+                throw new ArgumentException();
+
+            if (item.RerollRuneSlot(index, runeType))
+            {
+                // TODO: Calculate Cost
+
+                SendItemModify(item);
+            }
+            else
+                player.Session.EnqueueMessageEncrypted(new ServerItemError
+                {
+                    ItemGuid = itemGuid,
+                    ErrorCode = GenericError.CraftBadParams
+                });
+        }
+
+        /// <summary>
+        /// Used to Insert a list of Rune Item IDs into the supplied Guid matching an <see cref="Item"/>.
+        /// </summary>
+        public void RuneInsert(ulong itemGuid, uint[] runeItemIds)
+        {
+            Item item = GetItem(itemGuid);
+            if (item == null)
+                throw new ArgumentException();
+
+            for (uint i = 0; i < runeItemIds.Length; i++)
+            {
+                // Nothing being set as part of this insert request, skip to next.
+                if (runeItemIds[i] == 0)
+                    continue;
+
+                // Rune Socket missing, error.
+                if (item.Runes[i] == null)
+                    throw new ArgumentNullException();
+
+                // Rune Socket is filled with this Rune already, skip to next.
+                // We skip because on a Rune Insert packet, it sends a request with all runes it is expecting, even though only 1 can be added each time.
+                if (item.Runes[i].RuneItem == runeItemIds[i])
+                    continue;
+
+                // Rune Socket must be empty to place a rune in it, error.
+                if (item.Runes[i].RuneItem != null)
+                    throw new InvalidOperationException();
+
+                // Item missing to insert, error.
+                if (!HasItem(runeItemIds[i]))
+                    throw new InvalidOperationException();
+
+                item.Runes[i].RuneItem = runeItemIds[i];
+                ItemDelete(runeItemIds[i], 1u);
+            }
+
+            SendItemModifyGlyphs(item);
+
+            RemoveProperties(item);
+            ApplyProperties(item);
+        }
+
+        /// <summary>
+        /// Used to remove a Rune from a given socket index for a supplied Guid matching an <see cref="Item"/>.
+        /// </summary>
+        public void RuneRemove(ulong itemGuid, uint socketIndex, bool recover, bool useServiceTokens)
+        {
+            Item item = GetItem(itemGuid);
+            if (item == null)
+                throw new ArgumentException();
+
+            if (item.Runes[socketIndex] == null)
+                throw new ArgumentException();
+
+            if (!item.Runes[socketIndex].RuneItem.HasValue)
+                throw new ArgumentException();
+
+            if (recover)
+            {
+                if (GetInventorySlotsRemaining(InventoryLocation.Inventory) < 1u)
+                {
+                    player.SendGenericError(GenericError.ItemInventoryFull);
+                    return;
+                }
+
+                ItemCreate(InventoryLocation.Inventory, item.Runes[socketIndex].RuneItem.Value, 1u, ItemUpdateReason.TradeskillGlyph);
+
+                // TODO: Calculate Cost
+            }
+
+            item.Runes[socketIndex].RuneItem = null;
+
+            SendItemModifyGlyphs(item);
+
+            RemoveProperties(item);
+            ApplyProperties(item);
+        }
+
+        private void SendItemModify(Item item)
+        {
+            player.Session.EnqueueMessageEncrypted(new ServerItemModify
+            {
+                ItemGuid          = item.Guid,
+                ThresholdData     = 0u,
+                RandomCircuitData = item.RandomCircuitData,
+                RandomGlyphData   = item.RandomGlyphData
+            });
+        }
+
+        private void SendItemModifyGlyphs(Item item)
+        {
+            player.Session.EnqueueMessageEncrypted(new ServerItemModifyGlyphs
+            {
+                ItemGuid        = item.Guid,
+                RandomGlyphData = item.RandomGlyphData,
+                Glyphs          = item.Runes.Values.Select(i => i.RuneItem ?? 0).ToList()
+            });
+        }
+
         private void ApplyProperties(Item item)
         {
             Item2TypeEntry itemTypeEntry = item.Info.TypeEntry;
 
             foreach (KeyValuePair<Property, float> property in item.InnateProperties)
                 player.AddItemProperty(property.Key, (ItemSlot)itemTypeEntry.ItemSlotId, property.Value);
+
+            // TODO: Apply Properties from Runes and Effects
         }
 
         private void RemoveProperties(Item item)
@@ -915,6 +1062,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
             foreach (KeyValuePair<Property, float> property in item.InnateProperties)
                 player.RemoveItemProperty(property.Key, (ItemSlot)itemTypeEntry.ItemSlotId);
+
+            // TODO: Remove Properties from Runes and Effects
         }
 
         private Bag GetBag(InventoryLocation location)

@@ -81,7 +81,7 @@ namespace NexusForever.WorldServer.Network.Message.Model.Shared
             Microchips.ForEach(m => writer.Write(m));
             writer.Write(Glyphs.Count, 4u);
             Glyphs.ForEach(g => writer.Write(g));
-            writer.Write(Glyphs.Count, 6u);
+            writer.Write(Unknown88.Count, 6u);
             Unknown88.ForEach(u => u.Write(writer));
 
             writer.Write(EffectiveItemLevel);
