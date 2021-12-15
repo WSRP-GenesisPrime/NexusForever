@@ -60,12 +60,20 @@ namespace NexusForever.WorldServer.Game.Spell
 
         public SpellEffectTargetFlags Flags { get; }
         public UnitEntity Entity { get; }
+        public float Distance { get; }
         public List<SpellTargetEffectInfo> Effects { get; } = new List<SpellTargetEffectInfo>();
 
         public SpellTargetInfo(SpellEffectTargetFlags flags, UnitEntity entity)
         {
             Flags  = flags;
             Entity = entity;
+        }
+
+        public SpellTargetInfo(SpellEffectTargetFlags flags, UnitEntity entity, float distance)
+        {
+            Flags    = flags;
+            Entity   = entity;
+            Distance = distance;
         }
     }
 }

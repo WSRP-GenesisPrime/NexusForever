@@ -75,18 +75,24 @@ namespace NexusForever.WorldServer.Game.Spell
             Rotation = new Vector3(rotationRadians, Rotation.Y, Rotation.Z);
         }
 
+        private void FilterTargets(IEnumerable<SpellTargetInfo> targets, ISearchCheck check, out List<SpellTargetInfo> filteredTargets)
+        {
+            filteredTargets = new();
+            filteredTargets = targets.Where(x => check.CheckEntity(x.Entity)).ToList();
+        }
+
         /// <summary>
         /// Returns any <see cref="UnitEntity"/> inside the <see cref="Telegraph"/>.
         /// </summary>
-        public IEnumerable<UnitEntity> GetTargets(Spell spell)
+        public IEnumerable<SpellTargetInfo> GetTargets(Spell spell, List<SpellTargetInfo> targets)
         {
-            Caster.Map.Search(Position, GridSearchSize(), new SearchCheckTelegraph(this, Caster), out List<GridEntity> targets);
+            FilterTargets(targets, new SearchCheckTelegraph(this, Caster), out targets);
 
-            foreach (GridEntity target in targets.ToList())
-                if (!(EvaluateDamageFlagsForTarget(target, spell)))
+            foreach (var target in targets.ToList())
+                if (!(EvaluateDamageFlagsForTarget(target.Entity, spell)))
                     targets.Remove(target);
 
-            return targets.Select(t => t as UnitEntity);
+            return targets;
         }
 
         private bool EvaluateDamageFlagsForTarget(GridEntity target, Spell spell)
