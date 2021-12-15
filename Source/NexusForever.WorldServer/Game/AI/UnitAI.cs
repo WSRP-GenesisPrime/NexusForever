@@ -20,9 +20,10 @@ namespace NexusForever.WorldServer.Game.AI
 
         private bool resettingFromCombat = false;
 
+        public bool CanLeash() => this is not PetAI;
         public bool IsLeashing() => resettingFromCombat;
 
-        protected float MAX_ATTACK_RANGE = 5f;
+        protected float MAX_ATTACK_RANGE { get; set; } = 5f;
         protected List<uint> autoAttacks { get; set; } = new()
         {
             28704,
@@ -97,7 +98,12 @@ namespace NexusForever.WorldServer.Game.AI
 
                 if (resettingFromCombat)
                 {
-                    if (me.MovementManager?.MoveTo(me.LeashPosition, me.GetPropertyValue(Property.MoveSpeedMultiplier) * 10f * 1.5f) ?? true)
+                    if (CanLeash())
+                    {
+                        if (me.MovementManager?.MoveTo(me.LeashPosition, me.GetPropertyValue(Property.MoveSpeedMultiplier) * 10f * 1.5f) ?? true)
+                            Reset();
+                    }
+                    else
                         Reset();
                 }
             }

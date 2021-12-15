@@ -18,9 +18,7 @@ namespace NexusForever.WorldServer.Game.AI
                 {
                     autoAttacks.Clear();
                     autoAttacks.Add(entry.Id);
-
-                    if (MAX_ATTACK_RANGE < entry.TargetMaxRange)
-                        MAX_ATTACK_RANGE = entry.TargetMaxRange;
+                    MAX_ATTACK_RANGE = entry.TargetMaxRange;
                 }
 
             }
