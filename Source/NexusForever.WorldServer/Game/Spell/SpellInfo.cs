@@ -22,14 +22,15 @@ namespace NexusForever.WorldServer.Game.Spell
         public PrerequisiteEntry TargetCastPrerequisites { get; }
         public PrerequisiteEntry CasterPersistencePrerequisites { get; }
         public PrerequisiteEntry TargetPersistencePrerequisites { get; }
-        public List<PrerequisiteEntry> PrerequisiteRunners { get; } = new List<PrerequisiteEntry>();
+        public List<PrerequisiteEntry> PrerequisiteRunners { get; } = new();
         public Spell4VisualGroupEntry VisualGroup { get; }
 
         public List<TelegraphDamageEntry> Telegraphs { get; }
         public List<Spell4EffectsEntry> Effects { get; }
         public List<Spell4ThresholdsEntry> Thresholds { get; }
         public List<SpellPhaseEntry> Phases { get; }
-        public List<Spell4VisualEntry> Visuals { get; } = new List<Spell4VisualEntry>();
+        public List<Spell4VisualEntry> Visuals { get; } = new();
+        public List<SpellCoolDownEntry> Cooldowns { get; } = new();
 
         private Dictionary<int /* orderIndex */, SpellInfo /* spell4Id */> thresholdCache = new();
         private (SpellInfo, Spell4ThresholdsEntry) maxThresholdSpell;
@@ -68,6 +69,14 @@ namespace NexusForever.WorldServer.Game.Spell
             // Add all Prerequisites that allow the Caster to cast this Spell
             foreach (uint runnerId in spell4Entry.PrerequisiteIdRunners.Where(r => r != 0))
                 PrerequisiteRunners.Add(GameTableManager.Instance.Prerequisite.GetEntry(runnerId));
+
+            foreach (uint cooldownId in spell4Entry.SpellCoolDownIds)
+            {
+                if (cooldownId == 0)
+                    continue;
+
+                Cooldowns.Add(GameTableManager.Instance.SpellCoolDown.GetEntry(cooldownId));
+            }
         }
 
         public void Initialise()

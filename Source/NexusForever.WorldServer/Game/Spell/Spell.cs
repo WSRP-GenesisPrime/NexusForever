@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NexusForever.Shared;
+using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
@@ -28,6 +29,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public bool IsFailed => status == SpellStatus.Failed;
         public bool IsWaiting => status == SpellStatus.Waiting;
         public uint Spell4Id => parameters.SpellInfo.Entry.Id;
+        public bool HasGroup(uint groupId) => parameters.SpellInfo.GroupList?.SpellGroupIds.Contains(groupId) ?? false;
         public bool HasThresholdToCast => (parameters.SpellInfo.Thresholds.Count > 0 && thresholdValue < thresholdMax) || thresholdSpells.Count > 0;
         public CastMethod CastMethod { get; }
 
@@ -53,6 +55,8 @@ namespace NexusForever.WorldServer.Game.Spell
         private readonly SpellEventManager events = new();
         private Dictionary<uint /*effectId*/, uint/*count*/> effectTriggerCount = new();
 
+        private UpdateTimer persistCheck = new(0.1d);
+
         public Spell(UnitEntity caster, SpellParameters parameters)
         {
             this.caster     = caster;
@@ -74,6 +78,8 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             events.Update(lastTick);
+
+            CheckPersistance(lastTick);
 
             if (status == SpellStatus.Executing && HasThresholdToCast)
                 status = SpellStatus.Waiting;
@@ -165,7 +171,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 if (parameters.SpellInfo.GlobalCooldown != null && !parameters.IsProxy)
                     player.SpellManager.SetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum, parameters.SpellInfo.GlobalCooldown.CooldownTime / 1000d);
                 else if (parameters.IsProxy)
-                    player.SpellManager.SetSpellCooldown(Spell4Id, parameters.CooldownOverride / 1000d);
+                    player.SpellManager.SetSpellCooldown(parameters.SpellInfo, parameters.CooldownOverride / 1000d);
             }
 
             // It's assumed that non-player entities will be stood still to cast (most do). 
@@ -217,13 +223,18 @@ namespace NexusForever.WorldServer.Game.Spell
                     !parameters.IsProxy)
                     return CastResult.SpellCooldown;
 
+                foreach (SpellCoolDownEntry coolDownEntry in parameters.SpellInfo.Cooldowns)
+                {
+                    if (player.SpellManager.GetSpellCooldownByCooldownId(coolDownEntry.Id) > 0d &&
+                        parameters.UserInitiatedSpellCast &&
+                        !parameters.IsProxy)
+                        return CastResult.SpellCooldown;
+                }
+
                 if (player.SpellManager.GetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum) > 0d && 
                     !parameters.IsProxy && 
                     parameters.UserInitiatedSpellCast)
-                {
-                    if (CastMethod != CastMethod.ChargeRelease)
-                        return CastResult.SpellGlobalCooldown;
-                }
+                    return CastResult.SpellGlobalCooldown;
 
                 if (parameters.CharacterSpell?.MaxAbilityCharges > 0 && parameters.CharacterSpell?.AbilityCharges == 0)
                     return CastResult.SpellNoCharges;
@@ -503,9 +514,11 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private void SetCooldown()
         {
-            if (caster is Player player)
-                if (parameters.SpellInfo.Entry.SpellCoolDown != 0u)
-                    player.SpellManager.SetSpellCooldown(parameters.SpellInfo.Entry.Id, parameters.SpellInfo.Entry.SpellCoolDown / 1000d);
+            if (!(caster is Player player))
+                return;
+
+            if (parameters.SpellInfo.Entry.SpellCoolDown != 0u)
+                player.SpellManager.SetSpellCooldown(parameters.SpellInfo, parameters.SpellInfo.Entry.SpellCoolDown / 1000d);
         }
 
         private void CostSpell()
@@ -1093,6 +1106,26 @@ namespace NexusForever.WorldServer.Game.Spell
             };
 
             caster.EnqueueToVisible(spellTargets, true);
+        }
+
+        private void CheckPersistance(double lastTick)
+        {
+            if (caster is not Player player)
+                return;
+
+            if (parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence == 0 && parameters.SpellInfo.Entry.PrerequisiteIdTargetPersistence == 0)
+                return;
+
+            persistCheck.Update(lastTick);
+            if (persistCheck.HasElapsed)
+            {
+                if (!PrerequisiteManager.Instance.Meets(player, parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence))
+                    Finish();
+                
+                // TODO: Check if target can still persist
+
+                persistCheck.Reset();
+            }
         }
     }
 }

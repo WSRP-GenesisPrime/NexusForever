@@ -52,6 +52,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private readonly Dictionary<uint /*spell4BaseId*/, CharacterSpell> spells = new();
         private readonly Dictionary<uint /*spell4Id*/, double /*cooldown*/> spellCooldowns = new();
+        private readonly Dictionary<uint /*cooldownId*/, double /*cooldown*/> cooldownIds = new();
         private readonly Dictionary<uint /*globalCooldownEnum*/, double /*cooldown*/> globalSpellCooldowns = new();
         private uint maxGlobalSpellCooldownEnum = 3; // TODO: Read value from GameTables?
 
@@ -134,7 +135,15 @@ namespace NexusForever.WorldServer.Game.Entity
                         AddSpell(spell4PetEntry.Spell4BaseIdBaseSpell);
                 }
                 
-                    
+                if (spell4Entry.Spell4IdMechanicAlternateSpell > 0)
+                {
+                    Spell4Entry spell4AltEntry = GameTableManager.Instance.Spell4.GetEntry(spell4Entry.Spell4IdMechanicAlternateSpell);
+                    if (spell4AltEntry == null)
+                        continue;
+
+                    if (GetSpell(spell4AltEntry.Spell4BaseIdBaseSpell) == null)
+                        AddSpell(spell4AltEntry.Spell4BaseIdBaseSpell);
+                }
             }
 
             ClassEntry classEntry = GameTableManager.Instance.Class.GetEntry((byte)player.Class);
@@ -173,6 +182,18 @@ namespace NexusForever.WorldServer.Game.Entity
                 }
                 else
                     spellCooldowns[spellId] = cooldown - lastTick;
+            }
+
+            // update cooldown id groups
+            foreach ((uint cooldownId, double cooldown) in cooldownIds.ToArray())
+            {
+                if (cooldown - lastTick <= 0d)
+                {
+                    cooldownIds.Remove(cooldownId);
+                    log.Trace($"Cooldown ID {cooldownId} has reset.");
+                }
+                else
+                    cooldownIds[cooldownId] = cooldown - lastTick;
             }
 
             foreach (CharacterSpell unlockedSpell in spells.Values)
@@ -314,11 +335,11 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
-        /// Return spell cooldown for supplied spell id in seconds.
+        /// Return remaining cooldown for supplied cooldown ID.
         /// </summary>
-        public double GetSpellCooldown(uint spellId)
+        public double GetSpellCooldownByCooldownId(uint spell4CooldownId)
         {
-            return spellCooldowns.TryGetValue(spellId, out double cooldown) ? cooldown : 0d;
+            return cooldownIds.TryGetValue(spell4CooldownId, out double cooldown) ? cooldown : 0u;
         }
 
         /// <summary>
@@ -329,21 +350,24 @@ namespace NexusForever.WorldServer.Game.Entity
             if (newCooldown < 0d)
                 throw new ArgumentOutOfRangeException();
 
-            foreach (uint spell4 in spellCooldowns.Keys.ToList())
-            {
-                Spell4Entry spell4Entry = GameTableManager.Instance.Spell4.GetEntry(spell4);
-                if (spell4Entry == null)
-                    throw new InvalidOperationException($"Spell4 with ID ({spell4}) does not exist.");
+            if (cooldownIds.TryGetValue(spell4CooldownId, out double cooldown))
+                cooldownIds[spell4CooldownId] = newCooldown;
+            else
+                cooldownIds.TryAdd(spell4CooldownId, newCooldown);
+        }
 
-                if (spell4Entry.SpellCoolDownIds.Contains(spell4CooldownId))
-                    SetSpellCooldown(spell4, newCooldown);
-            }
+        /// <summary>
+        /// Return spell cooldown for supplied spell id in seconds.
+        /// </summary>
+        public double GetSpellCooldown(uint spellId)
+        {
+            return spellCooldowns.TryGetValue(spellId, out double cooldown) ? cooldown : 0d;
         }
 
         /// <summary>
         /// Set spell cooldown in seconds for supplied spell id.
         /// </summary>
-        public void SetSpellCooldown(uint spell4Id, double cooldown)
+        private void SetSpellCooldown(uint spell4Id, double cooldown, bool emit)
         {
             if (cooldown < 0d)
                 throw new ArgumentOutOfRangeException();
@@ -355,7 +379,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
             log.Trace($"Spell {spell4Id} cooldown set to {cooldown} seconds.");
 
-            if (!player.IsLoading)
+            if (!player.IsLoading && emit)
             {
                 player.Session.EnqueueMessageEncrypted(new ServerCooldown
                 {
@@ -368,6 +392,39 @@ namespace NexusForever.WorldServer.Game.Entity
                     }
                 });
             }
+        }
+
+        /// <summary>
+        /// Set spell cooldown in seconds for supplied <see cref="SpellInfo"/>.
+        /// </summary>
+        public void SetSpellCooldown(SpellInfo spellInfo, double cooldown)
+        {
+            if (cooldown < 0d)
+                throw new ArgumentOutOfRangeException();
+
+            SetSpellCooldown(spellInfo.Entry.Id, cooldown, false);
+
+            foreach (SpellCoolDownEntry coolDownEntry in spellInfo.Cooldowns)
+                SetSpellCooldownByCooldownId(coolDownEntry.Id, cooldown);
+        }
+
+        /// <summary>
+        /// Set spell cooldown in seconds for supplied spell id.
+        /// </summary>
+        public void SetSpellCooldown(uint spell4Id, double cooldown)
+        {
+            if (cooldown < 0d)
+                throw new ArgumentOutOfRangeException();
+
+            Spell4Entry entry = GameTableManager.Instance.Spell4.GetEntry(spell4Id);
+            if (entry == null)
+                throw new InvalidOperationException($"Spell4 with ID ({spell4Id}) does not exist.");
+
+            SpellBaseInfo baseInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(entry.Spell4BaseIdBaseSpell);
+            if (baseInfo == null)
+                throw new InvalidOperationException($"BaseInfo with ID ({entry.Spell4BaseIdBaseSpell}) does not exist.");
+
+            SetSpellCooldown(baseInfo.GetSpellInfo((byte)entry.TierIndex), cooldown);
         }
 
         /// <summary>
@@ -393,6 +450,27 @@ namespace NexusForever.WorldServer.Game.Entity
 
                 if (spell4GroupListEntry.SpellGroupIds.Contains(groupId))
                     SetSpellCooldown(spell4, cooldown);
+            }
+        }
+
+        /// <summary>
+        /// Update all spell cooldowns that share a base spell ID
+        /// </summary>
+        public void SetSpellCooldownByBaseSpell(uint spell4BaseId, uint type, double cooldown)
+        {
+            SpellBaseInfo baseSpellInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(spell4BaseId);
+            if (baseSpellInfo == null)
+                throw new ArgumentNullException();
+
+            foreach (SpellInfo spellInfo in baseSpellInfo)
+            {
+                if (spellCooldowns.TryGetValue(spellInfo.Entry.Id, out double currentCd))
+                {
+                    if (type == 3)
+                        SetSpellCooldown(spellInfo.Entry.Id, cooldown / 1000d);
+                    else
+                        SetSpellCooldown(spellInfo.Entry.Id, currentCd * cooldown);
+                }
             }
         }
 
