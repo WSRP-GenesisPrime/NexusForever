@@ -414,5 +414,29 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return false;
             }
         }
+
+        [PrerequisiteCheck(PrerequisiteType.SpellMechanic)]
+        private static bool PrerequisiteCheckSpellMechanic(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            uint resource = 0;
+            switch (objectId)
+            {
+                case 4:
+                    resource = (uint)player.GetVitalValue(Vital.SpellSurge);
+                    break;
+                default:
+                    log.Warn($"Unhandled objectId: {objectId} for {PrerequisiteType.SpellMechanic}");
+                    break;
+            }
+
+            switch (comparison)
+            {
+                case PrerequisiteComparison.GreaterThan:
+                    return resource > value;
+                default:
+                    log.Warn($"Unhandled {comparison} for {PrerequisiteType.SpellMechanic}");
+                    return false;
+            }
+        }
     }
 }

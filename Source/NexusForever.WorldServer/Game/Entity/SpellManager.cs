@@ -367,7 +367,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Set spell cooldown in seconds for supplied spell id.
         /// </summary>
-        private void SetSpellCooldown(uint spell4Id, double cooldown, bool emit)
+        private void _SetSpellCooldown(uint spell4Id, double cooldown, bool emit)
         {
             if (cooldown < 0d)
                 throw new ArgumentOutOfRangeException();
@@ -397,12 +397,12 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Set spell cooldown in seconds for supplied <see cref="SpellInfo"/>.
         /// </summary>
-        public void SetSpellCooldown(SpellInfo spellInfo, double cooldown)
+        public void SetSpellCooldown(SpellInfo spellInfo, double cooldown, bool emit = false)
         {
             if (cooldown < 0d)
                 throw new ArgumentOutOfRangeException();
 
-            SetSpellCooldown(spellInfo.Entry.Id, cooldown, false);
+            _SetSpellCooldown(spellInfo.Entry.Id, cooldown, emit);
 
             foreach (SpellCoolDownEntry coolDownEntry in spellInfo.Cooldowns)
                 SetSpellCooldownByCooldownId(coolDownEntry.Id, cooldown);
@@ -411,7 +411,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Set spell cooldown in seconds for supplied spell id.
         /// </summary>
-        public void SetSpellCooldown(uint spell4Id, double cooldown)
+        public void SetSpellCooldown(uint spell4Id, double cooldown, bool emit = false)
         {
             if (cooldown < 0d)
                 throw new ArgumentOutOfRangeException();
@@ -424,7 +424,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (baseInfo == null)
                 throw new InvalidOperationException($"BaseInfo with ID ({entry.Spell4BaseIdBaseSpell}) does not exist.");
 
-            SetSpellCooldown(baseInfo.GetSpellInfo((byte)entry.TierIndex), cooldown);
+            SetSpellCooldown(baseInfo.GetSpellInfo((byte)entry.TierIndex), cooldown, emit);
         }
 
         /// <summary>
@@ -477,7 +477,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public void ResetAllSpellCooldowns()
         {
             foreach (uint spell4Id in spellCooldowns.Keys.ToList())
-                SetSpellCooldown(spell4Id, 0d);
+                SetSpellCooldown(spell4Id, 0d, true);
         }
 
         public double GetGlobalSpellCooldown(uint globalEnum)

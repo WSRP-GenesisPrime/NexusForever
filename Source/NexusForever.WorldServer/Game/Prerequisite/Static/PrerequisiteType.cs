@@ -30,6 +30,10 @@
         /// Checks the amount of a Spell4Id is applied.
         /// </summary>
         ActiveSpellCount    = 59,
+        /// <summary>
+        /// Checks the amount of a given SpellMechanic resource. Seems to be legacy version of Vitals.
+        /// </summary>
+        SpellMechanic       = 64,
         Vital               = 73,
         /// <summary>
         /// Checks for an objectId. Used in the "RavelSignal" SpellEffectType at minimum. Error: World requirement not met

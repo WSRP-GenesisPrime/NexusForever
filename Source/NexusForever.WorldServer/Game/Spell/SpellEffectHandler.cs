@@ -384,6 +384,10 @@ namespace NexusForever.WorldServer.Game.Spell
 
             switch ((EffectModifySpellCooldownType)info.Entry.DataBits00)
             {
+                case EffectModifySpellCooldownType.SpellBase:
+                    player.SpellManager.SetSpellCooldownByBaseSpell(info.Entry.DataBits01, info.Entry.DataBits02, BitConverter.Int32BitsToSingle((int)info.Entry.DataBits03));
+                    log.Warn($"Setting SpellBase CD: {BitConverter.Int32BitsToSingle((int)info.Entry.DataBits03)}");
+                    break;
                 case EffectModifySpellCooldownType.Spell4:
                     player.SpellManager.SetSpellCooldown(info.Entry.DataBits01, BitConverter.Int32BitsToSingle((int)info.Entry.DataBits02));
                     break;
@@ -404,13 +408,14 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             switch ((EffectForceSpellRemoveType)info.Entry.DataBits00)
             {
+                case EffectForceSpellRemoveType.SpellGroupId:
+                    target.FinishSpellsByGroup(info.Entry.DataBits01);
+                    break;
                 case EffectForceSpellRemoveType.Spell4:
                     target.FinishSpells(info.Entry.DataBits01);
                     break;
                 case EffectForceSpellRemoveType.SpellBase:
-                    Spell activeSpellBase = target.GetActiveSpell(i => i.parameters.SpellInfo.Entry.Spell4BaseIdBaseSpell == info.Entry.DataBits01);
-                    if (activeSpellBase != null)
-                        activeSpellBase.Finish();
+                    target.FinishSpells(info.Entry.DataBits01);
                     break;
                 default:
                     log.Warn($"Unhandled EffectForceSpellRemoveType Type {(EffectForceSpellRemoveType)info.Entry.DataBits00}");

@@ -73,7 +73,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             Player target = context.GetTargetOrInvoker<Player>();
             if (spell4Id.HasValue)
-                target.SpellManager.SetSpellCooldown(spell4Id.Value, 0d);
+                target.SpellManager.SetSpellCooldown(spell4Id.Value, 0d, true);
             else
                 target.SpellManager.ResetAllSpellCooldowns();
         }

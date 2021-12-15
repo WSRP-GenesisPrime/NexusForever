@@ -308,6 +308,15 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
+        /// Finish all <see cref="Spell.Spell"/> that match the given spell4Id for this <see cref="UnitEntity"/>.
+        /// </summary>
+        public void FinishSpellsByGroup(uint groupId)
+        {
+            foreach (Spell.Spell spell in pendingSpells.Where(i => !i.IsCasting && !i.IsFinished && i.HasGroup(groupId)))
+                spell.Finish();
+        }
+
+        /// <summary>
         /// Returns an active <see cref="Spell.Spell"/> that is affecting this <see cref="UnitEntity"/>
         /// </summary>
         public int GetActiveSpellCount(Func<Spell.Spell, bool> func)
