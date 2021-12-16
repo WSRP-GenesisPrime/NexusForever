@@ -1122,7 +1122,7 @@ namespace NexusForever.WorldServer.Game.Spell
             persistCheck.Update(lastTick);
             if (persistCheck.HasElapsed)
             {
-                if (!PrerequisiteManager.Instance.Meets(player, parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence))
+                if (parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence > 0 && !PrerequisiteManager.Instance.Meets(player, parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence))
                     Finish();
                 
                 // TODO: Check if target can still persist
