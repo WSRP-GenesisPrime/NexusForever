@@ -55,21 +55,25 @@ namespace NexusForever.WorldServer.Game.Entity
             Faction1    = owner.Faction1;
             Faction2    = owner.Faction2;
 
-            SetStats(owner, spellInfo, effectsEntry);
-            BuildBaseProperties();
+            UpdateStats(owner);
             ModifyHealth(MaxHealth);
-            AI = new AI.PetAI(this, autoAttackId, autoAttackTimerSeconds);
+            SetupAI(spellInfo, effectsEntry);
         }
 
-        private void SetStats(Player owner, Spell4Entry spell4Entry, Spell4EffectsEntry spell4EffectsEntry)
+        public void UpdateStats(Player owner)
         {
-            var newHealth = (uint)Math.Round(owner.Health * 0.2f);
+            var newHealth = (uint)Math.Round(owner.Health * 0.4f);
             MaxHealth = newHealth;
             Level = owner.Level;
             Sheathed = false;
-            SetBaseProperty(Property.AssaultRating, owner.GetPropertyValue(Property.AssaultRating) * 0.2f);
-            SetBaseProperty(Property.SupportRating, owner.GetPropertyValue(Property.SupportRating) * 0.2f);
+            SetBaseProperty(Property.AssaultRating, owner.GetPropertyValue(Property.AssaultRating) * 0.4f);
+            SetBaseProperty(Property.SupportRating, owner.GetPropertyValue(Property.SupportRating) * 0.4f);
 
+            BuildBaseProperties();
+        }
+
+        private void SetupAI(Spell4Entry spell4Entry, Spell4EffectsEntry spell4EffectsEntry)
+        {
             uint autoAttackBaseId = 0;
             switch (spell4Entry.Spell4BaseIdBaseSpell)
             {
@@ -93,6 +97,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
             autoAttackId = GlobalSpellManager.Instance.GetSpellBaseInfo(autoAttackBaseId).GetSpellInfo((byte)spell4Entry.TierIndex).Entry.Id;
             autoAttackTimerSeconds = spell4EffectsEntry.DataBits03 / 1000d;
+
+            AI = new AI.PetAI(this, autoAttackId, autoAttackTimerSeconds);
         }
 
         protected override void InitialiseAI()

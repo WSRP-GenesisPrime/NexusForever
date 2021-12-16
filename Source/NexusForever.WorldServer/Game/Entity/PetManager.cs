@@ -211,6 +211,15 @@ namespace NexusForever.WorldServer.Game.Entity
                 pet.ThreatManager.AddThreat(target, 1);
         }
 
+        /// <summary>
+        /// Update the stats of all Pets. To be used after equipment change or level up.
+        /// </summary>
+        public void UpdateStats()
+        {
+            foreach (Pet pet in GetCombatPets())
+                pet.UpdateStats(owner);
+        }
+
         public IEnumerator<WorldEntity> GetEnumerator()
         {
             List<WorldEntity> worldEntities = new List<WorldEntity>();

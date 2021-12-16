@@ -365,6 +365,8 @@ namespace NexusForever.WorldServer.Game.Entity
                 ModifyHealth(MaxHealth);
                 Shield = MaxShieldCapacity;
             }
+
+            PetManager.UpdateStats();
         }
 
         public void FillStats()
