@@ -517,5 +517,18 @@ namespace NexusForever.WorldServer.Game.Spell
 
             //parameters.IsUnlimitedDuration = true;
         }
+
+        [SpellEffectHandler(SpellEffectType.DisguiseOutfit)]
+        private void HandleEffectDisguiseOutfit(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (info.Entry.DataBits00 == 0 && info.Entry.DataBits01 == 0)
+            {
+                if (info.Entry.DataBits02 > 0)
+                {
+                    ItemDisplayEntry entry = GameTableManager.Instance.ItemDisplay.GetEntry(info.Entry.DataBits02);
+                    target.AddTemporaryDisplayItem(Spell4Id, entry);
+                }
+            }
+        }
     }
 }

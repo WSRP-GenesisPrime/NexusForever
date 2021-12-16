@@ -115,6 +115,12 @@ namespace NexusForever.WorldServer.Game.Spell
                 foreach (SpellTargetInfo target in targets)
                     target.Entity?.RemoveSpellProperties(Spell4Id);
 
+                foreach (SpellTargetInfo target in targets)
+                    target.Entity?.RemoveProc(parameters.SpellInfo.Entry.Id);
+
+                foreach (SpellTargetInfo target in targets)
+                    target.Entity?.RemoveTemporaryDisplayItem(Spell4Id);
+
                 if (caster is Player player)
                     if (thresholdMax > 0)
                     {
@@ -126,9 +132,6 @@ namespace NexusForever.WorldServer.Game.Spell
                         if (CastMethod != CastMethod.ChargeRelease)
                             SetCooldown();
                     }
-
-                foreach (SpellTargetInfo target in targets)
-                    target.Entity.RemoveProc(parameters.SpellInfo.Entry.Id);
             }
         }
 
@@ -228,7 +231,7 @@ namespace NexusForever.WorldServer.Game.Spell
                     if (player.SpellManager.GetSpellCooldownByCooldownId(coolDownEntry.Id) > 0d &&
                         parameters.UserInitiatedSpellCast &&
                         !parameters.IsProxy)
-                        return CastResult.SpellCooldown;
+                        return CastResult.SpellGroupCooldown;
                 }
 
                 if (player.SpellManager.GetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum) > 0d && 

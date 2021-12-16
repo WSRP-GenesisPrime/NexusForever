@@ -238,6 +238,7 @@ namespace NexusForever.WorldServer.Game.Entity
         protected readonly Dictionary<Stat, StatValue> stats = new();
 
         private readonly Dictionary<ItemSlot, ItemVisual> itemVisuals = new();
+        private readonly Dictionary<uint /*spell4Id*/, Dictionary<ItemSlot, ItemVisual>> temporaryItemVisuals = new();
 
         protected DeathState DeathState 
         {
@@ -556,6 +557,76 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
+        /// Adds the visual of an <see cref="ItemDisplayEntry"/> temporarily.
+        /// </summary>
+        public void AddTemporaryDisplayItem(uint spell4Id, ItemDisplayEntry displayEntry)
+        {
+            if (displayEntry == null)
+                throw new ArgumentNullException();
+
+            Item2TypeEntry typeEntry = GameTableManager.Instance.Item2Type.GetEntry(displayEntry.Item2TypeId);
+            if (typeEntry == null)
+                throw new ArgumentNullException();
+
+            ItemSlot slot = (ItemSlot)typeEntry.ItemSlotId;
+            ItemVisual visual = new ItemVisual
+            {
+                Slot = slot,
+                DisplayId = (ushort)displayEntry.Id,
+                ColourSetId = (ushort)displayEntry.ItemColorSetId,
+                DyeData = (int)displayEntry.DyeChannelFlags
+            };
+
+            if (temporaryItemVisuals.TryGetValue(spell4Id, out Dictionary<ItemSlot, ItemVisual> visuals))
+            {
+                visuals[slot] = visual;
+            }
+            else
+                temporaryItemVisuals.Add(spell4Id, new Dictionary<ItemSlot, ItemVisual> 
+                { 
+                    { slot, visual }
+                });
+
+            EmitVisualUpdate();
+        }
+
+        /// <summary>
+        /// Remove all temporary <see cref="ItemVisual"/> associated with a give Spell4 ID.
+        /// </summary>
+        /// <param name="spell4Id"></param>
+        public void RemoveTemporaryDisplayItem(uint spell4Id)
+        {
+            if (temporaryItemVisuals.TryGetValue(spell4Id, out Dictionary<ItemSlot, ItemVisual> visuals))
+            {
+                temporaryItemVisuals.Remove(spell4Id);
+                EmitVisualUpdate();
+            }
+        }
+
+        private void EmitVisualUpdate()
+        {
+            var visualUpdate = new ServerEntityVisualUpdate
+            {
+                UnitId      = Guid,
+                DisplayInfo = DisplayInfo,
+                OutfitInfo  = OutfitInfo,
+                ItemVisuals = GetAppearance().ToList(),
+            };
+
+            if (this is Player player)
+            {
+                visualUpdate.Race = (byte)player.Race;
+                visualUpdate.Sex = (byte)player.Sex;
+            }
+            else
+            {
+                visualUpdate.CreatureId = CreatureId;
+            }
+
+            EnqueueToVisible(visualUpdate, true);
+        }
+
+        /// <summary>
         /// Return the base value for this <see cref="WorldEntity"/>'s <see cref="Property"/>
         /// </summary>
         private float GetBasePropertyValue(Property property)
@@ -780,7 +851,11 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public IEnumerable<ItemVisual> GetAppearance()
         {
-            return itemVisuals.Values;
+            var newVisuals = new List<ItemVisual>();
+            newVisuals.AddRange(itemVisuals.Values);
+            newVisuals.AddRange(temporaryItemVisuals.Values.SelectMany(x => x.Values));
+
+            return newVisuals.AsEnumerable();
         }
 
         /// <summary>
