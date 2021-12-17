@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -154,8 +155,12 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Return visible <see cref="WorldEntity"/> by supplied guid.
         /// </summary>
-        public T GetVisible<T>(uint guid) where T : WorldEntity
+        public virtual T GetVisible<T>(uint guid) where T : WorldEntity
         {
+            if (Map is ResidenceMapInstance residenceMap)
+                if (residenceMap.TryGetDecorEntity(guid, out WorldEntity decorEntity))
+                    return (T)decorEntity;
+
             if (!visibleEntities.TryGetValue(guid, out GridEntity entity))
                 return null;
 
@@ -230,5 +235,21 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         public abstract void Update(double lastTick);
+
+        public void SetPosition(Vector3 position)
+        {
+            if (Map != null)
+                throw new InvalidOperationException($"Cannot directly set Position of Entity if they are placed by a Map.");
+
+            Position = position;
+        }
+
+        public void SetGuid(uint guid)
+        {
+            if (Guid != 0u)
+                throw new InvalidOperationException($"Cannot directly set Guid of Entity if they are placed by a Map.");
+
+            Guid = guid;
+        }
     }
 }

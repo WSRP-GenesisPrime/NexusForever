@@ -8,6 +8,8 @@
         QuestComplete     = 3,
         MapComplete       = 53,
         ItemConsume       = 80,
+        HousePlugCount    = 111,
+        HousePlugType     = 114,
         AccountItemLoot   = 141
     }
 }

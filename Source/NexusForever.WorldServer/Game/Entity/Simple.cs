@@ -1,13 +1,16 @@
-using NexusForever.Database.World.Model;
+using System;
+using System.Linq;
+using System.Numerics;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.WorldServer.Game.CSI;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Quest.Static;
-using NexusForever.WorldServer.Game.Spell;
+using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Script;
+using EntityModel = NexusForever.Database.World.Model.EntityModel;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -33,6 +36,23 @@ namespace NexusForever.WorldServer.Game.Entity
             SetStat(Stat.Sheathed, 800u);
         }
 
+        public Simple(Creature2Entry entry, long propId, ushort plugId)
+            : base(EntityType.Simple)
+        {
+            CreatureId = entry.Id;
+            ActivePropId = propId;
+            WorldSocketId = plugId;
+            QuestChecklistIdx = 255;
+            Faction1 = (Faction)entry.FactionId;
+            Faction2 = (Faction)entry.FactionId;
+
+            Creature2DisplayGroupEntryEntry displayGroupEntry = GameTableManager.Instance.Creature2DisplayGroupEntry.Entries.FirstOrDefault(i => i.Creature2DisplayGroupId == entry.Creature2DisplayGroupId);
+            if (displayGroupEntry != null)
+                DisplayInfo = displayGroupEntry.Creature2DisplayInfoId;
+
+            CreateFlags |= EntityCreateFlag.SpawnAnimation;
+        }
+
         public override void Initialise(EntityModel model)
         {
             base.Initialise(model);
@@ -44,6 +64,11 @@ namespace NexusForever.WorldServer.Game.Entity
             QuestChecklistIdx = model.QuestChecklistIdx;
 
             ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnCreate(this);
+        }
+
+        public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
+        {
+            base.OnAddToMap(map, guid, vector);
         }
 
         protected override IEntityModel BuildEntityModel()

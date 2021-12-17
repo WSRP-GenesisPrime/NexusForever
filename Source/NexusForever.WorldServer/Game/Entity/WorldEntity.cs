@@ -64,10 +64,11 @@ namespace NexusForever.WorldServer.Game.Entity
         public Faction Faction1 { get; set; }
         public Faction Faction2 { get; set; }
 
+        public bool IsDecorEntity { get; set; }
         public byte QuestChecklistIdx { get; set; }
 
-        public ulong ActivePropId { get; private set; }
-        public ushort WorldSocketId { get; private set; }
+        public long ActivePropId { get; protected set; }
+        public ushort WorldSocketId { get; protected set; }
 
         public Vector3 LeashPosition { get; protected set; }
         public Vector3 LeashRotation { get; protected set; }
@@ -275,7 +276,7 @@ namespace NexusForever.WorldServer.Game.Entity
             Faction1          = (Faction)model.Faction1;
             Faction2          = (Faction)model.Faction2;
             QuestChecklistIdx = model.QuestChecklistIdx;
-            ActivePropId      = model.ActivePropId;
+            ActivePropId      = (long)model.ActivePropId;
             WorldSocketId     = model.WorldSocketId;
 
             splineInfo = model.EntitySpline;
@@ -330,7 +331,7 @@ namespace NexusForever.WorldServer.Game.Entity
             // This is in large part due to the way Plugs are tied either to a DecorId OR Guid. Other entities do not have the same issue.
             if (!(this is Plug))
             {
-                if (ActivePropId > 0 || WorldSocketId > 0)
+                if (ActivePropId != 0u || WorldSocketId > 0)
                 {
                     entityCreatePacket.WorldPlacementData = new ServerEntityCreate.WorldPlacement
                     {
@@ -1172,6 +1173,11 @@ namespace NexusForever.WorldServer.Game.Entity
         public void QueueEvent(IEvent eventToQueue)
         {
             events.EnqueueEvent(eventToQueue);
+        }
+
+        public void InitialiseTemporaryEntity()
+        {
+            MovementManager = new MovementManager(this, Position, Rotation);
         }
     }
 }

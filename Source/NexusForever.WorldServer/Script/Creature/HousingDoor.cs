@@ -19,9 +19,9 @@ namespace NexusForever.WorldServer.Script.Creature
             me.StandState = DOOR_CLOSED;
         }
 
-        public override void OnActivate(WorldEntity me, WorldEntity activator)
+        public override void OnActivateSuccess(WorldEntity me, WorldEntity activator)
         {
-            base.OnActivate(me, activator);
+            base.OnActivateSuccess(me, activator);
 
             // TODO: Add cooldown
 

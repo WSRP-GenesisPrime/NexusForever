@@ -250,21 +250,6 @@ namespace NexusForever.WorldServer.Game.Spell
             }
         }
 
-        [SpellEffectHandler(SpellEffectType.HousingTeleport)]
-        private void HandleEffectHousingTeleport(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
-        {
-            if (!(target is Player player))
-                return;
-
-            Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
-            if (residence == null)
-                residence = GlobalResidenceManager.Instance.CreateResidence(player);
-
-            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            player.Rotation = entrance.Rotation.ToEulerDegrees();
-            player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
-        }
-
         [SpellEffectHandler(SpellEffectType.FullScreenEffect)]
         private void HandleFullScreenEffect(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
@@ -529,6 +514,39 @@ namespace NexusForever.WorldServer.Game.Spell
                     target.AddTemporaryDisplayItem(Spell4Id, entry);
                 }
             }
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingTeleport)]
+        private void HandleEffectHousingTeleport(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
+            if (residence == null)
+                residence = GlobalResidenceManager.Instance.CreateResidence(player);
+
+            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingEscape)]
+        private void HandleEffectHousingEscape(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            if (player.Map == null || !(player.Map is ResidenceMapInstance residenceMap))
+                return;
+
+            Residence residence = residenceMap.GetMainResidence();
+            if (residence == null)
+                return;
+
+            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
         }
     }
 }

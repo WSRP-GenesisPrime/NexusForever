@@ -40,7 +40,7 @@ namespace NexusForever.WorldServer.Game.Map
 
         protected readonly ConcurrentQueue<IGridAction> pendingActions = new();
 
-        private readonly QueuedCounter entityCounter = new();
+        protected readonly QueuedCounter entityCounter = new();
         protected readonly Dictionary<uint /*guid*/, GridEntity> entities = new();
         private EntityCache entityCache;
 

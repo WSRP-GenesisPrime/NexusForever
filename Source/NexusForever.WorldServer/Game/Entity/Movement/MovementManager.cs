@@ -57,6 +57,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         public bool IsMoving() => isMoving;
 
         private bool isDirty;
+        private bool hasTicket = false;
         private bool serverControlled = true;
         private uint time = 1u;
         private EntityCommand[] handledCommands = new EntityCommand[]
@@ -142,9 +143,13 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         /// <remarks>
         /// Be aware that this position doesn't always match the grid position (eg: when on a vehicle)
         /// </remarks>
-        public void SetPosition(Vector3 position, bool sendImmediately = true)
+        public void SetPosition(Vector3 position, bool sendImmediately = true, bool hasTicket = false)
         {
             StopSpline();
+
+            if (owner is Player)
+                this.hasTicket = hasTicket;
+
             AddCommand(new SetPositionCommand
             {
                 Position = new Position(position)
@@ -373,6 +378,10 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             if (!isDirty)
                 return;
 
+            bool isPlayer = owner is Player;
+            if (isPlayer && hasTicket)
+                (owner as Player).Session.EnqueueMessageEncrypted(new Server0639());
+
             var serverEntityCommand = new ServerEntityCommand
             {
                 Guid             = owner.Guid,
@@ -387,7 +396,16 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             owner.EnqueueToVisible(serverEntityCommand, true);
             ClearUnhandledCommands();
 
+            if (isPlayer && hasTicket)
+                (owner as Player).Session.EnqueueMessageEncrypted(new ServerMovementControl
+                {
+                    Ticket    = 2,
+                    Immediate = true,
+                    UnitId    = owner.Guid
+                });
+
             isDirty = false;
+            hasTicket = false;
             serverControlled = true;
         }
 

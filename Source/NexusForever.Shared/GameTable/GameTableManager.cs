@@ -233,7 +233,10 @@ namespace NexusForever.Shared.GameTable
         public GameTable<HazardEntry> Hazard { get; private set; }
         public GameTable<HookAssetEntry> HookAsset { get; private set; }
         public GameTable<HookTypeEntry> HookType { get; private set; }
+
+        [GameData]
         public GameTable<HousingBuildEntry> HousingBuild { get; private set; }
+
         public GameTable<HousingContributionInfoEntry> HousingContributionInfo { get; private set; }
         public GameTable<HousingContributionTypeEntry> HousingContributionType { get; private set; }
 
@@ -241,7 +244,10 @@ namespace NexusForever.Shared.GameTable
         public GameTable<HousingDecorInfoEntry> HousingDecorInfo { get; private set; }
 
         public GameTable<HousingDecorLimitCategoryEntry> HousingDecorLimitCategory { get; private set; }
+
+        [GameData]
         public GameTable<HousingDecorTypeEntry> HousingDecorType { get; private set; }
+
         public GameTable<HousingMannequinPoseEntry> HousingMannequinPose { get; private set; }
         public GameTable<HousingMapInfoEntry> HousingMapInfo { get; private set; }
         public GameTable<HousingNeighborhoodInfoEntry> HousingNeighborhoodInfo { get; private set; }
@@ -257,7 +263,9 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<HousingPropertyInfoEntry> HousingPropertyInfo { get; private set; }
 
+        [GameData]
         public GameTable<HousingResidenceInfoEntry> HousingResidenceInfo { get; private set; }
+        
         public GameTable<HousingResourceEntry> HousingResource { get; private set; }
 
         [GameData]
@@ -683,7 +691,9 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<WorldSkyEntry> WorldSky { get; private set; }
 
+        [GameData]
         public GameTable<WorldSocketEntry> WorldSocket { get; private set; }
+
         public GameTable<WorldWaterEnvironmentEntry> WorldWaterEnvironment { get; private set; }
         public GameTable<WorldWaterFogEntry> WorldWaterFog { get; private set; }
         public GameTable<WorldWaterLayerEntry> WorldWaterLayer { get; private set; }

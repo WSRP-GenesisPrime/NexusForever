@@ -1,12 +1,8 @@
-﻿using NexusForever.Database.World.Model;
-using NexusForever.Shared;
+﻿using NexusForever.Shared;
 using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.WorldServer.Game.AI;
-using NexusForever.WorldServer.Game.CSI;
 using NexusForever.WorldServer.Game.Combat;
-using NexusForever.WorldServer.Game.Entity.Movement.Generator;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
@@ -16,6 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NexusForever.WorldServer.Game.Spell;
+using NexusForever.WorldServer.Game.Reputation.Static;
+using EntityModel = NexusForever.Database.World.Model.EntityModel;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -31,6 +29,30 @@ namespace NexusForever.WorldServer.Game.Entity
         public NonPlayer()
             : base(EntityType.NonPlayer)
         {
+        }
+
+        public NonPlayer(Creature2Entry entry, long propId, ushort plugId)
+            : base(EntityType.NonPlayer)
+        {
+            CreatureId = entry.Id;
+            ActivePropId = propId;
+            WorldSocketId = plugId;
+            Faction1 = (Faction)entry.FactionId;
+            Faction2 = (Faction)entry.FactionId;
+
+            Creature2DisplayGroupEntryEntry displayGroupEntry = GameTableManager.Instance.Creature2DisplayGroupEntry.Entries.FirstOrDefault(i => i.Creature2DisplayGroupId == entry.Creature2DisplayGroupId);
+            if (displayGroupEntry != null)
+                DisplayInfo = displayGroupEntry.Creature2DisplayInfoId;
+
+            Creature2OutfitGroupEntryEntry outfitGroupEntry = GameTableManager.Instance.Creature2OutfitGroupEntry.Entries.FirstOrDefault(i => i.Creature2OutfitGroupId == entry.Creature2OutfitGroupId);
+            if (outfitGroupEntry != null)
+                OutfitInfo = (ushort)outfitGroupEntry.Creature2OutfitInfoId;
+
+            Properties.Add(Property.BaseHealth, new PropertyValue(Property.BaseHealth, 135f, 125f));
+            stats.Add(Stat.Health, new StatValue(Stat.Health, 135));
+            stats.Add(Stat.Level, new StatValue(Stat.Level, 1));
+
+            CreateFlags |= EntityCreateFlag.SpawnAnimation;
         }
 
         public override void Initialise(EntityModel model)

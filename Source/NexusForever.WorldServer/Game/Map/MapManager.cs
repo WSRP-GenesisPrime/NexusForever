@@ -199,5 +199,21 @@ namespace NexusForever.WorldServer.Game.Map
                     return RezType.OpenWorld;
             }
         }
+
+        /// <summary>
+        /// Returns a <see cref="ResidenceMapInstance"/>, if active, corresponding to the given residence ID.
+        /// </summary>
+        public ResidenceMapInstance GetResidenceMapInstance(ulong residenceId)
+        {
+            foreach (var map in maps.Values)
+            {
+                if (map is not ResidenceInstancedMap residenceMapContainer)
+                    continue;
+
+                return residenceMapContainer.GetInstance(residenceId);
+            }
+
+            return null;
+        }
     }
 }
