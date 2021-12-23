@@ -4,8 +4,8 @@ using NexusForever.Shared.Network.Message;
 
 namespace NexusForever.WorldServer.Network.Message.Model
 {
-    [Message(GameMessageOpcode.Server0811)]
-    public class Server0811 : IWritable
+    [Message(GameMessageOpcode.ServerSpellBuffsRemoved)]
+    public class ServerSpellBuffsRemoved : IWritable
     {
         public uint CastingId { get; set; }
         public List<uint> SpellTargets { get; set; } = new List<uint>();

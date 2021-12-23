@@ -364,8 +364,8 @@ namespace NexusForever.Shared.Network.Message
         ClientCancelEffect              = 0x0802,
         ServerCooldown                  = 0x0804,
         ClientInteractionResult         = 0x0805,
-        Server0810                      = 0x0810,
-        Server0811                      = 0x0811, // spell related: broadcast parts of 0x07FF?
+        ServerSpellBuffsApply           = 0x0810,
+        ServerSpellBuffsRemoved         = 0x0811,
         ServerSpellBuffRemove           = 0x0813,
         ServerSpellThresholdClear       = 0x0814,
         ServerSpellThresholdStart       = 0x0816,

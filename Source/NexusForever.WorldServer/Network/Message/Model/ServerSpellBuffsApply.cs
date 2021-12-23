@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 namespace NexusForever.WorldServer.Network.Message.Model
 {
-    [Message(GameMessageOpcode.Server0810)]
-    public class Server0810 : IWritable
+    [Message(GameMessageOpcode.ServerSpellBuffsApply)]
+    public class ServerSpellBuffsApply : IWritable
     {
         public class SpellTarget : IWritable
         {

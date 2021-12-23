@@ -86,9 +86,10 @@ namespace NexusForever.WorldServer.Game.Spell
         #endregion
 
         private UnitEntity caster;
+        private Vector3 initialPosition;
         private SpellInfo info;
         private SpellParameters parameters;
-        
+
         private float maxRange => info.Entry.TargetMaxRange;
         private SpellTargetMechanicType targetType => (SpellTargetMechanicType)info.BaseInfo.TargetMechanics.TargetType;
         private SpellTargetMechanicFlags targetFlags => (SpellTargetMechanicFlags)info.BaseInfo.TargetMechanics.Flags;
@@ -101,6 +102,10 @@ namespace NexusForever.WorldServer.Game.Spell
             this.caster     = caster;
             this.parameters = parameters;
             this.info       = parameters.SpellInfo;
+            initialPosition = caster.Position;
+
+            if (parameters.PositionalUnitId > 0)
+                initialPosition = caster.GetVisible<WorldEntity>(parameters.PositionalUnitId)?.Position ?? caster.Position;
 
             SelectTargets();
             OrderForSelectionType();
@@ -113,7 +118,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
             // TODO: Use Target Type to calculate positions
 
-            caster.Map.Search(caster.Position, maxRange, new SearchCheckRangeAoeSelect(caster, maxRange, targetFlags), out List<GridEntity> selectedTargets);
+            caster.Map.Search(initialPosition, maxRange, new SearchCheckRangeAoeSelect(caster, initialPosition, maxRange, targetFlags), out List<GridEntity> selectedTargets);
 
             foreach (var target in selectedTargets)
                 validatedTargets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Telegraph, target as UnitEntity, Vector3.Distance(caster.Position, target.Position)));

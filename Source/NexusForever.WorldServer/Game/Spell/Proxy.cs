@@ -51,6 +51,12 @@ namespace NexusForever.WorldServer.Game.Spell
             if (!CanCast)
                 return;
 
+            if (ParentSpell.CastMethod == Static.CastMethod.Aura && Entry.TickTime > 0)
+            {
+                caster.CastSpell(Entry.DataBits01, proxyParameters);
+                return;
+            }
+
             events.EnqueueEvent(new SpellEvent(Entry.DelayTime / 1000d, () =>
             {
                 if (Entry.TickTime > 0)

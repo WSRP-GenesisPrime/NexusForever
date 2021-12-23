@@ -11,9 +11,9 @@ namespace NexusForever.WorldServer.Game.Map.Search
         private readonly GridEntity searcher;
         private readonly SpellTargetMechanicFlags targetMechanicFlags;
 
-        public SearchCheckRangeAoeSelect(GridEntity searcher, float radius, SpellTargetMechanicFlags targetMechanicFlags)
+        public SearchCheckRangeAoeSelect(GridEntity searcher, Vector3 position, float radius, SpellTargetMechanicFlags targetMechanicFlags)
         {
-            vector                   = searcher.Position;
+            vector                   = position;
             this.radius              = radius;
             this.searcher            = searcher;
             this.targetMechanicFlags = targetMechanicFlags;
@@ -50,7 +50,7 @@ namespace NexusForever.WorldServer.Game.Map.Search
                     return false;
             } 
 
-            if (Vector3.Distance(vector, entity.Position) > radius)
+            if (radius > 0 && Vector3.Distance(vector, entity.Position) > radius)
                 return false;
 
             return true;

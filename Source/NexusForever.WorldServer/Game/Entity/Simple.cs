@@ -17,23 +17,34 @@ namespace NexusForever.WorldServer.Game.Entity
     [DatabaseEntity(EntityType.Simple)]
     public class Simple : UnitEntity
     {
+        public Action<Simple> afterAddToMap;
+
         public Simple()
             : base(EntityType.Simple)
         {
         }
 
-        public Simple(uint creatureId)
+        public Simple(uint creatureId, Action<Simple> actionAfterAddToMap = null)
             : base(EntityType.Simple)
         {
+            Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(creatureId);
+            if (entry == null)
+                throw new ArgumentNullException();
+
             CreatureId = creatureId;
+            afterAddToMap = actionAfterAddToMap;
 
-            // temp
-            DisplayInfo = 24413;
-            SetBaseProperty(Property.BaseHealth, 800.0f);
+            SetBaseProperty(Property.BaseHealth, 101.0f);
 
-            SetStat(Stat.Health, 800u);
-            SetStat(Stat.Level, 3u);
-            SetStat(Stat.Sheathed, 800u);
+            SetStat(Stat.Health, 101u);
+            SetStat(Stat.Level, 1u);
+
+            Creature2DisplayGroupEntryEntry displayGroupEntry = GameTableManager.Instance.
+                Creature2DisplayGroupEntry.
+                Entries.
+                FirstOrDefault(d => d.Creature2DisplayGroupId == entry.Creature2DisplayGroupId);
+            if (displayGroupEntry != null)
+                DisplayInfo = displayGroupEntry.Creature2DisplayInfoId;
         }
 
         public Simple(Creature2Entry entry, long propId, ushort plugId)
@@ -69,6 +80,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
             base.OnAddToMap(map, guid, vector);
+
+            afterAddToMap?.Invoke(this);
         }
 
         protected override IEntityModel BuildEntityModel()

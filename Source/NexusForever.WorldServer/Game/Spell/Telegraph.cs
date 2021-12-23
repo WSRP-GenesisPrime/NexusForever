@@ -19,6 +19,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public Vector3 Position { get; private set; }
         public Vector3 Rotation { get; private set; }
         public TelegraphDamageEntry TelegraphDamage { get; }
+        public TelegraphTargetTypeFlags TelegraphTargetTypeFlags => (TelegraphTargetTypeFlags)TelegraphDamage.TargetTypeFlags;
 
         private float casterHitRadius = 0f;
         //private bool npcsSpawned = false;
@@ -99,9 +100,10 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             TelegraphDamageFlag damageFlag = (TelegraphDamageFlag)TelegraphDamage.TelegraphDamageFlags;
 
-            if (damageFlag.HasFlag(TelegraphDamageFlag.SpellMustBeMultiPhase))
-                if (spell.CastMethod != CastMethod.Multiphase)
-                    return false;
+            // This is Invalid
+            //if (damageFlag.HasFlag(TelegraphDamageFlag.SpellMustBeMultiPhase))
+            //    if (spell.CastMethod != CastMethod.Multiphase)
+            //        return false;
 
             if (damageFlag.HasFlag(TelegraphDamageFlag.CasterMustBeNPC))
                 if (Caster is Player)

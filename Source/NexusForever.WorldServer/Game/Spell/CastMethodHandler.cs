@@ -2,10 +2,8 @@
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Spell.Event;
 using NexusForever.WorldServer.Game.Spell.Static;
-using NexusForever.WorldServer.Network.Message.Model;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace NexusForever.WorldServer.Game.Spell
 {
@@ -19,6 +17,9 @@ namespace NexusForever.WorldServer.Game.Spell
             uint castTime = parameters.CastTimeOverride > -1 ? (uint)parameters.CastTimeOverride : parameters.SpellInfo.Entry.CastTime;
 
             events.EnqueueEvent(new SpellEvent(castTime / 1000d, Execute)); // enqueue spell to be executed after cast time
+
+            status = SpellStatus.Casting;
+            log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
         }
 
         [CastMethodHandler(CastMethod.Multiphase)]
@@ -48,6 +49,9 @@ namespace NexusForever.WorldServer.Game.Spell
                     }
                 }));
             }
+
+            status = SpellStatus.Casting;
+            log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
         }
 
         [CastMethodHandler(CastMethod.Channeled)]
@@ -87,6 +91,9 @@ namespace NexusForever.WorldServer.Game.Spell
 
                     targets.ForEach(t => t.Effects.Clear());
                 }));
+
+            status = SpellStatus.Casting;
+            log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
         }
 
         [CastMethodHandler(CastMethod.ChargeRelease)]
@@ -116,6 +123,9 @@ namespace NexusForever.WorldServer.Game.Spell
             }
 
             events.EnqueueEvent(new SpellEvent(parameters.SpellInfo.Entry.CastTime / 1000d, Execute)); // enqueue spell to be executed after cast time
+
+            status = SpellStatus.Casting;
+            log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
         }
 
         [CastMethodHandler(CastMethod.RapidTap)]
@@ -125,6 +135,56 @@ namespace NexusForever.WorldServer.Game.Spell
                 events.EnqueueEvent(new SpellEvent(parameters.SpellInfo.Entry.CastTime / 1000d + parameters.SpellInfo.Entry.ThresholdTime / 1000d, Finish)); // enqueue spell to be executed after cast time
 
             events.EnqueueEvent(new SpellEvent(parameters.SpellInfo.Entry.CastTime / 1000d, Execute)); // enqueue spell to be executed after cast time
+
+            status = SpellStatus.Casting;
+            log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
+        }
+
+        [CastMethodHandler(CastMethod.Aura)]
+        private void AuraHandler()
+        {
+            uint castTime = parameters.CastTimeOverride > -1 ? (uint)parameters.CastTimeOverride : parameters.SpellInfo.Entry.CastTime;
+            events.EnqueueEvent(new SpellEvent(castTime / 1000d, Execute)); // enqueue spell to be executed after cast time
+
+            foreach (Spell4EffectsEntry effect in parameters.SpellInfo.Effects.Where(i => i.TickTime > 0))
+            {
+                if ((SpellEffectType)effect.EffectType != SpellEffectType.Proxy)
+                {
+                    log.Warn($"Aura (Spell4 {Spell4Id}) has unhandled effect type {(SpellEffectType)effect.EffectType}.");
+                    continue;
+                }
+                
+                effectRetriggerTimers.Add(effect.Id, effect.TickTime / 1000d);
+            }
+
+            if (parameters.SpellInfo.Entry.SpellDuration > 0 && parameters.SpellInfo.Entry.SpellDuration < uint.MaxValue)
+                events.EnqueueEvent(new SpellEvent(parameters.SpellInfo.Entry.SpellDuration / 1000d, Finish));
+
+            if (parameters.SpellInfo.BaseInfo.Entry.Creature2IdPositionalAoe > 0)
+            {
+                Simple positionalEntity = new Simple(parameters.SpellInfo.BaseInfo.Entry.Creature2IdPositionalAoe, (entity) =>
+                {
+                    entity.Rotation = caster.Rotation;
+                    parameters.PositionalUnitId = entity.Guid;
+
+                    status = SpellStatus.Casting;
+                    log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
+                });
+
+                caster.Map.EnqueueAdd(positionalEntity, new Map.MapPosition
+                {
+                    Info = new Map.MapInfo
+                    {
+                        Entry = caster.Map.Entry
+                    },
+                    Position = caster.Position
+                });
+            }
+            else
+            {
+                status = SpellStatus.Casting;
+                log.Trace($"Spell {parameters.SpellInfo.Entry.Id} has started casting.");
+            }
         }
     }
 }
