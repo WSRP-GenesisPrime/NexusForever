@@ -200,7 +200,13 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "riding", 73222 },
                 { "polar", 73225 },
                 { "nightmare", 75208 },
-                { "loftite", 75568 }
+                { "loftite", 75568 },
+                //Added by Archive Update *******************
+                { "ridingblack", 77018 },
+                { "ridingwhite", 77019 },
+                { "ridingpurple", 77020 },
+                { "ridingscarred", 77021 },
+                { "ridingpurplestripe", 77022 },
             }},
             
             // Type: Grumpel
@@ -412,7 +418,18 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "hardlight", 75340 },
                 { "frostbite", 75648 },
                 { "exotic", 75872 },
-                { "whitevale", 69425 }
+                { "whitevale", 69425 },
+                { "mechari", 73411 },
+                //From archive update **************************
+                { "ridingtawny", 76999 },
+                { "ridingsienna", 77000 },
+                { "ridingmagenta", 77001 },
+                { "ridinggolden", 77002 },
+                { "ridingmaroon", 77003 },
+                { "ridingsnowy", 77004 },
+                { "ridingsnowstripe", 77005 },
+                { "ridingsteely", 77006 },
+                { "ridingwhitevale", 77007 },
             }},
 
             // Type: Ravenok
@@ -511,6 +528,17 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "technophage", 75907 },
             }},
 
+            // Type: Equirin ************* (mostly) Added by Archive Update
+            { "equirin", new Dictionary<string, uint>(){
+                { "brown", 70656 }, // this one already existed before archive update
+                { "luminous", 77013 },
+                { "purple", 77011 },
+                { "blue", 77008 },
+                { "green", 77010 },
+                { "black", 77012 },
+                { "verdant", 77009 },
+            }},
+
             // Type: Velocirex
             { "velocirex", new Dictionary<string, uint>(){
                 { "green", 54261 },
@@ -537,6 +565,11 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "strain", 73555 },
                 { "darkspur", 75293 },
                 { "hardlight", 75366 },
+                //Added by Archive Update ********************
+                { "blue", 77014 },
+                { "red", 77015 },
+                { "yellow", 77016 },
+                { "black", 77017 },
             }},
 
             // Type: Warpig
@@ -830,6 +863,9 @@ namespace NexusForever.WorldServer.Command.Helper
 
             // Type: Equivar
             { "equivar", 8725 },
+
+            // Type: Equirin
+            { "equirin", 70656 },
 
             // Type: Velocirex
             { "velocirex", 54261 },
