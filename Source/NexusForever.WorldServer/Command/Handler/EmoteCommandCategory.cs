@@ -2,6 +2,7 @@
 using NexusForever.WorldServer.Command.Helper;
 using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Network.Message.Handler;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -108,6 +109,16 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             context.SendMessage(message);
+        }
+
+        [Command(Permission.Emote, "Stop emote which is currently playing.", "stop")]
+        public void HandleEmoteStop(ICommandContext context)
+        {
+            context.InvokingPlayer.EnqueueToVisible(new ServerEmote
+            {
+                Guid = context.InvokingPlayer.Guid,
+                StandState = StandState.Stand,
+            }, true);
         }
     }
 }
