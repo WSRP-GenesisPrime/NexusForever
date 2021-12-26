@@ -5,6 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using Microsoft.Extensions.Hosting.Systemd;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using NexusForever.Shared;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
@@ -23,16 +26,32 @@ namespace NexusForever.WorldServer.Command
 
         private ImmutableDictionary<string, ICommandHandler> handlers;
 
-        private readonly ConcurrentQueue<PendingCommand> pendingCommands = new ConcurrentQueue<PendingCommand>();
+        private readonly ConcurrentQueue<PendingCommand> pendingCommands = new();
+
+        private Thread commandThread;
+        private readonly ManualResetEventSlim waitHandle = new();
+
+        private volatile CancellationTokenSource cancellationToken;
 
         private CommandManager()
         {
         }
 
+        /// <summary>
+        /// Initialise <see cref="CommandManager"/> and any related resources.
+        /// </summary>
         public void Initialise()
         {
+            if (cancellationToken != null)
+                throw new InvalidOperationException();
+
+            log.Info("Initialising command mananger...");
+
             BuildConverters();
             InitialiseHandlers();
+
+            if (!WindowsServiceHelpers.IsWindowsService() && !SystemdHelpers.IsSystemdService())
+                InitialiseCommandThread();
         }
 
         private void BuildConverters()
@@ -60,7 +79,7 @@ namespace NexusForever.WorldServer.Command
                 factoryBuilder.Add(type, Expression.Lambda<ParameterConverterFactoryDelegate>(@new).Compile());
 
                 // ConvertAttribute will specify the default type the converter is for
-                ConvertAttribute attribute = type.GetCustomAttribute<ConvertAttribute>();
+                ConvertAttribute attribute = type.GetCustomAttribute<ConvertAttribute>(false);
                 if (attribute != null)
                     defaultBuilder.Add(attribute.Type, type);
             }
@@ -126,6 +145,71 @@ namespace NexusForever.WorldServer.Command
             }
 
             handlers = builder.ToImmutable();
+        }
+
+        private void InitialiseCommandThread()
+        {
+            cancellationToken = new CancellationTokenSource();
+
+            commandThread = new Thread(CommandThread);
+            commandThread.Start();
+
+            // wait for command thread to start before continuing
+            waitHandle.Wait();
+        }
+
+        private void CommandThread()
+        {
+            log.Info("Started command thread.");
+            waitHandle.Set();
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                Console.Write(">> ");
+
+                // reading console input like this allows for a clean cancel of the thread
+                // using the standard read methods blocks the thread
+                ConsoleKeyInfo cki;
+                var sb = new StringBuilder();
+                do
+                {
+                    while (!Console.KeyAvailable)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
+
+                        Thread.Sleep(100);
+                    }
+
+                    cki = Console.ReadKey();
+                    sb.Append(cki.KeyChar);
+
+                } while (cki.Key != ConsoleKey.Enter);
+
+                HandleCommandDelay(new ConsoleCommandContext(), sb.ToString());
+            }
+
+            log.Info("Stopped command thread.");
+        }
+
+        /// <summary>
+        /// Shutdown <see cref="CommandManager"/> and any related resources.
+        /// </summary>
+        public void Shutdown()
+        {
+            log.Info("Shutting down command manager...");
+
+            // if server is running as a service the command thread is not started
+            // in this case there is no thread to shutdown, just return
+            if (cancellationToken == null)
+                return;
+
+            cancellationToken.Cancel();
+
+            commandThread.Join();
+            commandThread = null;
+
+            cancellationToken = null;
         }
 
         public void Update(double lastTick)

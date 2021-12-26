@@ -14,26 +14,26 @@ namespace NexusForever.Database.Auth.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.5")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64)
+                .HasAnnotation("ProductVersion", "5.0.2");
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountCostumeUnlockModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<uint>("ItemId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("itemId")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("itemId");
 
                     b.Property<DateTime>("Timestamp")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("timestamp")
                         .HasColumnType("datetime")
+                        .HasColumnName("timestamp")
                         .HasDefaultValueSql("current_timestamp()");
 
                     b.HasKey("Id", "ItemId")
@@ -45,21 +45,21 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountCurrencyModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<byte>("CurrencyId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("currencyId")
                         .HasColumnType("tinyint(4) unsigned")
-                        .HasDefaultValue((byte)0);
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("currencyId");
 
                     b.Property<ulong>("Amount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("amount")
                         .HasColumnType("bigint(20) unsigned")
-                        .HasDefaultValue(0ul);
+                        .HasDefaultValue(0ul)
+                        .HasColumnName("amount");
 
                     b.HasKey("Id", "CurrencyId")
                         .HasName("PRIMARY");
@@ -70,21 +70,21 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountEntitlementModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<byte>("EntitlementId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("entitlementId")
                         .HasColumnType("tinyint(3) unsigned")
-                        .HasDefaultValue((byte)0);
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("entitlementId");
 
                     b.Property<uint>("Amount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("amount")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("amount");
 
                     b.HasKey("Id", "EntitlementId")
                         .HasName("PRIMARY");
@@ -95,20 +95,20 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountGenericUnlockModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<uint>("Entry")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("entry")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("entry");
 
                     b.Property<DateTime>("Timestamp")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("timestamp")
                         .HasColumnType("datetime")
+                        .HasColumnName("timestamp")
                         .HasDefaultValueSql("current_timestamp()");
 
                     b.HasKey("Id", "Entry")
@@ -120,87 +120,87 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountKeybindingModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<ushort>("InputActionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("inputActionId")
                         .HasColumnType("smallint(5) unsigned")
-                        .HasDefaultValue((ushort)0);
+                        .HasDefaultValue((ushort)0)
+                        .HasColumnName("inputActionId");
 
                     b.Property<uint>("Code00")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("code00")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("code00");
 
                     b.Property<uint>("Code01")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("code01")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("code01");
 
                     b.Property<uint>("Code02")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("code02")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("code02");
 
                     b.Property<uint>("DeviceEnum00")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("deviceEnum00")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("deviceEnum00");
 
                     b.Property<uint>("DeviceEnum01")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("deviceEnum01")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("deviceEnum01");
 
                     b.Property<uint>("DeviceEnum02")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("deviceEnum02")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("deviceEnum02");
 
                     b.Property<uint>("EventTypeEnum00")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("eventTypeEnum00")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("eventTypeEnum00");
 
                     b.Property<uint>("EventTypeEnum01")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("eventTypeEnum01")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("eventTypeEnum01");
 
                     b.Property<uint>("EventTypeEnum02")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("eventTypeEnum02")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("eventTypeEnum02");
 
                     b.Property<uint>("MetaKeys00")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("metaKeys00")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("metaKeys00");
 
                     b.Property<uint>("MetaKeys01")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("metaKeys01")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("metaKeys01");
 
                     b.Property<uint>("MetaKeys02")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("metaKeys02")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("metaKeys02");
 
                     b.HasKey("Id", "InputActionId")
                         .HasName("PRIMARY");
@@ -212,60 +212,60 @@ namespace NexusForever.Database.Auth.Migrations
                 {
                     b.Property<uint>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id")
-                        .HasColumnType("int(10) unsigned");
+                        .HasColumnType("int(10) unsigned")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreateTime")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("createTime")
                         .HasColumnType("datetime")
+                        .HasColumnName("createTime")
                         .HasDefaultValueSql("current_timestamp()");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("email")
                         .HasColumnType("varchar(128)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("email");
 
                     b.Property<string>("GameToken")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("gameToken")
                         .HasColumnType("varchar(32)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("gameToken");
 
                     b.Property<string>("S")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("s")
                         .HasColumnType("varchar(32)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("s");
 
                     b.Property<string>("SessionKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("sessionKey")
                         .HasColumnType("varchar(32)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("sessionKey");
 
                     b.Property<string>("V")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("v")
                         .HasColumnType("varchar(512)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("v");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .HasName("email");
+                        .HasDatabaseName("email");
 
                     b.HasIndex("GameToken")
-                        .HasName("gameToken");
+                        .HasDatabaseName("gameToken");
 
                     b.HasIndex("SessionKey")
-                        .HasName("sessionKey");
+                        .HasDatabaseName("sessionKey");
 
                     b.ToTable("account");
                 });
@@ -273,15 +273,15 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountPermissionModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<uint>("PermissionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("permissionId")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("permissionId");
 
                     b.HasKey("Id", "PermissionId");
 
@@ -293,15 +293,15 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRoleModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<uint>("RoleId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("roleId")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("roleId");
 
                     b.HasKey("Id", "RoleId");
 
@@ -314,15 +314,15 @@ namespace NexusForever.Database.Auth.Migrations
                 {
                     b.Property<uint>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<string>("Name")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("name")
                         .HasColumnType("varchar(64)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
@@ -821,6 +821,141 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
+                            Id = 100u,
+                            Name = "Category: Guild"
+                        },
+                        new
+                        {
+                            Id = 101u,
+                            Name = "Command: GuildRegister"
+                        },
+                        new
+                        {
+                            Id = 102u,
+                            Name = "Command: GuildJoin"
+                        },
+                        new
+                        {
+                            Id = 103u,
+                            Name = "Category: Map"
+                        },
+                        new
+                        {
+                            Id = 104u,
+                            Name = "Command: MapUnload"
+                        },
+                        new
+                        {
+                            Id = 105u,
+                            Name = "Command: MapPlayerRemove"
+                        },
+                        new
+                        {
+                            Id = 106u,
+                            Name = "Command: MapPlayerRemoveCancel"
+                        },
+                        new
+                        {
+                            Id = 50000u,
+                            Name = "Category: Morph"
+                        },
+                        new
+                        {
+                            Id = 50001u,
+                            Name = "Command: MorphStoryTeller"
+                        },
+                        new
+                        {
+                            Id = 50100u,
+                            Name = "Category: Emote"
+                        },
+                        new
+                        {
+                            Id = 50200u,
+                            Name = "Category: Chron"
+                        },
+                        new
+                        {
+                            Id = 50300u,
+                            Name = "Category: XRoll"
+                        },
+                        new
+                        {
+                            Id = 50400u,
+                            Name = "Command: CharacterProps"
+                        },
+                        new
+                        {
+                            Id = 50500u,
+                            Name = "Category: Boost"
+                        },
+                        new
+                        {
+                            Id = 50600u,
+                            Name = "Command: HouseRemodel"
+                        },
+                        new
+                        {
+                            Id = 50700u,
+                            Name = "Command: RealmOnline"
+                        },
+                        new
+                        {
+                            Id = 50710u,
+                            Name = "Command: RealmUptime"
+                        },
+                        new
+                        {
+                            Id = 50800u,
+                            Name = "Command: AccountChangePass"
+                        },
+                        new
+                        {
+                            Id = 50810u,
+                            Name = "Command: AccountChangeMyPass"
+                        },
+                        new
+                        {
+                            Id = 50900u,
+                            Name = "Flag: GM"
+                        },
+                        new
+                        {
+                            Id = 60000u,
+                            Name = "Category: Costume"
+                        },
+                        new
+                        {
+                            Id = 60010u,
+                            Name = "Command: CostumeOverride"
+                        },
+                        new
+                        {
+                            Id = 60020u,
+                            Name = "Command: CostumeOverrideId"
+                        },
+                        new
+                        {
+                            Id = 61000u,
+                            Name = "Flag: Adult"
+                        },
+                        new
+                        {
+                            Id = 61100u,
+                            Name = "Command: AdultPlotLockSelf"
+                        },
+                        new
+                        {
+                            Id = 61150u,
+                            Name = "Command: AdultPlotLockNonOwner"
+                        },
+                        new
+                        {
+                            Id = 61200u,
+                            Name = "Command: AdultPlotAlert"
+                        },
+                        new
+                        {
                             Id = 10000u,
                             Name = "Other: InstantLogout"
                         },
@@ -828,6 +963,16 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 10001u,
                             Name = "Other: Signature"
+                        },
+                        new
+                        {
+                            Id = 10002u,
+                            Name = "Other: BypassInstanceLimits"
+                        },
+                        new
+                        {
+                            Id = 10003u,
+                            Name = "Other: GMFlag"
                         });
                 });
 
@@ -835,21 +980,21 @@ namespace NexusForever.Database.Auth.Migrations
                 {
                     b.Property<uint>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<uint>("Flags")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("flags")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("flags");
 
                     b.Property<string>("Name")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("name")
                         .HasColumnType("varchar(64)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
@@ -885,21 +1030,39 @@ namespace NexusForever.Database.Auth.Migrations
                             Id = 5u,
                             Flags = 2u,
                             Name = "WebSocket"
+                        },
+                        new
+                        {
+                            Id = 6u,
+                            Flags = 1u,
+                            Name = "Storyteller"
+                        },
+                        new
+                        {
+                            Id = 7u,
+                            Flags = 1u,
+                            Name = "NSFWS"
+                        },
+                        new
+                        {
+                            Id = 8u,
+                            Flags = 1u,
+                            Name = "NFSWSMod"
                         });
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.RolePermissionModel", b =>
                 {
                     b.Property<uint>("Id")
-                        .HasColumnName("id")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
 
                     b.Property<uint>("PermissionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("permissionId")
                         .HasColumnType("int(10) unsigned")
-                        .HasDefaultValue(0u);
+                        .HasDefaultValue(0u)
+                        .HasColumnName("permissionId");
 
                     b.HasKey("Id", "PermissionId");
 
@@ -911,21 +1074,21 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.ServerMessageModel", b =>
                 {
                     b.Property<byte>("Index")
-                        .HasColumnName("index")
                         .HasColumnType("tinyint(3) unsigned")
-                        .HasDefaultValue((byte)0);
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("index");
 
                     b.Property<byte>("Language")
-                        .HasColumnName("language")
                         .HasColumnType("tinyint(3) unsigned")
-                        .HasDefaultValue((byte)0);
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("language");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("message")
                         .HasColumnType("varchar(256)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("")
+                        .HasColumnName("message");
 
                     b.HasKey("Index", "Language")
                         .HasName("PRIMARY");
@@ -937,15 +1100,13 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Index = (byte)0,
                             Language = (byte)0,
-                            Message = @"Welcome to this NexusForever server!
-Visit: https://github.com/NexusForever/NexusForever"
+                            Message = "Welcome to this NexusForever server!\nVisit: https://github.com/NexusForever/NexusForever"
                         },
                         new
                         {
                             Index = (byte)0,
                             Language = (byte)1,
-                            Message = @"Willkommen auf diesem NexusForever server!
-Besuch: https://github.com/NexusForever/NexusForever"
+                            Message = "Willkommen auf diesem NexusForever server!\nBesuch: https://github.com/NexusForever/NexusForever"
                         });
                 });
 
@@ -953,34 +1114,40 @@ Besuch: https://github.com/NexusForever/NexusForever"
                 {
                     b.Property<byte>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id")
-                        .HasColumnType("tinyint(3) unsigned");
+                        .HasColumnType("tinyint(3) unsigned")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("AssumeOnline")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Host")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("host")
                         .HasColumnType("varchar(64)")
-                        .HasDefaultValue("127.0.0.1");
+                        .HasDefaultValue("127.0.0.1")
+                        .HasColumnName("host");
+
+                    b.Property<string>("InternalIP")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("name")
                         .HasColumnType("varchar(64)")
-                        .HasDefaultValue("NexusForever");
+                        .HasDefaultValue("NexusForever")
+                        .HasColumnName("name");
 
                     b.Property<ushort>("Port")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("port")
                         .HasColumnType("smallint(5) unsigned")
-                        .HasDefaultValue((ushort)24000);
+                        .HasDefaultValue((ushort)24000)
+                        .HasColumnName("port");
 
                     b.Property<byte>("Type")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("type")
                         .HasColumnType("tinyint(3) unsigned")
-                        .HasDefaultValue((byte)0);
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("type");
 
                     b.HasKey("Id");
 
@@ -990,6 +1157,7 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         new
                         {
                             Id = (byte)1,
+                            AssumeOnline = false,
                             Host = "127.0.0.1",
                             Name = "NexusForever",
                             Port = (ushort)24000,
@@ -1005,6 +1173,8 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_costume_item_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountCurrencyModel", b =>
@@ -1015,6 +1185,8 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_currency_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountEntitlementModel", b =>
@@ -1025,6 +1197,8 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_entitlement_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountGenericUnlockModel", b =>
@@ -1035,6 +1209,8 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_generic_unlock_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountKeybindingModel", b =>
@@ -1045,6 +1221,8 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_keybinding_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountPermissionModel", b =>
@@ -1062,6 +1240,10 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_permission_permission_id__permission_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Permission");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRoleModel", b =>
@@ -1079,6 +1261,10 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__account_role_role_id__role_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.RolePermissionModel", b =>
@@ -1096,6 +1282,41 @@ Besuch: https://github.com/NexusForever/NexusForever"
                         .HasConstraintName("FK__role_permission_permission_id__permission_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountModel", b =>
+                {
+                    b.Navigation("AccountCostumeUnlock");
+
+                    b.Navigation("AccountCurrency");
+
+                    b.Navigation("AccountEntitlement");
+
+                    b.Navigation("AccountGenericUnlock");
+
+                    b.Navigation("AccountKeybinding");
+
+                    b.Navigation("AccountPermission");
+
+                    b.Navigation("AccountRole");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.PermissionModel", b =>
+                {
+                    b.Navigation("AccountPermission");
+
+                    b.Navigation("RolePermission");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.RoleModel", b =>
+                {
+                    b.Navigation("AccountRole");
+
+                    b.Navigation("RolePermission");
                 });
 #pragma warning restore 612, 618
         }

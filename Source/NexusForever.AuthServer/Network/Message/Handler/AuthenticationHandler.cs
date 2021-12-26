@@ -34,7 +34,7 @@ namespace NexusForever.AuthServer.Network.Message.Handler
             string gameToken = helloAuth.GameToken.Guid
                 .ToByteArray()
                 .ToHexString();
-            session.EnqueueEvent(new TaskGenericEvent<AccountModel>(DatabaseManager.Instance.AuthDatabase.GetAccountByGameTokenAsync(helloAuth.Email, gameToken),
+            session.Events.EnqueueEvent(new TaskGenericEvent<AccountModel>(DatabaseManager.Instance.AuthDatabase.GetAccountByGameTokenAsync(helloAuth.Email, gameToken),
                 account =>
             {
                 if (account == null)
@@ -64,15 +64,20 @@ namespace NexusForever.AuthServer.Network.Message.Handler
                 });
 
                 byte[] sessionKey = RandomProvider.GetBytes(16u);
-                session.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.AuthDatabase.UpdateAccountSessionKey(account, sessionKey.ToHexString()),
+                session.Events.EnqueueEvent(new TaskEvent(DatabaseManager.Instance.AuthDatabase.UpdateAccountSessionKey(account, sessionKey.ToHexString()),
                     () =>
                 {
+                    uint address = server.Address;
+                    if(session.IsLocalIp() && server.InternalAddress != null)
+                    {
+                        address = (uint) server.InternalAddress;
+                    }
                     session.EnqueueMessageEncrypted(new ServerRealmInfo
                     {
                         AccountId  = account.Id,
                         SessionKey = sessionKey,
                         Realm      = server.Model.Name,
-                        Address    = server.Address,
+                        Address    = address,
                         Port       = server.Model.Port,
                         Type       = server.Model.Type
                     });

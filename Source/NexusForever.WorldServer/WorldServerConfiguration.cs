@@ -11,8 +11,19 @@ namespace NexusForever.WorldServer
             public string MapPath { get; set; }
             public List<ushort> PrecacheBaseMaps { get; set; }
             public List<ushort> PrecacheMapSpawns { get; set; }
+            public bool SynchronousUpdate { get; set; }
             public uint? GridActionThreshold { get; set; }
+            public uint? GridActionMaxRetry { get; set; }
             public double? GridUnloadTimer { get; set; }
+            public uint? MaxInstances { get; set; }
+        }
+
+        public struct ContactLimits
+        {
+            public uint? MaxFriends { get; set; }
+            public uint? MaxRivals { get; set; }
+            public uint? MaxIgnored { get; set; }
+            public float? MaxRequestDuration { get; set; }
         }
 
         public NetworkConfig Network { get; set; }
@@ -23,5 +34,6 @@ namespace NexusForever.WorldServer
         public string MessageOfTheDay { get; set; }
         public uint LengthOfInGameDay { get; set; }
         public bool CrossFactionChat { get; set; } = true;
+        public ContactLimits Contacts { get; set; }
     }
 }

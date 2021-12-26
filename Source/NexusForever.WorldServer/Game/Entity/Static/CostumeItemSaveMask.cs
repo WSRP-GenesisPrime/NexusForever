@@ -11,6 +11,7 @@ namespace NexusForever.WorldServer.Game.Entity.Static
         None    = 0x00,
         Create  = 0x01,
         ItemId  = 0x02,
-        DyeData = 0x04
+        DyeData = 0x04,
+        OverrideId = 0x08
     }
 }

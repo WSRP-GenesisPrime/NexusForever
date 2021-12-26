@@ -20,7 +20,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public EntityType Type { get; }
         public EntityCreateFlag CreateFlags { get; set; }
         public Vector3 Rotation { get; set; } = Vector3.Zero;
-        public Dictionary<Property, PropertyValue> Properties { get; } = new Dictionary<Property, PropertyValue>();
+        public Dictionary<Property, PropertyValue> Properties { get; } = new();
 
         public uint EntityId { get; protected set; }
         public uint CreatureId { get; protected set; }
@@ -29,8 +29,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public Faction Faction1 { get; set; }
         public Faction Faction2 { get; set; }
 
-        public ulong ActivePropId { get; private set; }
-        public ushort WorldSocketId { get; private set; }
+        public ulong ActivePropId { get; protected set; }
+        public ushort WorldSocketId { get; protected set; }
 
         public Vector3 LeashPosition { get; protected set; }
         public float LeashRange { get; protected set; } = 15f;
@@ -68,9 +68,9 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public uint ControllerGuid { get; set; }
 
-        protected readonly Dictionary<Stat, StatValue> stats = new Dictionary<Stat, StatValue>();
+        protected readonly Dictionary<Stat, StatValue> stats = new();
 
-        private readonly Dictionary<ItemSlot, ItemVisual> itemVisuals = new Dictionary<ItemSlot, ItemVisual>();
+        private readonly Dictionary<ItemSlot, ItemVisual> itemVisuals = new();
 
         /// <summary>
         /// Create a new <see cref="WorldEntity"/> with supplied <see cref="EntityType"/>.
@@ -113,7 +113,7 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
-        /// Invoked each world tick with the delta since the previous tick occured.
+        /// Invoked each world tick with the delta since the previous tick occurred.
         /// </summary>
         public override void Update(double lastTick)
         {
@@ -124,7 +124,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public virtual ServerEntityCreate BuildCreatePacket()
         {
-            ServerEntityCreate entityCreatePacket =  new ServerEntityCreate
+            var entityCreatePacket = new ServerEntityCreate
             {
                 Guid         = Guid,
                 Type         = Type,
@@ -176,7 +176,7 @@ namespace NexusForever.WorldServer.Game.Entity
             // deliberately empty
         }
 
-        protected void SetProperty(Property property, float value, float baseValue = 0.0f)
+        public void SetProperty(Property property, float value, float baseValue = 0.0f)
         {
             if (Properties.ContainsKey(property))
                 Properties[property].Value = value;
@@ -307,6 +307,10 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public void SetAppearance(ItemVisual visual)
         {
+            if (visual == null)
+            {
+                return;
+            }
             if (visual.DisplayId != 0)
             {
                 if (!itemVisuals.ContainsKey(visual.Slot))
@@ -335,6 +339,23 @@ namespace NexusForever.WorldServer.Game.Entity
                 UnitId      = Guid,
                 DisplayInfo = DisplayInfo
             }, true);
+        }
+
+        /// <summary>
+        /// Update the display info for the <see cref="WorldEntity"/> with outfit if the creature has outfit information
+        /// </summary>
+        public void SetDisplayInfo(uint displayInfo, uint outfitInfo)
+        {
+            DisplayInfo = displayInfo;
+            OutfitInfo = (ushort)outfitInfo;
+
+            EnqueueToVisible(new ServerEntityVisualUpdate
+            {
+                UnitId = Guid,
+                DisplayInfo = DisplayInfo,
+                OutfitInfo = OutfitInfo
+            },
+            true);
         }
 
         /// <summary>

@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Registration Successful";
+}
+
+<head>
+    <style>
+        /* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
+        for details on configuring this project to bundle and minify static web assets. */
+        body {
+            background-image: url('https://images.alphacoders.com/721/721671.jpg');
+            /*background-image: url('Mainbackground.jpg');*/
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            background-size: auto;
+            padding-top: 50px;
+            padding-bottom: 20px;
+        }
+
+        a {
+            color: orange;
+        }
+
+        /* Wrapping element */
+        /* Set some basic padding to keep content from hitting the edges */
+        .body-content {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+
+        #footer {
+            background-color: black;
+            position: absolute;
+            bottom: 1px;
+            width: inherit;
+            height: 48px; /* Height of the footer */
+            text-align: center;
+            padding-top: 12px;
+            color: paleturquoise;
+            text-shadow: 6px 6px 6px black;
+            border-color: paleturquoise;
+            border-radius: 8px;
+        }
+
+        #header {
+            background-color: black;
+            position: absolute;
+            top: 0;
+            width: inherit;
+            height: 72px; /* Height of the header */
+            text-align: center;
+            font-size: 36px;
+            padding: 8px;
+            color: orange;
+            text-shadow: 6px 6px 6px black;
+            border-color: paleturquoise;
+            border-radius: 8px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        hr {
+            display: block;
+            height: 1px;
+            border: 0;
+            border-top: 1px solid white;
+            margin: 1em 0;
+            padding: 0;
+        }
+
+        #mainContainer {
+            background-color: none;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 50px;
+            height: inherit;
+            width: inherit;
+            position: absolute;
+            top: 128px;
+        }
+
+        #textConsistency {
+            color: paleturquoise;
+        }
+
+        #feedbackContainer {
+            background-color: black;
+            border: 1px solid paleturquoise;
+            position: center;
+            border-radius: 8px;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="mainContainer">
+        <div id="feedbackContainer">
+            <strong id="textConsistency">Registration Successful</strong>
+            <p id="textConsistency">Account created successfully!</p>
+        </div>
+     </div>
+</body>
+

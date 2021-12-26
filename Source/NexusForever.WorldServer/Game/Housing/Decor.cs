@@ -3,15 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
-using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Housing.Static;
+using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
-    public class Decor : ISaveCharacter
+    public class Decor : ISaveCharacter, IBuildable<ServerHousingResidenceDecor.Decor>
     {
-        public ulong Id { get; }
+        public ulong Id => Residence.Id;
         public ulong DecorId { get; }
         public HousingDecorInfoEntry Entry { get; }
 
@@ -99,16 +100,39 @@ namespace NexusForever.WorldServer.Game.Housing
 
         private ushort colourShiftId;
 
+        public Residence Residence { get; }
+
         private DecorSaveMask saveMask;
+
+        /// <summary>
+        /// Returns if <see cref="Decor"/> is enqueued to be saved to the database.
+        /// </summary>
+        public bool PendingCreate => (saveMask & DecorSaveMask.Create) != 0;
+
+        /// <summary>
+        /// Returns if <see cref="Decor"/> is enqueued to be deleted from the database.
+        /// </summary>
+        public bool PendingDelete => (saveMask & DecorSaveMask.Delete) != 0;
+
+        /// <summary>
+        /// Enqueue <see cref="Decor"/> to be deleted from the database.
+        /// </summary>
+        public void EnqueueDelete()
+        {
+            if (PendingCreate)
+            {
+                return; // This does not exist in the database yet, no need to delete it from the database.
+            }
+            saveMask = DecorSaveMask.Delete;
+        }
 
         /// <summary>
         /// Create a new <see cref="Decor"/> from an existing database model.
         /// </summary>
-        public Decor(ResidenceDecor model)
+        public Decor(Residence residence, ResidenceDecor model, HousingDecorInfoEntry entry)
         {
-            Id            = model.Id;
             DecorId       = model.DecorId;
-            Entry         = GameTableManager.Instance.HousingDecorInfo.GetEntry(model.DecorInfoId);
+            Entry         = entry;
             type          = (DecorType)model.DecorType;
             plotIndex     = model.PlotIndex;
             position      = new Vector3(model.X, model.Y, model.Z);
@@ -116,6 +140,7 @@ namespace NexusForever.WorldServer.Game.Housing
             scale         = model.Scale;
             decorParentId = model.DecorParentId;
             colourShiftId = model.ColourShiftId;
+            Residence     = residence;
 
             saveMask = DecorSaveMask.None;
         }
@@ -123,24 +148,38 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Create a new <see cref="Decor"/> from a <see cref="HousingDecorInfoEntry"/> template.
         /// </summary>
-        public Decor(ulong id, ulong decorId, HousingDecorInfoEntry entry)
+        public Decor(Residence residence, ulong decorId, HousingDecorInfoEntry entry)
         {
-            Id       = id;
-            DecorId  = decorId;
-            Entry    = entry;
-            type     = DecorType.Crate;
-            position = Vector3.Zero;
-            rotation = Quaternion.Identity;
+            DecorId   = decorId;
+            Entry     = entry;
+            type      = DecorType.Crate;
+            position  = Vector3.Zero;
+            rotation  = Quaternion.Identity;
+            Residence = residence;
 
             saveMask = DecorSaveMask.Create;
         }
 
         /// <summary>
-        /// Enqueue <see cref="Decor"/> to be deleted from the database.
+        /// Create a new <see cref="Decor"/> from an existing <see cref="Decor"/>.
         /// </summary>
-        public void EnqueueDelete()
+        /// <remarks>
+        /// Copies all data from the source <see cref="Decor"/> with a new id.
+        /// </remarks>
+        public Decor(Residence residence, Decor decor, ulong decorId)
         {
-            saveMask = DecorSaveMask.Delete;
+            DecorId       = decorId;
+            Entry         = decor.Entry;
+            type          = decor.Type;
+            plotIndex     = decor.PlotIndex;
+            position      = decor.Position;
+            rotation      = decor.Rotation;
+            scale         = decor.Scale;
+            decorParentId = decor.DecorParentId;
+            colourShiftId = decor.ColourShiftId;
+            Residence     = residence;
+
+            saveMask = DecorSaveMask.Create;
         }
 
         public void Save(CharacterContext context)
@@ -244,12 +283,13 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Move <see cref="Decor"/> to supplied position.
         /// </summary>
-        public void Move(DecorType type, Vector3 position, Quaternion rotation, float scale)
+        public void Move(DecorType type, Vector3 position, Quaternion rotation, float scale, uint plotIndex)
         {
-            Type     = type;
-            Position = position;
-            Rotation = rotation;
-            Scale    = scale;
+            Type      = type;
+            Position  = position;
+            Rotation  = rotation;
+            Scale     = scale;
+            PlotIndex = plotIndex;
         }
 
         /// <summary>
@@ -257,8 +297,26 @@ namespace NexusForever.WorldServer.Game.Housing
         /// </summary>
         public void Crate()
         {
-            Move(DecorType.Crate, Vector3.Zero, Quaternion.Identity, 0f);
+            Move(DecorType.Crate, Vector3.Zero, Quaternion.Identity, 0f, int.MaxValue);
             DecorParentId = 0u;
+        }
+
+        public ServerHousingResidenceDecor.Decor Build()
+        {
+            return new()
+            {
+                RealmId       = WorldServer.RealmId,
+                DecorId       = DecorId,
+                ResidenceId   = Residence.Id,
+                DecorType     = Type,
+                PlotIndex     = PlotIndex,
+                Scale         = Scale,
+                Position      = Position,
+                Rotation      = Rotation,
+                DecorInfoId   = Entry.Id,
+                ParentDecorId = DecorParentId,
+                ColourShift   = ColourShiftId
+            };
         }
     }
 }

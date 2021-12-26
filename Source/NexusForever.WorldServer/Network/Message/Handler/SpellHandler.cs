@@ -56,13 +56,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         }
 
         [MessageHandler(GameMessageOpcode.ClientCancelEffect)]
-        public static void HandlePlayerCastSpell(WorldSession session, ClientCancelEffect cancelSpell)
+        public static void HandlePlayerCancelEffect(WorldSession session, ClientCancelEffect cancelSpell)
         {
-            //TODO: integrate into some Spell System removal queue & do the checks & handle stopped effects
-            session.Player.EnqueueToVisible(new ServerSpellFinish
-            {
-                ServerUniqueId  = cancelSpell.ServerUniqueId
-            },true);
+            session.Player.CancelEffect(cancelSpell.ServerUniqueId);
         }
 
         [MessageHandler(GameMessageOpcode.ClientChangeActiveActionSet)]

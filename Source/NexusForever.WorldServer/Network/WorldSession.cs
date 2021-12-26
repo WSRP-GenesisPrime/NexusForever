@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using NexusForever.Database.Auth.Model;
 using NexusForever.Database.Character.Model;
-using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
@@ -21,7 +20,7 @@ namespace NexusForever.WorldServer.Network
     public class WorldSession : GameSession
     {
         public AccountModel Account { get; private set; }
-        public List<CharacterModel> Characters { get; } = new List<CharacterModel>();
+        public List<CharacterModel> Characters { get; } = new();
 
         public Player Player { get; set; }
 
@@ -29,6 +28,15 @@ namespace NexusForever.WorldServer.Network
         public GenericUnlockManager GenericUnlockManager { get; private set; }
         public AccountCurrencyManager AccountCurrencyManager { get; private set; }
         public EntitlementManager EntitlementManager { get; private set; }
+
+        public TimeSpan Uptime
+        {
+            get
+            {
+                return DateTime.UtcNow.Subtract(sessionCreated);
+            }
+        }
+        private DateTime sessionCreated;
 
         public AccountTier AccountTier => AccountRbacManager.HasPermission(Permission.Signature) ? AccountTier.Signature : AccountTier.Basic;
 
@@ -75,6 +83,8 @@ namespace NexusForever.WorldServer.Network
             GenericUnlockManager   = new GenericUnlockManager(this, account);
             AccountCurrencyManager = new AccountCurrencyManager(this, account);
             EntitlementManager     = new EntitlementManager(this, account);
+
+            sessionCreated = DateTime.UtcNow;
         }
 
         public void SetEncryptionKey(byte[] sessionKey)

@@ -5,7 +5,7 @@ using NexusForever.WorldServer.Game.Spell;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
-    [Command(Permission.Spell, "A collection of commands to manage spells.")]
+    [Command(Permission.Spell, "A collection of commands to manage spells.", "spell")]
     public class SpellCommandCategory : CommandCategory
     {
         [Command(Permission.SpellAdd, "Add a base spell to character, optionally supplying the tier.", "add")]
@@ -32,7 +32,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            context.GetTargetOrInvoker<Player>().SpellManager.AddSpell(spell4BaseId, tier.Value);
+            context.InvokingPlayer.SpellManager.AddSpell(spell4BaseId, tier.Value);
         }
 
         [Command(Permission.SpellCast, "Cast a base spell for target, optionally supplying the tier.", "cast")]
@@ -71,7 +71,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Spell id to reset cooldown for character.")]
             uint? spell4Id)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (spell4Id.HasValue)
                 target.SpellManager.SetSpellCooldown(spell4Id.Value, 0d);
             else

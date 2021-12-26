@@ -10,6 +10,7 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game;
 using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Network.Message.Handler
 {
@@ -21,34 +22,26 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         public static void HandleEntityCommand(WorldSession session, ClientEntityCommand entityCommand)
         {
             WorldEntity mover = session.Player;
+            if (mover == null)
+                return;
+
             if (session.Player.ControlGuid != session.Player.Guid)
                 mover = session.Player.GetVisible<WorldEntity>(session.Player.ControlGuid);
 
-            foreach ((EntityCommand id, IEntityCommandModel command) in entityCommand.Commands)
-            {
-                switch (command)
-                {
-                    case SetPositionCommand setPosition:
-                    {
-                        // this is causing issues after moving to soon after mounting:
-                        // session.Player.CancelSpellsOnMove();
+            if (mover == null)
+                return;
 
-                        mover.Map.EnqueueRelocate(mover, setPosition.Position.Vector);
-                        break;
-                    }
-                    case SetRotationCommand setRotation:
-                        mover.Rotation = setRotation.Position.Vector;
-                        break;
-                }
+            if (session.Player.IsEmoting)
+                session.Player.IsEmoting = false;
+
+            try
+            {
+                mover.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);
             }
-
-            mover.EnqueueToVisible(new ServerEntityCommand
+            catch (NullReferenceException nre)
             {
-                Guid     = mover.Guid,
-                Time     = entityCommand.Time,
-                ServerControlled = false,
-                Commands = entityCommand.Commands
-            });
+                log.Error($"Exception caught while invoking EntityHandler.HandleEntityCommand - Invoking player is null! :\n{nre}");
+            }
         }
 
         [MessageHandler(GameMessageOpcode.ClientActivateUnit)]

@@ -20,8 +20,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public UnitVehicleEntry VehicleEntry { get; }
         public Spell4Entry SpellEntry { get; }
 
-        protected readonly List<VehiclePassenger> passengers = new List<VehiclePassenger>();
-        private readonly Queue<VehiclePassenger> pendingAdd = new Queue<VehiclePassenger>();
+        protected readonly List<VehiclePassenger> passengers = new();
+        private readonly Queue<VehiclePassenger> pendingAdd = new();
 
         public Vehicle()
             : base(EntityType.Vehicle)
@@ -250,6 +250,8 @@ namespace NexusForever.WorldServer.Game.Entity
             // this probably isn't correct for all cases
             if (passengers.Count == 0)
                 RemoveFromMap();
+
+            player.MovementManager.BroadcastCommands();
         }
 
         /// <summary>

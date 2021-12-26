@@ -163,8 +163,57 @@
         GuildRegister               = 101,
         GuildJoin                   = 102,
 
+        // map
+        Map                         = 103,
+        MapUnload                   = 104,
+        MapPlayerRemove             = 105,
+        MapPlayerRemoveCancel       = 106,
+
+        // Genesis Prime: morph command
+        Morph                       = 50000,
+        MorphStoryteller            = 50001,
+
+        // Genesis Prime: emote command
+        Emote                       = 50100,
+
+        // Genesis Prime: chron command
+        Chron                       = 50200,
+
+        // Genesis Prime: xroll command
+        XRoll                       = 50300,
+
+        // GP: !character props/resetprops
+        CharacterProps              = 50400,
+
+        // GP: boost
+        Boost                       = 50500,
+
+        // GP: !house remodel
+        HouseRemodel                = 50600,
+
+        // GP: realm
+        RealmOnline                 = 50700,
+        RealmUptime                 = 50710,
+
+        // GP: Change account password
+        AccountChangePass           = 50800,
+        AccountChangeMyPass         = 50810,
+
+        // GP: Costume commands
+        Costume                     = 60000,
+        CostumeOverride             = 60010,
+        CostumeOverrideId           = 60020,
+        
+        // GP: 18+ flag
+        Adult                       = 61000,
+        AdultPlotLockOwner          = 61100,
+        AdultPlotLockNonOwner       = 61150,
+        AdultPlotAlert              = 61200,
+
         // non command permissions
         InstantLogout               = 10000,
-        Signature                   = 10001
+        Signature                   = 10001,
+        BypassInstanceLimits        = 10002,
+        GMFlag                      = 10003
     }
 }

@@ -9,8 +9,10 @@ using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Guild.Static;
+using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Game.TextFilter.Static;
+using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NLog;
@@ -98,7 +100,7 @@ namespace NexusForever.WorldServer.Game.Guild
 
         private readonly Player owner;
 
-        private readonly Dictionary<ulong, GuildBase> guilds = new Dictionary<ulong, GuildBase>();
+        private readonly Dictionary<ulong, GuildBase> guilds = new();
         private GuildInvite pendingInvite;
 
         /// <summary>
@@ -122,6 +124,8 @@ namespace NexusForever.WorldServer.Game.Guild
             // validation can fail if the player is removed from the guild or the guild is disbanded while offline
             if (model.GuildAffiliation != null)
                 GuildAffiliation = guilds.TryGetValue(model.GuildAffiliation.Value, out GuildBase guild) ? guild : guilds.Values.FirstOrDefault();
+            else if (model.GuildAffiliation == null && guilds.Count > 0)
+                GuildAffiliation = guilds.Values.FirstOrDefault();
         }
 
         public void Save(CharacterContext context)
@@ -143,11 +147,22 @@ namespace NexusForever.WorldServer.Game.Guild
         }
 
         /// <summary>
+        /// Return guild of supplied <see cref="GuildType"/>.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="Player"/> is part of multiple guilds of <see cref="GuildType"/>, the first one is returned.
+        /// </remarks>
+        public T GetGuild<T>(GuildType type) where T : GuildBase
+        {
+            return (T)guilds.FirstOrDefault(g => g.Value.Type == type).Value;
+        }
+
+        /// <summary>
         /// Send initial packets and trigger login events for any <see cref="GuildBase"/>'s for <see cref="Player"/>.
         /// </summary>
         public void OnLogin()
         {
-            SendGuildInitialise();
+            SendGuildInitialise(owner.Session);
             if (Guild != null)
                 UpdateHolomark();
 
@@ -155,28 +170,35 @@ namespace NexusForever.WorldServer.Game.Guild
                 guild.OnPlayerLogin(owner);
         }
 
-        private void SendGuildInitialise()
+        /// <summary>
+        /// Used to send initial packets to the <see cref="Player"/> containing associated guilds
+        /// </summary>
+        public static void SendGuildInitialise(WorldSession session)
         {
-            var guildInit = new ServerGuildInit();
-
-            uint index = 0u;
-            foreach (GuildBase guild in guilds.Values)
+            List<GuildData> playerGuilds = new List<GuildData>();
+            List<NetworkGuildMember> playerMemberInfo = new List<NetworkGuildMember>();
+            List<GuildPlayerLimits> playerUnknowns = new List<GuildPlayerLimits>();
+            foreach (GuildBase guild in session.Player.GuildManager.guilds.Values)
             {
-                NetworkGuildMember member = guild.GetMember(owner.CharacterId).Build();
-                if (guildAffiliation?.Id == guild.Id)
-                {
-                    guildInit.NameplateIndex = index;
-                    member.Unknown10 = 1; // TODO: research this
-                }
-
-                guildInit.Self.Add(member);
-                guildInit.SelfPrivate.Add(new GuildPlayerLimits());
-                guildInit.Guilds.Add(guild.Build());
-
-                index++;
+                playerGuilds.Add(guild.BuildGuildDataPacket());
+                var selfPacket = guild.GetMember(session.Player.CharacterId).BuildGuildMemberPacket();
+                if (session.Player.GuildManager.GuildAffiliation == guild)
+                    selfPacket.Unknown10 = 1;
+                playerMemberInfo.Add(selfPacket);
+                playerUnknowns.Add(new GuildPlayerLimits());
             }
 
-            owner.Session.EnqueueMessageEncrypted(guildInit);
+            int index = 0;
+            if (session.Player.GuildManager.GuildAffiliation != null)
+                index = playerGuilds.FindIndex(a => a.GuildId == session.Player.GuildManager.GuildAffiliation.Id);
+            ServerGuildInit serverGuildInit = new ServerGuildInit
+            {
+                NameplateIndex = (uint)index,
+                Guilds = playerGuilds,
+                Self = playerMemberInfo,
+                SelfPrivate = playerUnknowns
+            };
+            session.EnqueueMessageEncrypted(serverGuildInit);
         }
 
         /// <summary>
@@ -235,7 +257,7 @@ namespace NexusForever.WorldServer.Game.Guild
         private bool CanStoreGuildType(GuildType type)
         {
             uint count = (uint)guilds.Count(g => g.Value.Type == type);
-            return GetMaximumGuildTypeCount(type) < count;
+            return count < GetMaximumGuildTypeCount(type);
         }
 
         /// <summary>
@@ -264,6 +286,9 @@ namespace NexusForever.WorldServer.Game.Guild
         {
             GuildBase guild = GlobalGuildManager.Instance.RegisterGuild(type, name, leaderRankName, councilRankName, memberRankName, standard);
             JoinGuild(guild);
+
+            if (guild is Community community)
+                community.Residence = GlobalResidenceManager.Instance.CreateCommunity(community);
         }
 
         /// <summary>
@@ -275,7 +300,7 @@ namespace NexusForever.WorldServer.Game.Guild
             if (guild == null)
                 return new GuildResultInfo(GuildResult.NotAGuild);
 
-            if (CanStoreGuildType(guild.Type))
+            if (!CanStoreGuildType(guild.Type))
                 return new GuildResultInfo(GuildResult.CharacterCannotJoinMoreGuilds, referenceString: owner.Name);
 
             if (pendingInvite != null)

@@ -7,12 +7,15 @@ using NexusForever.WorldServer.Game.Account.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NLog;
+using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
     [Command(Permission.Currency, "A collection of commands to modify account and character currency.", "currency")]
     public class CurrencyCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.CurrencyAccount, "A collection of commands to modify account currency.", "account")]
         public class CurrencyAccountCommandCategory : CommandCategory
         {
@@ -24,14 +27,22 @@ namespace NexusForever.WorldServer.Command.Handler
                 [Parameter("Amount of currency to grant.")]
                 uint amount)
             {
-                AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
-                if (entry == null || currencyId == AccountCurrencyType.MaxLevelToken) // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
+                try
                 {
-                    context.SendMessage("Invalid currencyId. Please try again.");
-                    return;
-                }
+                    AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
+                    if (entry == null || currencyId == AccountCurrencyType.MaxLevelToken) // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
+                    {
+                        context.SendMessage("Invalid currencyId. Please try again.");
+                        return;
+                    }
 
-                context.GetTargetOrInvoker<Player>().Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
+                    context.InvokingPlayer.Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
+                }
+                catch (Exception e)
+                {
+                    log.Error($"Exception caught in CurrencyAccountCommandCategory.HandleCurrencyAccountAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                    context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                }
             }
 
             [Command(Permission.CurrencyAccountList, "List all account currency types", "list")]
@@ -54,13 +65,21 @@ namespace NexusForever.WorldServer.Command.Handler
                 [Parameter("Amount of currency to grant.")]
                 uint amount)
             {
-                if (GameTableManager.Instance.CurrencyType.GetEntry((uint)currencyId) == null)
+                try
                 {
-                    context.SendMessage("Invalid currencyId. Please try again.");
-                    return;
-                }
+                    if (GameTableManager.Instance.CurrencyType.GetEntry((uint)currencyId) == null)
+                    {
+                        context.SendMessage("Invalid currencyId. Please try again.");
+                        return;
+                    }
 
-                context.GetTargetOrInvoker<Player>().CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
+                    context.InvokingPlayer.CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
+                }
+                catch (Exception e)
+                {
+                    log.Error($"Exception caught in CurrencyAccountCommandCategory.HandleCurrencyCharacterAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
+                    context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                }
             }
 
             [Command(Permission.CurrencyCharacterList, "List all currency types.", "list")]

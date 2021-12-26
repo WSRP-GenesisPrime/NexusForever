@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NexusForever.Database.Character.Model;
 using NexusForever.Database.Configuration;
+using System;
 
 namespace NexusForever.Database.Character
 {
@@ -12,8 +13,10 @@ namespace NexusForever.Database.Character
         public DbSet<CharacterActionSetShortcutModel> CharacterActionSetShortcut { get; set; }
         public DbSet<CharacterAppearanceModel> CharacterAppearance { get; set; }
         public DbSet<CharacterBoneModel> CharacterBone { get; set; }
+        public DbSet<CharacterContactModel> CharacterContact { get; set; }
         public DbSet<CharacterCostumeModel> CharacterCostume { get; set; }
         public DbSet<CharacterCostumeItemModel> CharacterCostumeItem { get; set; }
+        public DbSet<CharacterCreateModel> CharacterCreate { get; set; }
         public DbSet<CharacterCurrencyModel> CharacterCurrency { get; set; }
         public DbSet<CharacterCustomisationModel> CharacterCustomisation { get; set; }
         public DbSet<CharacterDatacubeModel> CharacterDatacube { get; set; }
@@ -32,9 +35,12 @@ namespace NexusForever.Database.Character
         public DbSet<CharacterTitleModel> CharacterTitle { get; set; }
         public DbSet<CharacterTradeskillMaterialModel> CharacterTradeskillMaterial { get; set; }
         public DbSet<CharacterZonemapHexgroupModel> CharacterZonemapHexgroup { get; set; }
+        public DbSet<ChatChannelModel> ChatChannel { get; set; }
+        public DbSet<ChatChannelMemberModel> ChatChannelMember { get; set; }
         public DbSet<GuildModel> Guild { get; set; }
         public DbSet<GuildRankModel> GuildRank { get; set; }
         public DbSet<GuildMemberModel> GuildMember { get; set; }
+        public DbSet<GuildAchievementModel> GuildAchievement { get; set; }
         public DbSet<GuildDataModel> GuildData { get; set; }
         public DbSet<ItemModel> Item { get; set; }
         public DbSet<ResidenceModel> Residence { get; set; }
@@ -61,7 +67,7 @@ namespace NexusForever.Database.Character
                 entity.ToTable("character");
 
                 entity.HasIndex(e => e.AccountId)
-                    .HasName("accountId");
+                    .HasDatabaseName("accountId");
 
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
@@ -101,7 +107,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.DeleteTime)
                     .HasColumnName("deleteTime")
                     .HasColumnType("datetime")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.Property(e => e.FactionId)
                     .HasColumnName("factionId")
@@ -149,6 +155,21 @@ namespace NexusForever.Database.Character
                     .HasColumnType("float")
                     .HasDefaultValue(0);
 
+                entity.Property(e => e.RotationX)
+                    .HasColumnName("rotationX")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.RotationY)
+                    .HasColumnName("rotationY")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.RotationZ)
+                    .HasColumnName("rotationZ")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
                 entity.Property(e => e.Name)
                     .HasColumnName("name")
                     .HasColumnType("varchar(50)")
@@ -157,7 +178,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.OriginalName)
                     .HasColumnName("originalName")
                     .HasColumnType("varchar(50)")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.Property(e => e.PathActivatedTimestamp)
                     .HasColumnName("pathActivatedTimestamp")
@@ -240,7 +261,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.DateCompleted)
                     .HasColumnName("dateCompleted")
                     .HasColumnType("datetime")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.HasOne(d => d.Character)
                     .WithMany(p => p.Achievement)
@@ -365,7 +386,8 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.BoneIndex)
                     .HasColumnName("boneIndex")
                     .HasColumnType("tinyint(4) unsigned")
-                    .HasDefaultValue(0);
+                    .HasDefaultValue(0)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.Bone)
                     .HasColumnName("bone")
@@ -376,6 +398,63 @@ namespace NexusForever.Database.Character
                     .WithMany(p => p.Bone)
                     .HasForeignKey(d => d.Id)
                     .HasConstraintName("FK_character_bone_id__character_id");
+            });
+
+            modelBuilder.Entity<CharacterContactModel>(entity =>
+            {
+                entity.ToTable("character_contact");
+
+                entity.HasKey(e => new { e.Id, e.OwnerId, e.ContactId })
+                    .HasName("PRIMARY");
+
+                entity.HasIndex(e => e.Id)
+                    .HasName("contactGuid")
+                    .IsUnique();
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.OwnerId)
+                    .HasColumnName("ownerId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.ContactId)
+                    .HasColumnName("contactId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Type)
+                    .HasColumnName("type")
+                    .HasColumnType("int(3) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.InviteMessage)
+                    .HasColumnName("inviteMessage")
+                    .HasColumnType("varchar(100)")
+                    .HasDefaultValueSql("''");
+
+                entity.Property(e => e.PrivateNote)
+                    .HasColumnName("privateNote")
+                    .HasColumnType("varchar(100)")
+                    .HasDefaultValueSql("''");
+
+                entity.Property(e => e.Accepted)
+                    .HasColumnName("accepted")
+                    .HasColumnType("tinyint(8) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.RequestTime)
+                    .HasColumnName("requestTime")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.HasOne(d => d.Character)
+                    .WithMany(p => p.Contact)
+                    .HasForeignKey(d => d.OwnerId)
+                    .HasConstraintName("FK__character_contact_id__character_id");
             });
 
             modelBuilder.Entity<CharacterCostumeModel>(entity =>
@@ -450,6 +529,407 @@ namespace NexusForever.Database.Character
                     .WithMany(p => p.CostumeItem)
                     .HasForeignKey(d => new { d.Id, d.Index })
                     .HasConstraintName("FK__character_costume_item_id-index__character_costume_id-index");
+            });
+
+            modelBuilder.Entity<CharacterCreateModel>(entity =>
+            {
+                entity.ToTable("character_create");
+
+                entity.HasKey(e => new { e.Race, e.Faction, e.CreationStart })
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Race)
+                    .HasColumnName("race")
+                    .HasColumnType("tinyint(4) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Faction)
+                    .HasColumnName("faction")
+                    .HasColumnType("smallint(5) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.CreationStart)
+                    .HasColumnName("creationStart")
+                    .HasColumnType("tinyint(4) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.WorldId)
+                    .HasColumnName("worldId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.X)
+                    .HasColumnName("x")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Y)
+                    .HasColumnName("y")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Z)
+                    .HasColumnName("z")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Rx)
+                    .HasColumnName("rx")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Ry)
+                    .HasColumnName("ry")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Rz)
+                    .HasColumnName("rz")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Comment)
+                    .HasColumnName("comment")
+                    .HasColumnType("varchar(200)")
+                    .HasDefaultValue("");
+
+                entity.HasData(
+                    new CharacterCreateModel
+                    {
+                        Race          = 1,
+                        Faction       = 167,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Human - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 1,
+                        Faction       = 167,
+                        CreationStart = 3,
+                        WorldId       = 426,
+                        X             = 4110.71f,
+                        Y             = -658.6249f,
+                        Z             = -5145.48f,
+                        Rx            = 0.317613f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Human - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 1,
+                        Faction       = 167,
+                        CreationStart = 5,
+                        WorldId       = 51,
+                        X             = 4074.34f,
+                        Y             = -797.8368f,
+                        Z             = -2399.37f,
+                        Rx            = 0f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Human - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 3,
+                        Faction       = 167,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Granok - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 3,
+                        Faction       = 167,
+                        CreationStart = 3,
+                        WorldId       = 426,
+                        X             = 4110.71f,
+                        Y             = -658.6249f,
+                        Z             = -5145.48f,
+                        Rx            = 0.317613f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment = "Exile Granok- Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 3,
+                        Faction       = 167,
+                        CreationStart = 5,
+                        WorldId       = 51,
+                        X             = 4074.34f,
+                        Y             = -797.8368f,
+                        Z             = -2399.37f,
+                        Rx            = 0f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Granok - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 4,
+                        Faction       = 167,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Aurin - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 4,
+                        Faction       = 167,
+                        CreationStart = 3,
+                        WorldId       = 990,
+                        X             = -771.823f,
+                        Y             = -904.2852f,
+                        Z             = -2269.56f,
+                        Rx            = -1.1214035f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Aurin - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 4,
+                        Faction       = 167,
+                        CreationStart = 5,
+                        WorldId       = 51,
+                        X             = 4074.34f,
+                        Y             = -797.8368f,
+                        Z             = -2399.37f,
+                        Rx            = 0f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Aurin - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 16,
+                        Faction       = 167,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Mordesh - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 16,
+                        Faction       = 167,
+                        CreationStart = 3,
+                        WorldId       = 990,
+                        X             = -771.823f,
+                        Y             = -904.2852f,
+                        Z             = -2269.56f,
+                        Rx            = -1.1214035f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Mordesh - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 16,
+                        Faction       = 167,
+                        CreationStart = 5,
+                        WorldId       = 51,
+                        X             = 4074.34f,
+                        Y             = -797.8368f,
+                        Z             = -2399.37f,
+                        Rx            = 0f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Exile Mordesh - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 13,
+                        Faction       = 166,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Chua - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 13,
+                        Faction       = 166,
+                        CreationStart = 3,
+                        WorldId       = 870,
+                        X             = -8261.3984f,
+                        Y             = -995.471f,
+                        Z             = -242.3648f,
+                        Rx            = -2.215535f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Chua - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 13,
+                        Faction       = 166,
+                        CreationStart = 5,
+                        WorldId       = 22,
+                        X             = -3343.58f,
+                        Y             = -887.4646f,
+                        Z             = -536.03f,
+                        Rx            = -0.7632219f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Chua - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 5,
+                        Faction       = 166,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Draken - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 5,
+                        Faction       = 166,
+                        CreationStart = 3,
+                        WorldId       = 870,
+                        X             = -8261.3984f,
+                        Y             = -995.471f,
+                        Z             = -242.3648f,
+                        Rx            = -2.215535f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Draken - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 5,
+                        Faction       = 166,
+                        CreationStart = 5,
+                        WorldId       = 22,
+                        X             = -3343.58f,
+                        Y             = -887.4646f,
+                        Z             = -536.03f,
+                        Rx            = -0.7632219f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Draken - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 1,
+                        Faction       = 166,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Cassian - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 1,
+                        Faction       = 166,
+                        CreationStart = 3,
+                        WorldId       = 1387,
+                        X             = -3835.341f,
+                        Y             = -980.2174f,
+                        Z             = -6050.524f,
+                        Rx            = -0.456820f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Cassian - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 1,
+                        Faction       = 166,
+                        CreationStart = 5,
+                        WorldId       = 22,
+                        X             = -3343.58f,
+                        Y             = -887.4646f,
+                        Z             = -536.03f,
+                        Rx            = -0.7632219f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Cassian - Level 50"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 12,
+                        Faction       = 166,
+                        CreationStart = 4,
+                        WorldId       = 3460,
+                        X             = 29.1286f,
+                        Y             = -853.8716f,
+                        Z             = -560.188f,
+                        Rx            = -2.751458f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Mechari - Novice"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 12,
+                        Faction       = 166,
+                        CreationStart = 3,
+                        WorldId       = 1387,
+                        X             = -3835.341f,
+                        Y             = -980.2174f,
+                        Z             = -6050.524f,
+                        Rx            = -0.456820f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Mechari - Veteran"
+                    },
+                    new CharacterCreateModel
+                    {
+                        Race          = 12,
+                        Faction       = 166,
+                        CreationStart = 5,
+                        WorldId       = 22,
+                        X             = -3343.58f,
+                        Y             = -887.4646f,
+                        Z             = -536.03f,
+                        Rx            = -0.7632219f,
+                        Ry            = 0f,
+                        Rz            = 0f,
+                        Comment       = "Dominion Mechari - Level 50"
+                    });
             });
 
             modelBuilder.Entity<CharacterCurrencyModel>(entity =>
@@ -660,7 +1140,7 @@ namespace NexusForever.Database.Character
                 entity.ToTable("character_mail");
 
                 entity.HasIndex(e => e.RecipientId)
-                    .HasName("FK__character_mail_recipientId__character_id");
+                    .HasDatabaseName("FK__character_mail_recipientId__character_id");
 
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
@@ -758,7 +1238,7 @@ namespace NexusForever.Database.Character
                     .HasName("PRIMARY");
 
                 entity.HasIndex(e => e.ItemGuid)
-                    .HasName("itemGuid")
+                    .HasDatabaseName("itemGuid")
                     .IsUnique();
 
                 entity.Property(e => e.Id)
@@ -913,7 +1393,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.Reset)
                     .HasColumnName("reset")
                     .HasColumnType("datetime")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.Property(e => e.State)
                     .HasColumnName("state")
@@ -923,7 +1403,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.Timer)
                     .HasColumnName("timer")
                     .HasColumnType("int(10) unsigned")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.HasOne(d => d.Character)
                     .WithMany(p => p.Quest)
@@ -961,7 +1441,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.Timer)
                     .HasColumnName("timer")
                     .HasColumnType("int(10) unsigned")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.HasOne(d => d.Quest)
                     .WithMany(p => p.QuestObjective)
@@ -1143,6 +1623,62 @@ namespace NexusForever.Database.Character
                     .HasConstraintName("FK__character_zonemap_hexgroup_id__character_id");
             });
 
+            modelBuilder.Entity<ChatChannelModel>(entity =>
+            {
+                entity.ToTable("chat_channel");
+
+                entity.HasKey(e => e.Id)
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Type)
+                    .HasColumnName("type")
+                    .HasColumnType("tinyint(3) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Name)
+                    .HasColumnName("name")
+                    .HasColumnType("varchar(20)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.Password)
+                    .HasColumnName("password")
+                    .HasColumnType("varchar(20)")
+                    .HasDefaultValue("");
+            });
+
+            modelBuilder.Entity<ChatChannelMemberModel>(entity =>
+            {
+                entity.ToTable("chat_channel_member");
+
+                entity.HasKey(e => new { e.Id, e.CharacterId })
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.CharacterId)
+                    .HasColumnName("characterId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Flags)
+                    .HasColumnName("flags")
+                    .HasColumnType("tinyint(3) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.HasOne(e => e.Channel)
+                    .WithMany(e => e.Members)
+                    .HasForeignKey(e => e.Id)
+                    .HasConstraintName("FK__chat_channel_member_id__chat_channel_id");
+            });
+
             modelBuilder.Entity<GuildModel>(entity =>
             {
                 entity.HasKey(e => new { e.Id })
@@ -1188,8 +1724,46 @@ namespace NexusForever.Database.Character
                     .HasColumnType("varchar(30)");
 
                 entity.Property(e => e.OriginalLeaderId)
-                    .HasColumnName("orginialLeaderId")
+                    .HasColumnName("originalLeaderId")
                     .HasColumnType("bigint(20) unsigned");
+            });
+
+            modelBuilder.Entity<GuildAchievementModel>(entity =>
+            {
+                entity.ToTable("guild_achievement");
+
+                entity.HasKey(e => new { e.Id, e.AchievementId })
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.AchievementId)
+                    .HasColumnName("achievementId")
+                    .HasColumnType("smallint(5) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Data0)
+                    .HasColumnName("data0")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Data1)
+                    .HasColumnName("data1")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.DateCompleted)
+                    .HasColumnName("dateCompleted")
+                    .HasColumnType("datetime")
+                    .HasDefaultValue(null);
+
+                entity.HasOne(d => d.Guild)
+                    .WithMany(p => p.Achievement)
+                    .HasForeignKey(d => d.Id)
+                    .HasConstraintName("FK__guild_achievement_id__guild_id");
             });
 
             modelBuilder.Entity<GuildDataModel>(entity =>
@@ -1310,6 +1884,11 @@ namespace NexusForever.Database.Character
                     .HasColumnType("varchar(32)")
                     .HasDefaultValue("");
 
+                entity.Property(e => e.CommunityPlotReservation)
+                    .HasColumnName("communityPlotReservation")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValue(-1);
+
                 entity.HasOne(d => d.Guild)
                     .WithMany(p => p.GuildMember)
                     .HasForeignKey(d => d.Id)
@@ -1321,7 +1900,7 @@ namespace NexusForever.Database.Character
                 entity.ToTable("item");
 
                 entity.HasIndex(e => e.OwnerId)
-                    .HasName("FK__item_ownerId__character_id");
+                    .HasDatabaseName("FK__item_ownerId__character_id");
 
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
@@ -1361,7 +1940,7 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.OwnerId)
                     .HasColumnName("ownerId")
                     .HasColumnType("bigint(20) unsigned")
-                    .HasDefaultValue();
+                    .HasDefaultValue(null);
 
                 entity.Property(e => e.StackCount)
                     .HasColumnName("stackCount")
@@ -1380,7 +1959,7 @@ namespace NexusForever.Database.Character
                 entity.ToTable("residence");
 
                 entity.HasIndex(e => e.OwnerId)
-                    .HasName("ownerId")
+                    .HasDatabaseName("ownerId")
                     .IsUnique();
 
                 entity.Property(e => e.Id)
@@ -1427,7 +2006,12 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.OwnerId)
                     .HasColumnName("ownerId")
                     .HasColumnType("bigint(20) unsigned")
-                    .HasDefaultValue(0);
+                    .HasDefaultValue(null);
+
+                entity.Property(e => e.GuildOwnerId)
+                    .HasColumnName("guildOwnerId")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(null);
 
                 entity.Property(e => e.PrivacyLevel)
                     .HasColumnName("privacyLevel")
@@ -1459,10 +2043,20 @@ namespace NexusForever.Database.Character
                     .HasColumnType("smallint(5) unsigned")
                     .HasDefaultValue(0);
 
+                entity.Property(e => e.NSFWLock)
+                    .HasColumnName("nsfwlock")
+                    .HasColumnType("bit")
+                    .HasDefaultValue(0);
+
                 entity.HasOne(d => d.Character)
                     .WithOne(p => p.Residence)
                     .HasForeignKey<ResidenceModel>(d => d.OwnerId)
                     .HasConstraintName("FK__residence_ownerId__character_id");
+
+                entity.HasOne(d => d.Guild)
+                    .WithMany(p => p.Residence)
+                    .HasForeignKey(d => d.GuildOwnerId)
+                    .HasConstraintName("FK__residence_guildOwnerId__guild_id");
             });
 
             modelBuilder.Entity<ResidenceDecor>(entity =>
@@ -1505,7 +2099,8 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.PlotIndex)
                     .HasColumnName("plotIndex")
                     .HasColumnType("int(10) unsigned")
-                    .HasDefaultValue(2147483647);
+                    .HasDefaultValue(2147483647)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.Qw)
                     .HasColumnName("qw")
@@ -1568,7 +2163,8 @@ namespace NexusForever.Database.Character
                 entity.Property(e => e.Index)
                     .HasColumnName("index")
                     .HasColumnType("tinyint(3) unsigned")
-                    .HasDefaultValue(0);
+                    .HasDefaultValue(0)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.BuildState)
                     .HasColumnName("buildState")

@@ -9,11 +9,13 @@ using NexusForever.WorldServer.Command.Convert;
 using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Command
 {
     public class CommandHandler : ICommandHandler
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         public class CommandParameter
         {
             public Type Type { get; }
@@ -196,7 +198,15 @@ namespace NexusForever.WorldServer.Command
             }
             catch (Exception exception)
             {
-                context.SendError(exception.ToString());
+                if (context.InvokingPlayer == null)
+                {
+                    log.Error($"Exception caught in CommandHandler.Invoke!\n{exception.Message} : {exception.StackTrace}");
+                }
+                else
+                {
+                    log.Error($"Exception caught in CommandHandler.Invoke!\nInvoked by {context.InvokingPlayer.Name}; {exception.Message} :\n{exception.StackTrace}");
+                }
+                context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
 
             return CommandResult.Ok;
