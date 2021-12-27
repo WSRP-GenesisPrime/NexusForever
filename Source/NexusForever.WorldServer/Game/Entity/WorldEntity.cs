@@ -236,6 +236,11 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public uint ControllerGuid { get; set; }
 
+        /// <summary>
+        /// This is for scripts (or database entities) to use to replace the default activation spell ID.
+        /// </summary>
+        public uint ActivateSpell4Id { get; set; } = 0u;
+
         protected readonly Dictionary<Stat, StatValue> stats = new();
 
         private readonly Dictionary<ItemSlot, ItemVisual> itemVisuals = new();

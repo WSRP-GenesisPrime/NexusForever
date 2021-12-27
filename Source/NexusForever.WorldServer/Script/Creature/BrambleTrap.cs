@@ -1,7 +1,5 @@
 ﻿using NexusForever.WorldServer.Game.Entity;
-using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Spell;
-using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Script.Creature
 {
@@ -19,7 +17,8 @@ namespace NexusForever.WorldServer.Script.Creature
         {
             base.OnActivateSuccess(me, activator);
 
-            (activator as UnitEntity).GetActiveSpell(s => s.Spell4Id == SPELL_PENALTY)?.Finish();
+            if ((activator as UnitEntity).HasSpell(s => s.Spell4Id == SPELL_PENALTY, out Spell spell))
+                spell.Finish();
             me.ModifyHealth(-me.MaxHealth);
         }
 

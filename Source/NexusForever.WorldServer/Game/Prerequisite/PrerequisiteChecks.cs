@@ -132,9 +132,9 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             switch (comparison)
             {
                 case PrerequisiteComparison.Equal:
-                    return player.GetActiveSpell(s => s.Spell4Id == value) != null;
+                    return player.HasSpell(s => s.Spell4Id == value, out Spell.Spell equalSpell);
                 case PrerequisiteComparison.NotEqual:
-                    return player.GetActiveSpell(s => s.Spell4Id == value) == null;
+                    return !player.HasSpell(s => s.Spell4Id == value, out Spell.Spell notEqualSpell);
                 default:
                     log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.Spell}!");
                     return false;

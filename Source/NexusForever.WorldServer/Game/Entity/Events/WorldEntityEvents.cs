@@ -77,14 +77,18 @@ namespace NexusForever.WorldServer.Game.Entity
                     spell4Id = entry.Spell4IdActivate[i - 1];
             }
 
+            if (ActivateSpell4Id != 0)
+                spell4Id = ActivateSpell4Id;
+
             if (spell4Id == 0)
                 throw new InvalidOperationException($"Spell4Id should not be 0. Unhandled Creature ActivateCast {CreatureId}");
 
             SpellParameters parameters = new SpellParameters
             {
-                PrimaryTargetId = Guid,
-                ClientSideInteraction = new ClientSideInteraction(activator, this, interactionId),
-                CastTimeOverride = (int)entry.ActivateSpellCastTime,
+                PrimaryTargetId         = Guid,
+                ClientSideInteraction   = new ClientSideInteraction(activator, this, interactionId),
+                CastTimeOverride        = (int)entry.ActivateSpellCastTime,
+                UserInitiatedSpellCast  = true
             };
             activator.CastSpell(spell4Id, parameters);
         }

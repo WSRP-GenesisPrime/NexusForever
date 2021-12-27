@@ -52,22 +52,6 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             entity.OnInteract(session.Player);
         }
 
-        [MessageHandler(GameMessageOpcode.ClientActivateUnitCast)]
-        public static void HandleActivateUnitCast(WorldSession session, ClientActivateUnitCast unit)
-        {
-            WorldEntity entity = session.Player.GetVisible<WorldEntity>(unit.ActivateUnitId);
-            if (entity == null)
-                throw new InvalidPacketValueException();
-
-            // TODO: sanity check for range etc.
-
-            //session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, entity.CreatureId, 1u);
-            //foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(entity.CreatureId) ?? Enumerable.Empty<uint>())
-            //    session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroup, targetGroupId, 1u);
-            
-            entity.OnActivateCast(session.Player, unit.ClientUniqueId);
-        }
-
         [MessageHandler(GameMessageOpcode.ClientEntityInteract)]
         public static void HandleClientEntityInteraction(WorldSession session, ClientEntityInteract entityInteraction)
         {
@@ -141,10 +125,24 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             session.Player.Sit(chair);
         }
-        
+
+        [MessageHandler(GameMessageOpcode.ClientActivateUnitCast)]
+        public static void HandleActivateUnitCast(WorldSession session, ClientActivateUnitCast request)
+        {
+            WorldEntity entity = session.Player.GetVisible<WorldEntity>(request.ActivateUnitId);
+            if (entity == null)
+                throw new InvalidPacketValueException();
+
+            entity.OnActivateCast(session.Player, request.ClientUniqueId);
+        }
+
+        /// <remarks>
+        /// Possibly only used by Bindpoint entities
+        /// </remarks>
         [MessageHandler(GameMessageOpcode.ClientActivateUnitInteraction)]
         public static void HandleActivateUnitDeferred(WorldSession session, ClientActivateUnitInteraction request)
         {
+
             WorldEntity entity = session.Player.GetVisible<WorldEntity>(request.ActivateUnitId);
             if (entity == null)
                 throw new InvalidPacketValueException();
@@ -155,23 +153,22 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientInteractionResult)]
         public static void HandleSpellDeferredResult(WorldSession session, ClientSpellInteractionResult result)
         {
-            Spell spell = session.Player.GetPendingSpell(result.CastingId);
-            if (spell == null)
+            if (!(session.Player.HasSpell(x => x.CastingId == result.CastingId, out Spell spell)))
                 throw new ArgumentNullException($"Spell cast {result.CastingId} not found.");
 
-            if (!spell.IsClientSideInteraction)
+            if (spell is not SpellClientSideInteraction spellCSI)
                 throw new ArgumentNullException($"Spell missing a ClientSideInteraction.");
 
             switch (result.Result)
             {
                 case 0:
-                    spell.FailClientInteraction();
+                    spellCSI.FailClientInteraction();
                     break;
                 case 1:
-                    spell.SucceedClientInteraction();
+                    spellCSI.SucceedClientInteraction();
                     break;
                 case 2:
-                    spell.CancelCast(Game.Spell.Static.CastResult.ClientSideInteractionFail);
+                    spellCSI.CancelCast(Game.Spell.Static.CastResult.ClientSideInteractionFail);
                     break;
             }
         }

@@ -246,8 +246,10 @@ namespace NexusForever.WorldServer.Game.Entity
             owner.PetManager.RemovePetGuid(PetType.CombatPet, this);
             owner.SpellManager.GetSpell(Spell4Entry.Spell4BaseIdBaseSpell).SetPetUnitId(0u);
 
-            owner.GetActiveSpell(x => !x.IsFinished && !x.IsFinishing && x.Spell4Id == 56487)?.Finish(); // End Limiter Debuff
-            owner.GetActiveSpell(x => x.CastingId == CastingId)?.Finish(); // End Casted Spell
+            if (owner.HasSpell(x => !x.IsFinished && !x.IsFinishing && x.Spell4Id == 56487, out Spell.Spell limiterDebuff))
+                limiterDebuff.Finish(); // End Limiter Debuff
+            if (owner.HasSpell(x => x.CastingId == CastingId, out Spell.Spell petSpell))
+                petSpell.Finish(); // End Casted Spell
         }
 
         public override void Update(double lastTick)

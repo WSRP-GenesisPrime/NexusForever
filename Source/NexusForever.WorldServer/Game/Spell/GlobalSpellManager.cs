@@ -32,9 +32,12 @@ namespace NexusForever.WorldServer.Game.Spell
         private uint nextCastingId = 1;
         private uint nextEffectId = 1;
 
+        // Spell Delegates
+        private delegate Spell SpellFactoryDelegate(UnitEntity unit, SpellParameters parameters);
+        private ImmutableDictionary<CastMethod, SpellFactoryDelegate> spellFactoryDelegates;
+
         private readonly Dictionary<uint, SpellBaseInfo> spellBaseInfoStore = new();
         private readonly Dictionary<SpellEffectType, SpellEffectDelegate> spellEffectDelegates =  new();
-        private readonly Dictionary<CastMethod, CastMethodDelegate> castMethodDelegates = new();
 
         // entry caches
         private ImmutableDictionary<uint, ImmutableList<Spell4Entry>> spellEntries;
@@ -51,11 +54,45 @@ namespace NexusForever.WorldServer.Game.Spell
 
         public void Initialise()
         {
+            InitialiseSpellFactories();
             CacheSpellEntries();
             InitialiseSpellInfo();
             InitialiseSpellEffectHandlers();
-            InitialiseCastMethodHandlers();
             InitialiseVitalCastResults();
+        }
+
+        private void InitialiseSpellFactories()
+        {
+            var builder = ImmutableDictionary.CreateBuilder<CastMethod, SpellFactoryDelegate>();
+
+            Type[] types = new Type[2];
+            types[0] = typeof(UnitEntity);
+            types[1] = typeof(SpellParameters);
+
+            ParameterExpression[] constructorParams = new ParameterExpression[2];
+            constructorParams[0] = Expression.Parameter(typeof(UnitEntity));
+            constructorParams[1] = Expression.Parameter(typeof(SpellParameters));
+
+            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                foreach (var attribute in type.GetCustomAttributes<SpellTypeAttribute>())
+                {
+                    if (attribute == null)
+                        continue;
+
+                    ConstructorInfo constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, 
+                        null, types, null);
+
+                    NewExpression @new = Expression.New(constructor, constructorParams);
+
+                    Expression<SpellFactoryDelegate> lambda =
+                        Expression.Lambda<SpellFactoryDelegate>(@new, constructorParams[0], constructorParams[1]);
+
+                    builder.Add(attribute.CastMethod, lambda.Compile());
+                }
+            }
+
+            spellFactoryDelegates = builder.ToImmutable();
         }
 
         private void CacheSpellEntries()
@@ -130,30 +167,6 @@ namespace NexusForever.WorldServer.Game.Spell
             }
         }
 
-        private void InitialiseCastMethodHandlers()
-        {
-            foreach (MethodInfo method in Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .SelectMany(t => t.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)))
-            {
-                List<CastMethodHandlerAttribute> attributes = method.GetCustomAttributes<CastMethodHandlerAttribute>().ToList();
-                if (attributes.Count() == 0)
-                    continue;
-                
-                foreach(CastMethodHandlerAttribute attribute in attributes)
-                {
-                    ParameterExpression spellParameter = Expression.Parameter(typeof(Spell));
-
-                    MethodCallExpression call = Expression.Call(spellParameter, method);
-
-                    Expression<CastMethodDelegate> lambda =
-                        Expression.Lambda<CastMethodDelegate>(call, spellParameter);
-
-                    castMethodDelegates.Add(attribute.CastMethod, lambda.Compile());
-                }
-            }
-        }
-
         private void InitialiseVitalCastResults()
         {
             var builder = ImmutableDictionary.CreateBuilder<Vital, CastResult>();
@@ -166,6 +179,21 @@ namespace NexusForever.WorldServer.Game.Spell
             }
 
             vitalCastResults = builder.ToImmutable();
+        }
+
+        /// <summary>
+        /// Return a new <see cref="WorldEntity"/> of supplied <see cref="EntityType"/>.
+        /// </summary>
+        public Spell NewSpell(CastMethod castMethod, UnitEntity caster, SpellParameters parameters)
+        {
+            if (spellFactoryDelegates.TryGetValue(castMethod, out SpellFactoryDelegate factory))
+                return factory.Invoke(caster, parameters);
+
+            log.Warn($"Unhandled cast method {castMethod}. Using {CastMethod.Normal} instead.");
+            if (spellFactoryDelegates.TryGetValue(CastMethod.Normal, out SpellFactoryDelegate normalFactory))
+                return normalFactory.Invoke(caster, parameters);
+
+            return null;
         }
 
         /// <summary>
@@ -252,14 +280,6 @@ namespace NexusForever.WorldServer.Game.Spell
         public SpellEffectDelegate GetEffectHandler(SpellEffectType spellEffectType)
         {
             return spellEffectDelegates.TryGetValue(spellEffectType, out SpellEffectDelegate handler) ? handler : null;
-        }
-
-        /// <summary>
-        /// Return <see cref="CastMethodDelegate"/> for supplied <see cref="SpellEffectType"/>.
-        /// </summary>
-        public CastMethodDelegate GetCastMethodHandler(CastMethod castMethod)
-        {
-            return castMethodDelegates.TryGetValue(castMethod, out CastMethodDelegate handler) ? handler : null;
         }
 
         /// <summary>

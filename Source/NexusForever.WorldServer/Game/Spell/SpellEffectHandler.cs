@@ -244,6 +244,22 @@ namespace NexusForever.WorldServer.Game.Spell
             if (locationEntry == null)
                 return;
 
+            // Handle Housing Teleport
+            if (locationEntry.WorldId == 1229)
+            {
+                Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
+                if (residence == null)
+                    residence = GlobalResidenceManager.Instance.CreateResidence(player);
+
+                ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+                if (player.CanTeleport())
+                {
+                    player.Rotation = entrance.Rotation.ToEulerDegrees();
+                    player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
+                    return;
+                }
+            }
+
             if (player.CanTeleport()) {
                 player.Rotation = new Quaternion(locationEntry.Facing0, locationEntry.Facing1, locationEntry.Facing2, locationEntry.Facing3).ToEulerDegrees();
                 player.TeleportTo((ushort)locationEntry.WorldId, locationEntry.Position0, locationEntry.Position1, locationEntry.Position2);

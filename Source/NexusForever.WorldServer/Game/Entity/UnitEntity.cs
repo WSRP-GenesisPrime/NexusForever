@@ -93,6 +93,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 {
                     Spell.Spell spell = pendingSpells[i];
                     spell.Update(lastTick);
+                    spell.LateUpdate(lastTick);
                 }
 
             pendingSpells.RemoveAll(s => s.IsFinished);
@@ -228,15 +229,20 @@ namespace NexusForever.WorldServer.Game.Entity
                     {
                         if (statuses.Contains(EntityStatus.Stealth))
                         {
-                            Spell.Spell activeSpell = GetActiveSpell(i => i.CastingId == castingId);
-                            activeSpell.Finish();
+                            if (HasSpell(i => i.CastingId == castingId, out Spell.Spell activeSpell))
+                                activeSpell.Finish();
                         }
                     }
                 }
-            }                        
+            }
 
-            var spell = new Spell.Spell(this, parameters);
-            spell.Cast();
+            CastMethod castMethod = (CastMethod)parameters.SpellInfo.BaseInfo.Entry.CastMethod;
+            if (parameters.ClientSideInteraction != null)
+                castMethod = CastMethod.ClientSideInteraction;
+
+            var spell = GlobalSpellManager.Instance.NewSpell(castMethod, this, parameters);
+            if (!spell.Cast())
+                return;
 
             // Don't store spell if it failed to initialise
             if (spell.IsFailed)
@@ -299,6 +305,16 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
+        /// Check if this <see cref="UnitEntity"/> has a spell active with the provided <see cref="Func"/> predicate.
+        /// </summary>
+        public bool HasSpell(Func<Spell.Spell, bool> predicate, out Spell.Spell spell)
+        {
+            spell = pendingSpells.FirstOrDefault(predicate);
+
+            return spell != null;
+        }
+
+        /// <summary>
         /// Finish all <see cref="Spell.Spell"/> that match the given spell4Id for this <see cref="UnitEntity"/>.
         /// </summary>
         public void FinishSpells(uint spell4Id)
@@ -324,26 +340,6 @@ namespace NexusForever.WorldServer.Game.Entity
             // TODO: Should return a single spell if looking for ActiveSpell?
 
             return pendingSpells.Where(func).Count();
-        }
-
-        /// <summary>
-        /// Returns an active <see cref="Spell.Spell"/> that is affecting this <see cref="UnitEntity"/>
-        /// </summary>
-        public Spell.Spell GetActiveSpell(Func<Spell.Spell, bool> func)
-        {
-            // TODO: Should return a single spell if looking for ActiveSpell?
-
-            return pendingSpells.FirstOrDefault(func);
-        }
-
-        /// <summary>
-        /// Returns a pending <see cref="Spell.Spell"/> based on its casting id
-        /// </summary>
-        /// <param name="castingId">Casting ID of the spell to return</param>
-        public Spell.Spell GetPendingSpell(uint castingId)
-        {
-            Spell.Spell spell = pendingSpells.SingleOrDefault(s => s.CastingId == castingId);
-            return spell ?? null;
         }
 
         /// <summary>
