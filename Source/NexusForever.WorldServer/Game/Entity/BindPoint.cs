@@ -89,7 +89,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 // This might also be GameFormula Entry #472?
                 SpellParameters parameters = new SpellParameters
                 {
-                    PrimaryTargetId = Guid,
+                    PrimaryTargetId       = Guid,
                     ClientSideInteraction = new ClientSideInteraction(activator, this, interactionId)
                 };
                 activator.CastSpell(8566, parameters);

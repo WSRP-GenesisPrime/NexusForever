@@ -20,12 +20,7 @@ namespace NexusForever.WorldServer.Script.Creature
             base.OnActivateSuccess(me, activator);
 
             (activator as UnitEntity).GetActiveSpell(s => s.Spell4Id == SPELL_PENALTY)?.Finish();
-            me.EnqueueToVisible(new ServerEntityDeath
-            {
-                UnitId = me.Guid,
-                Dead = true,
-                Reason = 2
-            });
+            me.ModifyHealth(-me.MaxHealth);
         }
 
         public override void OnActivateFail(WorldEntity me, WorldEntity activator)
@@ -34,9 +29,7 @@ namespace NexusForever.WorldServer.Script.Creature
 
             (activator as UnitEntity).CastSpell(SPELL_PENALTY, new SpellParameters
             {
-                PrimaryTargetId = activator.Guid,
-                UserInitiatedSpellCast = false,
-                IsProxy = true
+                UserInitiatedSpellCast = false
             });
         }
     }
