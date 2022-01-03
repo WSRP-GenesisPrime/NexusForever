@@ -387,7 +387,7 @@ namespace NexusForever.WorldServer.Game.Housing
                         Flags               = (ushort)flags,
                         ResourceSharing     = resourceSharing,
                         GardenSharing       = gardenSharing,
-                        ResidenceInfoId     = (ushort)ResidenceInfoEntry.Id
+                        ResidenceInfoId     = (ushort)(ResidenceInfoEntry?.Id ?? 0)
                     });
                 }
                 else
@@ -472,7 +472,7 @@ namespace NexusForever.WorldServer.Game.Housing
                     }
                     if ((saveMask & ResidenceSaveMask.ResidenceInfo) != 0)
                     {
-                        model.ResidenceInfoId = (ushort)ResidenceInfoEntry.Id;
+                        model.ResidenceInfoId = (ushort)(ResidenceInfoEntry?.Id ?? 0u);
                         entity.Property(p => p.ResidenceInfoId).IsModified = true;
                     }
                 }
