@@ -30,6 +30,7 @@ namespace NexusForever.Shared.Network
         public SocketHeartbeat Heartbeat { get; } = new();
 
         private Socket socket;
+        private EndPoint remoteEndPoint;
         private readonly byte[] buffer = new byte[4096];
         private int bufferOffset;
 
@@ -47,6 +48,7 @@ namespace NexusForever.Shared.Network
 
             socket = newSocket;
             socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, ReceiveDataCallback, null);
+            remoteEndPoint = socket.RemoteEndPoint;
 
             log.Trace($"New client {Id} connected from {newSocket.RemoteEndPoint}.");
         }
@@ -85,11 +87,9 @@ namespace NexusForever.Shared.Network
 
         protected virtual void OnDisconnect()
         {
-            EndPoint remoteEndPoint = socket.RemoteEndPoint;
             socket.Close();
 
             log.Trace($"Client {Id} disconnected. {remoteEndPoint}");
-
             disconnectState = DisconnectState.Complete;
         }
 
