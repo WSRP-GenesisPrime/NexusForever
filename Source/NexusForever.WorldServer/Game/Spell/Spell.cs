@@ -559,7 +559,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             if (targets.Count > 0 && CastMethod == CastMethod.Aura)
-                log.Info($"New Targets found for {CastingId}, applying effects.");
+                log.Trace($"New Targets found for {CastingId}, applying effects.");
 
             // Using For..Loop instead of foreach intentionally, as this can be modified as effects are evaluated.
             for (int index = 0; index < parameters.SpellInfo.Effects.Count(); index++)
@@ -661,7 +661,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             if (targets.Count > 0 && CastMethod == CastMethod.Aura)
-                log.Info($"Target exited spell {CastingId}'s range, removing effects.");
+                log.Trace($"Target exited spell {CastingId}'s range, removing effects.");
 
             target.Entity?.RemoveSpellProperties(Spell4Id);
             target.Entity?.RemoveProc(parameters.SpellInfo.Entry.Id);

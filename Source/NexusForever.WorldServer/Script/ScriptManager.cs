@@ -25,7 +25,7 @@ namespace NexusForever.WorldServer.Script
         public void Initialise()
         {
             InitialiseScripts();
-            log.Info($"Loaded {creatureScripts.Count} creature scripts.");
+            log.Info($"Loaded {creatureScripts.Count + plugScripts.Count + questScripts.Count + mapScripts.Count + spellScripts.Count} scripts.");
         }
 
         private void InitialiseScripts()
