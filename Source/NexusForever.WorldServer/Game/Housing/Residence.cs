@@ -15,11 +15,14 @@ using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
     public class Residence : ISaveCharacter, IBuildable<ServerHousingProperties.Residence>
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
         public ulong Id { get; }
         public ResidenceType Type { get; }
         public ulong? OwnerId { get; }
@@ -44,6 +47,18 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask |= ResidenceSaveMask.PropertyInfo;
 
                 UpdatePlots();
+
+                // TODO: This is only for Test Server Logging
+                try
+                {
+                    if (value == (PropertyInfoId)99)
+                        throw new ArgumentOutOfRangeException();
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex);
+                }
+
             }
         }
         private PropertyInfoId propertyInfoId;
@@ -301,6 +316,13 @@ namespace NexusForever.WorldServer.Game.Housing
                 plots.Add(new Plot(plotModel));
 
             saveMask = ResidenceSaveMask.None;
+
+            // TODO: Temporarily resolve bug where some plots end up at 99, which is invalid with current support.
+            if (PropertyInfoId > PropertyInfoId.Residence && PropertyInfoId < PropertyInfoId.CommunityResidence1)
+            {
+                PropertyInfoId = PropertyInfoId.Residence;
+                GuildOwnerId = null;
+            }
         }
 
         /// <summary>
