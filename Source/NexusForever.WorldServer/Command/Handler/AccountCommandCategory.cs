@@ -34,8 +34,8 @@ namespace NexusForever.WorldServer.Command.Handler
                 
                 role ??= (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? (uint)Role.Player);
                 
-                (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password, (uint)role);
-                DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier);
+                (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+                DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role);
 
                 if (context.InvokingPlayer != null)
                 {

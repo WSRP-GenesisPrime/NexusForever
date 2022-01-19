@@ -12,6 +12,7 @@ using NexusForever.Database.Auth;
 using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Database;
 using NexusForever.Database.Auth.Model;
+using NexusForever.Shared.Configuration;
 
 namespace MainSite.Controllers
 {
@@ -39,10 +40,10 @@ namespace MainSite.Controllers
                     try
                     {
                         (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(username, newUser.Password);
-                        DatabaseManager.Instance.AuthDatabase.CreateAccount(username, salt, verifier);
+                        DatabaseManager.Instance.AuthDatabase.CreateAccount(username, salt, verifier, 1);
                         return View("RegisterSuccess");
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         return View("DBException");
                     }
