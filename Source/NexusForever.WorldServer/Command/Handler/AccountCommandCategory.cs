@@ -1,7 +1,9 @@
-﻿using NexusForever.Shared.Cryptography;
+﻿using NexusForever.Shared.Configuration;
+using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Database;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
+using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
@@ -18,7 +20,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Email address for the new account", converter: typeof(StringLowerParameterConverter))]
             string email,
             [Parameter("Password for the new account")]
-            string password)
+            string password,
+            [Parameter("Role", ParameterFlags.Optional)]
+            uint? role = null)
         {
             try
             {
@@ -27,8 +31,10 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendMessage("Account with that username already exists. Please try another.");
                     return;
                 }
-
-                (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+                
+                role ??= (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? (uint)Role.Player);
+                
+                (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password, (uint)role);
                 DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier);
 
                 if (context.InvokingPlayer != null)

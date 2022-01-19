@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Systemd;
@@ -39,7 +41,11 @@ namespace NexusForever.WorldServer
         /// </summary>
         public static string RealmMotd { get; set; }
 
-        private static void Main()
+        private static TimeSpan serverTimeOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
+
+        private static readonly CancellationTokenSource cancellationToken = new();
+
+        private static async Task Main()
         {
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
 
@@ -66,13 +72,29 @@ namespace NexusForever.WorldServer
 
             try
             {
-                IHost host = builder.Build();
-                host.Run();
+                var host = builder.Build();
+                await host.RunAsync(cancellationToken.Token);
             }
             catch (Exception e)
             {
                 log.Fatal(e);
             }
+        }
+
+        /// <summary>
+        /// Request shutdown of <see cref="WorldServer"/>.
+        /// </summary>
+        public static void Shutdown()
+        {
+            cancellationToken.Cancel();
+        }
+
+        /// <summary>
+        /// Get the current Server Time in FileTime format.
+        /// </summary>
+        public static ulong GetServerTime()
+        {
+            return (ulong)DateTime.UtcNow.Add(serverTimeOffset).ToFileTime();
         }
     }
 }

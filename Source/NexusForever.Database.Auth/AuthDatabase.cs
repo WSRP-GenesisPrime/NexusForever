@@ -80,6 +80,7 @@ namespace NexusForever.Database.Auth
             return account;
 
             /*return await context.Account
+                .AsSplitQuery()
                 .Include(a => a.AccountCostumeUnlock)
                 .Include(a => a.AccountCurrency)
                 .Include(a => a.AccountGenericUnlock)
@@ -102,24 +103,23 @@ namespace NexusForever.Database.Auth
         /// <summary>
         /// Create a new account with the supplied email, salt and password verifier that is inserted into the database.
         /// </summary>
-        public void CreateAccount(string email, string s, string v)
+        public void CreateAccount(string email, string s, string v, uint role)
         {
             if (AccountExists(email))
                 throw new InvalidOperationException($"Account with that username already exists.");
 
             using var context = new AuthContext(config);
-            AccountModel acc = new AccountModel
+            var model = new AccountModel
             {
                 Email = email,
-                S = s,
-                V = v
+                S     = s,
+                V     = v
             };
-            context.Account.Add(acc);
-            context.AccountRole.Add(new AccountRoleModel
+            model.AccountRole.Add(new AccountRoleModel
             {
-                Account = acc,
-                RoleId = 1
+                RoleId = role
             });
+            context.Account.Add(model);
 
             context.SaveChanges();
         }
