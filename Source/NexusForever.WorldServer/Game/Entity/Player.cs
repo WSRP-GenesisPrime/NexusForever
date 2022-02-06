@@ -711,11 +711,11 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if(guid <= 0)
             {
-                log.Warn($"Adding player {Name} to map {map.Entry.Id} with guid 0!");
+                log.Warn($"Adding player {Name} ({CharacterId}) to map {map.Entry.Id} with guid 0!");
             }
             else
             {
-                log.Info($"Adding player {Name} to map {map.Entry.Id} with guid {guid}.");
+                log.Info($"Adding player {Name} ({CharacterId}) to map {map.Entry.Id} with guid {guid}.");
             }
             IsLoading = true;
 
@@ -880,11 +880,11 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (Guid <= 0)
             {
-                log.Warn($"Removing player {Name} from map {Map.Entry.Id} with guid 0!");
+                log.Warn($"Removing player {Name} ({CharacterId}) from map {Map.Entry.Id} with guid 0!");
             }
             else
             {
-                log.Info($"Removing player {Name} from map {Map.Entry.Id} with guid {Guid}.");
+                log.Info($"Removing player {Name} ({CharacterId}) from map {Map.Entry.Id} with guid {Guid}.");
             }
             DestroyDependents();
             base.OnRemoveFromMap();
