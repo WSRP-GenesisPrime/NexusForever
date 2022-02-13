@@ -20,8 +20,7 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
 
-        // TODO: need to research Server092C more to find a permanent home for this
-        public const byte CostumeCap = 12; // probably the current cap?
+        public byte CostumeCap => (byte)(player.Session.EntitlementManager.GetRewardProperty(RewardPropertyType.CostumeSlots).GetValue(0) ?? 4u);
 
         // hard limit, array storing costumes at client is 12 in size 
         private const byte MaxCostumes = 12;
@@ -163,7 +162,8 @@ namespace NexusForever.WorldServer.Game.Entity
                 costumes.Add(costume.Index, costume);
             }
 
-            SetCostume((sbyte)costumeSave.Index, costume);
+            if (costumeSave.Index == player.CostumeIndex)
+                player.Inventory.VisualUpdate(costume);
 
             SendCostume(costume);
             SendCostumeSaveResult(CostumeSaveResult.Saved, costumeSave.Index, costumeSave.MannequinIndex);

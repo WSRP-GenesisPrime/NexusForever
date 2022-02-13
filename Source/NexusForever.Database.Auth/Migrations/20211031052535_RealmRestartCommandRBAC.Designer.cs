@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexusForever.Database.Auth;
 
 namespace NexusForever.Database.Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    partial class AuthContextModelSnapshot : ModelSnapshot
+    [Migration("20211031052535_RealmRestartCommandRBAC")]
+    partial class RealmRestartCommandRBAC
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -871,116 +873,6 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
-                            Id = 110u,
-                            Name = "Command: QuestList"
-                        },
-                        new
-                        {
-                            Id = 111u,
-                            Name = "Command: RealmMaxPlayers"
-                        },
-                        new
-                        {
-                            Id = 50000u,
-                            Name = "Category: Morph"
-                        },
-                        new
-                        {
-                            Id = 50001u,
-                            Name = "Command: MorphStoryTeller"
-                        },
-                        new
-                        {
-                            Id = 50100u,
-                            Name = "Category: Emote"
-                        },
-                        new
-                        {
-                            Id = 50200u,
-                            Name = "Category: Chron"
-                        },
-                        new
-                        {
-                            Id = 50300u,
-                            Name = "Category: XRoll"
-                        },
-                        new
-                        {
-                            Id = 50400u,
-                            Name = "Command: CharacterProps"
-                        },
-                        new
-                        {
-                            Id = 50500u,
-                            Name = "Category: Boost"
-                        },
-                        new
-                        {
-                            Id = 50600u,
-                            Name = "Command: HouseRemodel"
-                        },
-                        new
-                        {
-                            Id = 50700u,
-                            Name = "Command: RealmOnline"
-                        },
-                        new
-                        {
-                            Id = 50710u,
-                            Name = "Command: RealmUptime"
-                        },
-                        new
-                        {
-                            Id = 50800u,
-                            Name = "Command: AccountChangePass"
-                        },
-                        new
-                        {
-                            Id = 50810u,
-                            Name = "Command: AccountChangeMyPass"
-                        },
-                        new
-                        {
-                            Id = 50900u,
-                            Name = "Flag: GM"
-                        },
-                        new
-                        {
-                            Id = 60000u,
-                            Name = "Category: Costume"
-                        },
-                        new
-                        {
-                            Id = 60010u,
-                            Name = "Command: CostumeOverride"
-                        },
-                        new
-                        {
-                            Id = 60020u,
-                            Name = "Command: CostumeOverrideId"
-                        },
-                        new
-                        {
-                            Id = 61000u,
-                            Name = "Flag: Adult"
-                        },
-                        new
-                        {
-                            Id = 61100u,
-                            Name = "Command: AdultPlotLockSelf"
-                        },
-                        new
-                        {
-                            Id = 61150u,
-                            Name = "Command: AdultPlotLockNonOwner"
-                        },
-                        new
-                        {
-                            Id = 61200u,
-                            Name = "Command: AdultPlotAlert"
-                        },
-                        new
-                        {
                             Id = 10000u,
                             Name = "Other: InstantLogout"
                         },
@@ -1055,24 +947,6 @@ namespace NexusForever.Database.Auth.Migrations
                             Id = 5u,
                             Flags = 2u,
                             Name = "WebSocket"
-                        },
-                        new
-                        {
-                            Id = 6u,
-                            Flags = 1u,
-                            Name = "Storyteller"
-                        },
-                        new
-                        {
-                            Id = 7u,
-                            Flags = 1u,
-                            Name = "NSFWS"
-                        },
-                        new
-                        {
-                            Id = 8u,
-                            Flags = 1u,
-                            Name = "NFSWSMod"
                         });
                 });
 
@@ -1142,18 +1016,12 @@ namespace NexusForever.Database.Auth.Migrations
                         .HasColumnType("tinyint(3) unsigned")
                         .HasColumnName("id");
 
-                    b.Property<bool>("AssumeOnline")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("Host")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("varchar(64)")
                         .HasDefaultValue("127.0.0.1")
                         .HasColumnName("host");
-
-                    b.Property<string>("InternalIP")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1182,7 +1050,6 @@ namespace NexusForever.Database.Auth.Migrations
                         new
                         {
                             Id = (byte)1,
-                            AssumeOnline = false,
                             Host = "127.0.0.1",
                             Name = "NexusForever",
                             Port = (ushort)24000,
