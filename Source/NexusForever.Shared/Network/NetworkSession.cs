@@ -73,7 +73,7 @@ namespace NexusForever.Shared.Network
             if (!disconnectState.HasValue)
                 Heartbeat.Update(lastTick);
 
-            if (Heartbeat.Flatline || disconnectState == DisconnectState.Pending)
+            if ((Heartbeat.Flatline && disconnectState != DisconnectState.Complete) || disconnectState == DisconnectState.Pending)
             {
                 // no defibrillator is going to save this session
                 if (Heartbeat.Flatline)
