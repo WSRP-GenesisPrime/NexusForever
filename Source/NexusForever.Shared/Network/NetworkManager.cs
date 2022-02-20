@@ -98,7 +98,7 @@ namespace NexusForever.Shared.Network
                 UpdateSession(existingSession, Guid.NewGuid().ToString());
             }
             */
-
+            log.Info($"Adding new session with ID: {session.Id}");
             sessions.Add(session.Id, session);
         }
 
