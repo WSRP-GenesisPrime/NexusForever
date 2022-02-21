@@ -102,7 +102,8 @@ namespace NexusForever.WorldServer.Command.Helper
             { "resocharge", 467 },
             { "resofire3", 468 },
             { "readycombat2", 469 },
-            { "readystaff", 470 }
+            { "readystaff", 470 },
+            { "hoverboard", 471 }
         };
 
         /// <summary>

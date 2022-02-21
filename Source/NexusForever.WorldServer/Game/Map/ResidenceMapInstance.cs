@@ -413,7 +413,11 @@ namespace NexusForever.WorldServer.Game.Map
                     {
                         ColorShiftEntry colourEntry = GameTableManager.Instance.ColorShift.GetEntry(update.ColourShiftId);
                         if (colourEntry == null)
+                        {
+                            log.Error($"ColorShiftEntry null for update.ColourShiftId: {update.ColourShiftId}; actor name: {player.Name}, residence: {residence.Id} ({residence.Name})");
                             throw new InvalidPacketValueException();
+                        }
+                            
                     }
 
                     decor.ColourShiftId = update.ColourShiftId;

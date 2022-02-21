@@ -371,6 +371,7 @@ namespace NexusForever.WorldServer.Game.Guild
 
         private void SendGuildRoster(WorldSession session)
         {
+            log.Info($"In GuildBase.SendGuildRoster() : Guild ID = {Id}");
             session.EnqueueMessageEncrypted(new ServerGuildRoster
             {
                 GuildRealm = WorldServer.RealmId,
