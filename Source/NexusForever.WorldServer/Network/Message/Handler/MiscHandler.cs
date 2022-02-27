@@ -88,7 +88,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (randomRoll.MaxRandom > 1000000u)
                 throw new InvalidPacketValueException();
 
-            int RandomRollResult = new Random().Next((int)randomRoll.MinRandom, (int)randomRoll.MaxRandom);
+            int RandomRollResult = new Random().Next((int)randomRoll.MinRandom, (int)randomRoll.MaxRandom+1);
 
             // get players in local chat range
             session.Player.Map.Search(
@@ -98,18 +98,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 out List<GridEntity> intersectedEntities
             );
 
-            ServerChat serverChat = new ServerChat
-            {
-                Guid = session.Player.Guid,
-                Channel = new Channel
-                {
-                    Type = Game.Social.Static.ChatChannelType.Emote
-                }, // roll result to emote channel
-                Text = $"♥♦♣♠ (({session.Player.Name} rolls {RandomRollResult})) ({randomRoll.MinRandom} - {randomRoll.MaxRandom}) ♠♣♦♥"
-            };
-
-            intersectedEntities.ForEach(e => ((Player)e).Session.EnqueueMessageEncrypted(serverChat));
-            session.EnqueueMessageEncrypted(serverChat); // send to player's own emote channel as well?
+            string systemMessage = $"{session.Player.Name} rolls {RandomRollResult} ({randomRoll.MinRandom}-{randomRoll.MaxRandom})";
+            intersectedEntities.ForEach(e => ((Player)e).SendSystemMessage(systemMessage));
 
             session.EnqueueMessageEncrypted(new ServerRandomRollResponse
             {
