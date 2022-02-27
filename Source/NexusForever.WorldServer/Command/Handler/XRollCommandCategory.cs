@@ -82,14 +82,15 @@ namespace NexusForever.WorldServer.Command.Handler
                 int num = modifier;
                 for (int i = 0; i < numDice; ++i)
                 {
-                    int r = rnd.Next(1, dieType);
+                    int r = rnd.Next(1, dieType+1);
                     num += r;
                     numString += $"{((i > 0) ? "+" : "")}{r}";
                 }
-                string feedback = $"{numDice}d{dieType}{modifierText}: ({numString}){modifierText} = {num}";
-                context.SendMessage($"You roll {feedback}");
 
                 Player player = context.InvokingPlayer;
+
+                string feedback = $"{numDice}d{dieType}{modifierText}: ({numString}){modifierText} = {num}";
+                context.SendMessage($"{player.Name} rolls {feedback}");
 
                 // get players in local chat range
                 player.Map.Search(
