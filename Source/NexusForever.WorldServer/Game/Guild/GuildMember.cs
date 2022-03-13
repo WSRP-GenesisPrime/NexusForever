@@ -143,16 +143,16 @@ namespace NexusForever.WorldServer.Game.Guild
             log.Info($"In GuildMember.Build() : CharacterId = {CharacterId}, characterInfo = {characterInfo}, rank = {rank}");
             return new NetworkGuildMember
             {
-                Realm = WorldServer.RealmId,
-                CharacterId = CharacterId,
-                Rank = rank.Index,
-                Name = characterInfo.Name,
-                Sex = characterInfo.Sex,
-                Class = characterInfo.Class,
-                Path = characterInfo.Path,
-                Level = characterInfo.Level,
-                Note = Note,
-                LastLogoutTimeDays = characterInfo.GetOnlineStatus() ?? 0f,
+                Realm                    = WorldServer.RealmId,
+                CharacterId              = CharacterId,
+                Rank                     = rank.Index,
+                Name                     = characterInfo.Name,
+                Sex                      = characterInfo.Sex,
+                Class                    = characterInfo.Class,
+                Path                     = characterInfo.Path,
+                Level                    = characterInfo.Level,
+                Note                     = Note,
+                LastLogoutTimeDays       = characterInfo.GetOnlineStatus() ?? 0f,
                 CommunityPlotReservation = communityPlotReservation
             };
         }
