@@ -94,7 +94,8 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Category.", ParameterFlags.Optional)]
             string category)
         {
-            if (!"weapon".Equals(slotName.ToLower()))
+            ItemSlot? slot = StringToItemSlot(slotName);
+            if (slot == null)
             {
                 context.SendError("Invalid item slot: " + slotName);
                 return;
@@ -102,7 +103,7 @@ namespace NexusForever.WorldServer.Command.Handler
             if (string.IsNullOrWhiteSpace(category))
             {
                 string message = $"Available {slotName} types:";
-                var list = CostumeHelper.getItemTypeList();
+                var list = CostumeHelper.getItemTypeList((ItemSlot) slot);
                 foreach(var entry in list)
                 {
                     message += $"\n{entry}";
@@ -112,7 +113,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
             { // listing a category. Just a scope thing.
                 string message = $"Available {category} items:";
-                var list = CostumeHelper.getItemsForType(category);
+                var list = CostumeHelper.getItemsForType((ItemSlot) slot, category);
                 if (list == null)
                 {
                     context.SendError("No such category!");

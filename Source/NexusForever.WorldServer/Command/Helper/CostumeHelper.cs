@@ -202,16 +202,28 @@ namespace NexusForever.WorldServer.Command.Helper
         /// <summary>
         /// (GENESIS PRIME) Get a list of valid item display types.
         /// </summary>
-        public static List<string> getItemTypeList()
+        public static List<string> getItemTypeList(ItemSlot slot)
         {
-            return ItemDisplayVariantLibrary.Keys.ToList();
+            if (slot == ItemSlot.WeaponPrimary)
+            {
+                return ItemDisplayVariantLibrary.Keys.ToList();
+            }
+            if (slot == ItemSlot.BodyType)
+            {
+                return VariantsBodyType.Keys.ToList();
+            }
+            return null;
         }
 
         /// <summary>
         /// (GENESIS PRIME) Get a list of valid item display variants for a type.
         /// </summary>
-        public static List<string> getItemsForType(string itemType)
+        public static List<string> getItemsForType(ItemSlot slot, string itemType)
         {
+            if(slot != ItemSlot.WeaponPrimary)
+            {
+                return null;
+            }
             (Dictionary<string, ushort>, ushort) itemDisplaySubLibrary;
             // get the item display type-specific dictionary
             if (ItemDisplayVariantLibrary.TryGetValue(itemType, out itemDisplaySubLibrary))
