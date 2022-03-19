@@ -239,5 +239,15 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             session.Player.ChatManager.Mute(chatMute.Channel.ChatId, chatMute.CharacterName, chatMute.Status);
         }
+
+        [MessageHandler(GameMessageOpcode.ClientIcCommJoin)]
+        public static void HandleIcCommJoin(WorldSession session, ClientIcCommJoin chatMute)
+        {
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientIcCommSendMessage)]
+        public static void HandleIcCommSendMessage(WorldSession session, ClientIcCommSendMessage chatMute)
+        {
+        }
     }
 }
