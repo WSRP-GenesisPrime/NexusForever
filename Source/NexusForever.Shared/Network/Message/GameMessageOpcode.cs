@@ -223,6 +223,15 @@ namespace NexusForever.Shared.Network.Message
         ClientHousingCommunityPrivacyLevel = 0x0538,
         ServerHousingPlotUpdate         = 0x053B,
         ClientHousingEditMode           = 0x053C,
+        ClientIcCommJoin                = 0x0546,
+        ServerIcCommJoinResult          = 0x0547,
+        Server0548                      = 0x0548,
+        Client0549                      = 0x0549, // IC error?
+        Server054A                      = 0x054A, // IC throttle
+        ClientIcCommSendMessage         = 0x054B,
+        Server054C                      = 0x054C, // IC direct??
+        Server054D                      = 0x054D,
+        Server054E                      = 0x054E, // send message
         ServerSpellList                 = 0x0551,
         ClientInspectPlayerRequest      = 0x0552,
         ServerInspectPlayerResponse     = 0x0553,
