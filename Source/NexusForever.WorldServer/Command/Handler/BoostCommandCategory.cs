@@ -39,7 +39,15 @@ namespace NexusForever.WorldServer.Command.Handler
             target.CurrencyManager.CurrencyAddAmount(CurrencyType.Glory, 500000);
         }
 
-        [Command(Permission.Boost, "Level boost, currencies and unlock all dyes.", "all")]
+        [Command(Permission.Boost, "Unlock lore.", "lore")]
+        public void HandleBoostLore(ICommandContext context)
+        {
+            Player target = context.InvokingPlayer;
+
+            target.DatacubeManager.UnlockAllLore();
+        }
+
+        [Command(Permission.Boost, "Level boost, currencies, unlock all dyes and unlock all lore.", "all")]
         public void HandleBoostAll(ICommandContext context)
         {
             Player target = context.InvokingPlayer;
@@ -57,6 +65,8 @@ namespace NexusForever.WorldServer.Command.Handler
             target.CurrencyManager.CurrencyAddAmount(CurrencyType.CraftingVoucher, 500000);
             target.CurrencyManager.CurrencyAddAmount(CurrencyType.Prestige, 500000);
             target.CurrencyManager.CurrencyAddAmount(CurrencyType.Glory, 500000);
+
+            target.DatacubeManager.UnlockAllLore();
         }
     }
 }
