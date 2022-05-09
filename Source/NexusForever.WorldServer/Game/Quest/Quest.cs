@@ -104,7 +104,7 @@ namespace NexusForever.WorldServer.Game.Quest
             if (timer != null)
                 questTimer = new UpdateTimer(timer.Value);
 
-            foreach (CharacterQuestObjectiveModel objectiveModel in model.QuestObjective)
+            foreach (CharacterQuestObjectiveModel objectiveModel in model.QuestObjective.OrderBy(o => o.Index))
                 objectives.Add(new QuestObjective(info, info.Objectives[objectiveModel.Index], objectiveModel));
         }
 
