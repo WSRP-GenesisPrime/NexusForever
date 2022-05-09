@@ -747,5 +747,20 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             session.Player.SetCharacterCustomisation(customisations, appearanceChange.Bones, (Race)appearanceChange.Race, (Sex)appearanceChange.Sex, appearanceChange.UseServiceTokens);
         }
+
+        [MessageHandler(GameMessageOpcode.ClientPvpModeSet)]
+        public static void HandlePvpModeSet(WorldSession session, ClientPvpModeSet pvpModeSet)
+        {
+            if (session.Player == null)
+                throw new ArgumentNullException("Player does not exist!");
+
+            if (session.Player.InCombat)
+            {
+                session.Player.SendGenericError(GenericError.PlayerCannotWhileInCombat);
+                return;
+            }
+
+            session.Player.SetPvpMode(pvpModeSet.PvpMode);
+        }
     }
 }

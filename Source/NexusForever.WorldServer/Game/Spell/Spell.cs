@@ -538,6 +538,9 @@ namespace NexusForever.WorldServer.Game.Spell
                         finalAoeTargets.Count > parameters.SpellInfo.AoeTargetConstraints.TargetCount)
                         break;
 
+                    if ((target.Flags & SpellEffectTargetFlags.Caster) != 0)
+                        continue;
+
                     if ((target.Flags & SpellEffectTargetFlags.Telegraph) == 0)
                         continue;
 
@@ -673,7 +676,7 @@ namespace NexusForever.WorldServer.Game.Spell
             bool effectCanApply = true;
 
             // TODO: Possibly update Prereq Manager to handle other Units
-            if (unit is not Player player)
+            if (unit != caster || unit is not Player player)
                 return true;
 
             if ((targetFlags & SpellEffectTargetFlags.Caster) != 0)

@@ -141,12 +141,7 @@ namespace NexusForever.WorldServer.Game.Entity
             set => MovementManager.SetPlatform(value);
         }
 
-        ///// <summary>
-        ///// Guid of the <see cref="VanityPet"/> currently summoned by the <see cref="Player"/>.
-        ///// </summary>
-        //public uint? VanityPetGuid { get; set; }
-
-        //public List<uint> CombatPetGuids { get; private set; } = new List<uint>();
+        public PvPFlag PvPFlags { get; private set; }
 
         public bool IsSitting => currentChairGuid != null;
         private uint? currentChairGuid;
@@ -223,7 +218,6 @@ namespace NexusForever.WorldServer.Game.Entity
         public VendorInfo SelectedVendorInfo { get; set; } // TODO unset this when too far away from vendor
 
         private UpdateTimer saveTimer = new(SaveDuration);
-
         private PlayerSaveMask saveMask;
 
         private LogoutManager logoutManager;
@@ -634,7 +628,7 @@ namespace NexusForever.WorldServer.Game.Entity
                     .ToList(),
                 GuildName = GuildManager.GuildAffiliation?.Name,
                 GuildType = GuildManager.GuildAffiliation?.Type ?? GuildType.None,
-                PvPFlag   = PvPFlag.Disabled
+                PvPFlag   = PvPFlags
             };
         }
 
@@ -1427,6 +1421,7 @@ namespace NexusForever.WorldServer.Game.Entity
             Map.EnqueueRemove(ghost);
 
             SetDeathState(DeathState.JustSpawned);
+            HandleMovementSpeedApply(movementSpeed);
         }
 
         protected override void OnDeathStateChange(DeathState newState)
@@ -1570,6 +1565,20 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             return base.CanSeeEntity(entity);
+        }
+
+        public void SetPvpMode(bool pvpMode)
+        {
+            if (pvpMode)
+                PvPFlags = PvPFlag.Enabled;
+            else
+                PvPFlags = PvPFlag.Disabled;
+
+            EnqueueToVisible(new ServerUnitSetPvpFlags
+            {
+                UnitId = Guid,
+                PvpFlags = PvPFlags
+            }, true);
         }
     }
 }

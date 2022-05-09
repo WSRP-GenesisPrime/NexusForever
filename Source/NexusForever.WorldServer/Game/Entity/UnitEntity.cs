@@ -364,7 +364,10 @@ namespace NexusForever.WorldServer.Game.Entity
 
             // TODO: Support PvP. For now, don't let this entity count as attackable
             if (this is Player && target is Player)
-                return false;
+            {
+                if ((((this as Player).PvPFlags & PvPFlag.Enabled) == 0) || (((target as Player).PvPFlags & PvPFlag.Enabled) == 0))
+                    return false;
+            }
 
             return target.Faction1 != (Faction)0 ? GetDispositionTo(target.Faction1) < Disposition.Friendly : false;
         }
@@ -556,6 +559,10 @@ namespace NexusForever.WorldServer.Game.Entity
                 UnitEntity target = hostileEntity.GetEntity(this);
                 if (target != null && target is Player player)
                 {
+                    // TODO: Handle rewarding PVP Kills.
+                    if (this is Player)
+                        continue;
+
                     RewardKiller(player);
 
                     LootInstance loot = GlobalLootManager.Instance.DropLoot(player.Session, this);

@@ -76,6 +76,7 @@ namespace NexusForever.Shared.Network.Message
         ServerShowActionBar             = 0x016C,
         ServerCharacterBindpoint        = 0x016D,
         ClientInnateChange              = 0x016F,
+        ClientPvpModeSet                = 0x0173,
         ClientChangeActiveActionSet     = 0x0174,
         ServerChangeActiveActionSet     = 0x0175,
         ClientToggleWeapons             = 0x0177,
@@ -391,7 +392,8 @@ namespace NexusForever.Shared.Network.Message
         Server089B                      = 0x089B, // mount related
         ServerLootGrant                 = 0x08A5,
         Server08B3                      = 0x08B3,
-        ServerSetUnitPathType           = 0x08B8,
+        ServerUnitSetPathType           = 0x08B8,
+        ServerUnitSetPvpFlags           = 0x08BD,
         ServerVehiclePassengerRemove    = 0x08C7,
         ServerUnitSetChair              = 0x08CF,
         ServerUnitStealth               = 0x08F5,

@@ -30,12 +30,13 @@ namespace NexusForever.WorldServer.Game.Combat
         /// </summary>
         public void Update(double lastTick)
         {
-            if (hostiles.Count == 0u || owner is Player)
+            if (hostiles.Count == 0u)
                 return;
 
             updateInterval.Update(lastTick);
             if (updateInterval.HasElapsed)
             {
+                CheckForRemoval();
                 SendThreatList();
                 updateInterval.Reset();
             }
@@ -122,6 +123,9 @@ namespace NexusForever.WorldServer.Game.Combat
         /// </summary>
         private void SendThreatList()
         {
+            if (owner is Player)
+                return;
+
             var threatUpdate = new ServerThreatListUpdate
             {
                 SrcUnitId = owner.Guid
@@ -146,6 +150,15 @@ namespace NexusForever.WorldServer.Game.Combat
                     owner.EnqueueToVisible(threatUpdate);
 
                 j++;
+            }
+        }
+
+        private void CheckForRemoval()
+        {
+            foreach (HostileEntity hostile in GetThreatList().ToList())
+            {
+                if (hostile.CanRemove())
+                    RemoveTarget(hostile.HatedUnitId);
             }
         }
 
