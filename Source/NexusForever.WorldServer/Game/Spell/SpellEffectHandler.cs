@@ -508,6 +508,15 @@ namespace NexusForever.WorldServer.Game.Spell
                 log.Trace($"Failed to apply Proc {info.Entry.Id} for {(ProcType)info.Entry.DataBits00} to Entity {target.Guid}.");
         }
 
+        [SpellEffectHandler(SpellEffectType.QuestAdvanceObjective)]
+        private void HandleEffectQuestAdvanceObjective(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            player.QuestManager.QuestAchieveObjective((ushort)info.Entry.DataBits00, (byte)info.Entry.DataBits01);
+        }
+
         [SpellEffectHandler(SpellEffectType.SummonPet)]
         private void HandleEffectSummonPet(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
