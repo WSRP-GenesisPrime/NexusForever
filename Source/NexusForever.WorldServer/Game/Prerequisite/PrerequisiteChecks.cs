@@ -18,9 +18,21 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         {
             switch (comparison)
             {
+                case PrerequisiteComparison.Equal:
+                    return player.Level == value;
+                case PrerequisiteComparison.NotEqual:
+                    return player.Level != value;
+                case PrerequisiteComparison.GreaterThan:
+                    return player.Level > value;
+                case PrerequisiteComparison.GreaterThanOrEqual:
+                    return player.Level >= value;
+                case PrerequisiteComparison.LessThan:
+                    return player.Level < value;
+                case PrerequisiteComparison.LessThanOrEqual:
+                    return player.Level <= value;
                 default:
                     log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.Level}!");
-                    return true;
+                    return false;
             }
         }
 
@@ -395,6 +407,53 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return player.GetVitalValue((Vital)objectId) <= value;
                 case PrerequisiteComparison.LessThan:
                     return player.GetVitalValue((Vital)objectId) < value;
+                default:
+                    log.Warn($"Unhandled {comparison} for {PrerequisiteType.Vital}!");
+                    return false;
+            }
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.VitalPercent)]
+        private static bool PrerequisiteCheckVitalPercent(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        {
+            float max = 0;
+            switch (objectId)
+            {
+                case 1:
+                    max = player.GetPropertyValue(Property.BaseHealth);
+                    break;
+                case 3:
+                    max = player.GetPropertyValue(Property.ShieldCapacityMax);
+                    break;
+                case 5:
+                    max = player.GetPropertyValue(Property.ResourceMax0);
+                    break;
+                case 6:
+                    max = player.GetPropertyValue(Property.ResourceMax1);
+                    break;
+                case 8:
+                    max = player.GetPropertyValue(Property.ResourceMax3);
+                    break;
+                case 15:
+                    max = player.GetPropertyValue(Property.BaseFocusPool);
+                    break;
+                default:
+                    log.Warn($"Unhandled objectId: {objectId} for {PrerequisiteType.SpellMechanic}");
+                    break;
+            }
+
+            float percentage = player.GetVitalValue((Vital)objectId) / max * 100;
+
+            switch (comparison)
+            {
+                case PrerequisiteComparison.GreaterThanOrEqual:
+                    return percentage >= value;
+                case PrerequisiteComparison.GreaterThan:
+                    return percentage > value;
+                case PrerequisiteComparison.LessThanOrEqual:
+                    return percentage <= value;
+                case PrerequisiteComparison.LessThan:
+                    return percentage < value;
                 default:
                     log.Warn($"Unhandled {comparison} for {PrerequisiteType.Vital}!");
                     return false;

@@ -34,6 +34,8 @@
         /// Checks the amount of a given SpellMechanic resource. Seems to be legacy version of Vitals.
         /// </summary>
         SpellMechanic       = 64,
+        QuestObjective2     = 68,
+        VitalPercent        = 71,
         Vital               = 73,
         /// <summary>
         /// Checks to see if a PositionalRequirement Entry is met.
