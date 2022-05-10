@@ -36,6 +36,10 @@
         SpellMechanic       = 64,
         Vital               = 73,
         /// <summary>
+        /// Checks to see if a PositionalRequirement Entry is met.
+        /// </summary>
+        PositionalRequirement = 108,
+        /// <summary>
         /// Checks for an objectId. Used in the "RavelSignal" SpellEffectType at minimum. Error: World requirement not met
         /// </summary>
         WorldReq            = 109,

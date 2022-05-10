@@ -676,7 +676,7 @@ namespace NexusForever.WorldServer.Game.Spell
             bool effectCanApply = true;
 
             // TODO: Possibly update Prereq Manager to handle other Units
-            if (unit != caster || unit is not Player player)
+            if (caster is not Player player)
                 return true;
 
             if ((targetFlags & SpellEffectTargetFlags.Caster) != 0)
@@ -692,7 +692,7 @@ namespace NexusForever.WorldServer.Game.Spell
             {
                 if (spell4EffectsEntry.PrerequisiteIdTargetApply > 0)
                 {
-                    effectCanApply = PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdTargetApply);
+                    effectCanApply = PrerequisiteManager.Instance.Meets(player, spell4EffectsEntry.PrerequisiteIdTargetApply, unit);
                 }
             }
 
