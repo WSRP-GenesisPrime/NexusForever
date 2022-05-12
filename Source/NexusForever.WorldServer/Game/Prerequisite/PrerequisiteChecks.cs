@@ -464,5 +464,54 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return false;
             }
         }
+
+        [PrerequisiteCheck(PrerequisiteType.Entitlement)]
+        private static bool PrerequisiteCheckEntitlement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        {
+            EntitlementEntry entry = GameTableManager.Instance.Entitlement.GetEntry(objectId);
+            if (entry == null)
+                throw new ArgumentException($"Invalid entitlement type {objectId}!");
+
+            uint currentValue = 0;
+
+            if (((EntitlementFlags)entry.Flags).HasFlag(EntitlementFlags.Character))
+                currentValue = player.Session.EntitlementManager.GetCharacterEntitlement((EntitlementType)objectId)?.Amount ?? 0u;
+            else
+                currentValue = player.Session.EntitlementManager.GetAccountEntitlement((EntitlementType)objectId)?.Amount ?? 0u;
+
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return currentValue == value;
+                case PrerequisiteComparison.NotEqual:
+                    return currentValue != value;
+                case PrerequisiteComparison.GreaterThanOrEqual:
+                    return currentValue >= value;
+                case PrerequisiteComparison.GreaterThan:
+                    return currentValue > value;
+                case PrerequisiteComparison.LessThanOrEqual:
+                    return currentValue <= value;
+                case PrerequisiteComparison.LessThan:
+                    return currentValue < value;
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.PositionalRequirement}!");
+                    return false;
+            }
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.CostumeUnlocked)]
+        private static bool PrerequisiteCheckCostumeUnlocked(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        {
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return player.CostumeManager.HasCostumeItemUnlocked(objectId);
+                case PrerequisiteComparison.NotEqual:
+                    return !player.CostumeManager.HasCostumeItemUnlocked(objectId);
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.PositionalRequirement}!");
+                    return false;
+            }
+        }
     }
 }

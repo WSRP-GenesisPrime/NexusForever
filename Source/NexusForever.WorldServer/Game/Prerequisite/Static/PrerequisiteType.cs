@@ -63,6 +63,8 @@
         AccountItemClaimed  = 246,
         BaseFaction         = 250,
         Unhealthy           = 269,
+        Entitlement         = 273,
+        CostumeUnlocked     = 275,
         CosmicRewards       = 270
     }
 }
