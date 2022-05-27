@@ -553,6 +553,11 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private void RewardQuest(QuestInfo info, ushort reward)
         {
+            // Handle all Rewards that are not chosen
+            foreach (Quest2RewardEntry rewardEntry in info.Rewards.Values.Where(x => x.Flags == 0))
+                RewardQuest(rewardEntry);
+
+            // Handle any chosen rewards
             if (reward != 0)
             {
                 if (!info.Rewards.TryGetValue(reward, out Quest2RewardEntry entry))
@@ -677,6 +682,14 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             foreach (Quest.Quest quest in activeQuests.Values)
                 quest.ObjectiveUpdate(id, progress);
+        }
+
+        /// <summary>
+        /// Returns a collection of all active quests.
+        /// </summary>
+        public IEnumerable<Quest.Quest> GetActiveQuests()
+        {
+            return activeQuests.Values;
         }
     }
 }

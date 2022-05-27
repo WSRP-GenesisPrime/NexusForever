@@ -147,6 +147,30 @@ namespace NexusForever.WorldServer.Game.Entity
         private uint? currentChairGuid;
 
         /// <summary>
+        /// Whether or not this <see cref="Player"/> is currently in a state after using an emote. Setting this to false will let all nearby entities know that the state has been reset.
+        /// </summary>
+        public bool IsEmoting 
+        {
+            get => isEmoting;
+            set
+            {
+                if (isEmoting && value == false)
+                {
+                    isEmoting = false;
+                    EnqueueToVisible(new ServerEntityEmote
+                    {
+                        EmotesId = 0,
+                        SourceUnitId = Guid
+                    });
+                    return;
+                }
+
+                isEmoting = value;
+            }
+        }
+        private bool isEmoting;
+
+        /// <summary>
         /// Returns if <see cref="Player"/> has premium signature subscription.
         /// </summary>
         public bool SignatureEnabled => Session.AccountRbacManager.HasPermission(Permission.Signature);
@@ -728,11 +752,11 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if(guid <= 0)
             {
-                log.Warn($"Adding player {Name} to map {map.Entry.Id} with guid 0!");
+                log.Warn($"Adding player {Name} ({CharacterId}) to map {map.Entry.Id} with guid 0!");
             }
             else
             {
-                log.Info($"Adding player {Name} to map {map.Entry.Id} with guid {guid}.");
+                log.Info($"Adding player {Name} ({CharacterId}) to map {map.Entry.Id} with guid {guid}.");
             }
             IsLoading = true;
 
@@ -897,11 +921,11 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (Guid <= 0)
             {
-                log.Warn($"Removing player {Name} from map {Map.Entry.Id} with guid 0!");
+                log.Warn($"Removing player {Name} ({CharacterId}) from map {Map.Entry.Id} with guid 0!");
             }
             else
             {
-                log.Info($"Removing player {Name} from map {Map.Entry.Id} with guid {Guid}.");
+                log.Info($"Removing player {Name} ({CharacterId}) from map {Map.Entry.Id} with guid {Guid}.");
             }
             DestroyDependents();
             base.OnRemoveFromMap();
@@ -1064,6 +1088,8 @@ namespace NexusForever.WorldServer.Game.Entity
             GuildManager.OnLogin();
             ChatManager.OnLogin();
             GlobalChatManager.Instance.JoinDefaultChatChannels(this);
+
+            ShutdownManager.Instance.OnLogin(this);
         }
 
         private void OnLogout()

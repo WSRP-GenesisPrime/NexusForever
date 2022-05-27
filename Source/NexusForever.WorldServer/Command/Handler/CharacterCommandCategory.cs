@@ -219,7 +219,7 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Maximum number of stacks.", Static.ParameterFlags.Optional)]
             uint? maxStacks)
         {
-            UnitEntity target = context.GetTargetOrInvoker<UnitEntity>();
+            Player target = context.InvokingPlayer;
             target.WipeEffectsByID(63490);
             target.WipeEffectsByID(63491);
             uint mStacks = maxStacks ?? 20;
@@ -268,7 +268,81 @@ namespace NexusForever.WorldServer.Command.Handler
                 }
             }
 
-            context.SendMessage($"Scaling you by {bestScale}x.");
+            target.TargetGuid = target.EntityId;
+
+            for (int i = 0; i < bestSmallStacks; ++i)
+            {
+                target.CastSpell(63490, 1, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false,
+                    OverrideTargetId = target.Guid
+                });
+            }
+            for (int i = 0; i < bestLargeStacks; ++i)
+            {
+                target.CastSpell(63491, 1, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false,
+                    OverrideTargetId = target.Guid
+                });
+            }
+        }
+
+        [Command(Permission.MorphStoryteller, "scale another character", "scaleOther")]
+        public void HandleScaleOther(ICommandContext context,
+           [Parameter("Scale.")]
+            float targetScale,
+           [Parameter("Maximum number of stacks.", Static.ParameterFlags.Optional)]
+            uint? maxStacks)
+        {
+            UnitEntity target = (UnitEntity) context.Target;
+            target.WipeEffectsByID(63490);
+            target.WipeEffectsByID(63491);
+            uint mStacks = maxStacks ?? 20;
+            if (mStacks > 100)
+            {
+                mStacks = 100;
+            }
+
+            uint smallStacks = 0;
+            uint largeStacks = 0;
+            uint bestSmallStacks = 0;
+            uint bestLargeStacks = 0;
+            float bestError = targetScale;
+            if (bestError < 1f)
+            {
+                bestError = 1 / bestError;
+            }
+            bestError -= 1f;
+            float bestScale = 1f;
+
+            float scale = 1f;
+
+            while (smallStacks + largeStacks < mStacks)
+            {
+                if (scale < targetScale)
+                {
+                    largeStacks += 1;
+                }
+                else
+                {
+                    smallStacks += 1;
+                }
+                scale = MathF.Pow(1.5f, largeStacks) * MathF.Pow(0.8f, smallStacks);
+                float error = scale / targetScale;
+                if (error < 1f)
+                {
+                    error = 1f / error;
+                }
+                error -= 1f;
+                if (error < bestError)
+                {
+                    bestError = error;
+                    bestSmallStacks = smallStacks;
+                    bestLargeStacks = largeStacks;
+                    bestScale = scale;
+                }
+            }
 
             for (int i = 0; i < bestSmallStacks; ++i)
             {

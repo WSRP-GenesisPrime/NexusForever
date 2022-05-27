@@ -131,6 +131,7 @@
         QuestAchieveObjective       = 79,
         QuestObjective              = 80,
         QuestKill                   = 81,
+        QuestList                   = 110,
 
         // spell
         Spell                       = 83,
@@ -148,6 +149,10 @@
         // realm
         Realm                       = 82,
         RealmMOTD                   = 94,
+        RealmShutdown               = 107,
+        RealmShutdownStart          = 108,
+        RealmShutdownCancel         = 109,
+        RealmMaxPlayers             = 111,
 
         // story board
         Story                       = 95,

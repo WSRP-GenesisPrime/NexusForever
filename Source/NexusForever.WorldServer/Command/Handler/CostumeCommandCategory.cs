@@ -52,7 +52,7 @@ namespace NexusForever.WorldServer.Command.Handler
             string slotName,
             [Parameter("Override item type.")]
             string itemType,
-            [Parameter("Override item variant.")]
+            [Parameter("Override item variant.", ParameterFlags.Optional)]
             string itemVariant)
         {
             try
@@ -64,32 +64,21 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
 
-                ItemSlot slot;
-                if ("weapon".Equals(slotName.ToLower()))
-                {
-                    slot = ItemSlot.WeaponPrimary;
-                }
-                else
+                ItemSlot? slot = StringToItemSlot(slotName);
+                if (slot == null)
                 {
                     context.SendError("Invalid item slot: " + slotName);
                     return;
                 }
 
-                ushort? displayID = CostumeHelper.GetItemDisplayIdFromType(itemType, itemVariant);
+                ushort? displayID = CostumeHelper.GetItemDisplayIdFromType((ItemSlot) slot, itemType, itemVariant);
                 if (displayID == null)
                 {
                     context.SendError("A Display ID for the given type and variant could not be found!");
                     return;
                 }
 
-                Costume costume = p.CostumeManager.GetCostume((byte)p.CostumeIndex);
-                if (costume == null)
-                {
-                    context.SendError("The current costume is invalid.");
-                    return;
-                }
-                costume.setOverride(slot, displayID);
-                p.EmitVisualUpdate();
+                HandleCostumeOverrideID(context, (ItemSlot)slot, (ushort)displayID);
             }
             catch (Exception e)
             {
@@ -105,7 +94,8 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Category.", ParameterFlags.Optional)]
             string category)
         {
-            if (!"weapon".Equals(slotName.ToLower()))
+            ItemSlot? slot = StringToItemSlot(slotName);
+            if (slot == null)
             {
                 context.SendError("Invalid item slot: " + slotName);
                 return;
@@ -113,7 +103,7 @@ namespace NexusForever.WorldServer.Command.Handler
             if (string.IsNullOrWhiteSpace(category))
             {
                 string message = $"Available {slotName} types:";
-                var list = CostumeHelper.getItemTypeList();
+                var list = CostumeHelper.getItemTypeList((ItemSlot) slot);
                 foreach(var entry in list)
                 {
                     message += $"\n{entry}";
@@ -123,7 +113,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
             { // listing a category. Just a scope thing.
                 string message = $"Available {category} items:";
-                var list = CostumeHelper.getItemsForType(category);
+                var list = CostumeHelper.getItemsForType((ItemSlot) slot, category);
                 if (list == null)
                 {
                     context.SendError("No such category!");
@@ -137,12 +127,13 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.CostumeOverride, "Restore an overridden item slot.", "restoreslot")]
-        public void HandleCostumeRestoreSlot(ICommandContext context,
+        [Command(Permission.CostumeOverrideId, "Restore an overridden item slot by itemslot enum.", "restoreslotid")]
+        public void HandleCostumeRestoreSlotID(ICommandContext context,
            [Parameter("Item slot.", ParameterFlags.None, typeof(EnumParameterConverter<ItemSlot>))]
             ItemSlot slot)
         {
-            try {
+            try
+            {
                 Player p = context.InvokingPlayer;
                 if (p.CostumeIndex == 0)
                 {
@@ -162,6 +153,37 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 log.Error($"Exception caught in CostumeCommandCategory.HandleCostumeRestoreSlot!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
+        }
+
+        [Command(Permission.CostumeOverride, "Restore an overridden item slot.", "restoreslot")]
+        public void HandleCostumeRestoreSlot(ICommandContext context,
+           [Parameter("Item slot (your only choice right now is 'weapon').")]
+            string slotName)
+        {
+            ItemSlot? slot = StringToItemSlot(slotName);
+            if (slot == null)
+            {
+                context.SendError("Invalid item slot: " + slotName);
+                return;
+            }
+
+            HandleCostumeRestoreSlotID(context, (ItemSlot)slot);
+        }
+
+        public ItemSlot? StringToItemSlot(string slotName)
+        {
+            if ("weapon".Equals(slotName.ToLower()))
+            {
+                return ItemSlot.WeaponPrimary;
+            }
+            if ("bodytype".Equals(slotName.ToLower()))
+            {
+                return ItemSlot.BodyType;
+            }
+            else
+            {
+                return null;
             }
         }
     }

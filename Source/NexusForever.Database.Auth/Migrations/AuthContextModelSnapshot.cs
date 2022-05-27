@@ -856,6 +856,31 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
+                            Id = 107u,
+                            Name = "Category: RealmShutdown"
+                        },
+                        new
+                        {
+                            Id = 108u,
+                            Name = "Command: RealmShutdownStart"
+                        },
+                        new
+                        {
+                            Id = 109u,
+                            Name = "Command: RealmShutdownCancel"
+                        },
+                        new
+                        {
+                            Id = 110u,
+                            Name = "Command: QuestList"
+                        },
+                        new
+                        {
+                            Id = 111u,
+                            Name = "Command: RealmMaxPlayers"
+                        },
+                        new
+                        {
                             Id = 50000u,
                             Name = "Category: Morph"
                         },
