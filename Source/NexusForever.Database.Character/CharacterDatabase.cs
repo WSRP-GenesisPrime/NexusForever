@@ -105,10 +105,10 @@ namespace NexusForever.Database.Character
                 .Max();
         }
 
-        public ulong GetNextDecorId()
+        public long GetNextDecorId()
         {
             using var context = new CharacterContext(config);
-            return context.ResidenceDecor
+            return (long) context.ResidenceDecor
                 .Select(r => r.DecorId)
                 .DefaultIfEmpty()
                 .Max();

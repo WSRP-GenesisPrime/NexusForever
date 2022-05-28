@@ -312,8 +312,8 @@ namespace NexusForever.WorldServer.Command.Handler
                         ClientHousingPlugUpdate pu = new ClientHousingPlugUpdate
                         {
                             Operation = PlugUpdateOperation.Place,
-                            PlotInfo = residence.GetPlot(0).PlotInfoEntry.Id,
-                            PlugFacing = (uint)residence.GetPlot(0).PlugFacing,
+                            PlotInfo = residence.GetPlotByIndex(0).PlotInfoEntry.Id,
+                            PlugFacing = (uint)residence.GetPlotByIndex(0).PlugFacing,
                             PlugItem = id,
                             ResidenceId = residence.Id,
                             RealmId = WorldServer.RealmId

@@ -2,12 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using NexusForever.Shared;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.Shared.GameTable.Static;
 using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Housing.Static;
+using NexusForever.WorldServer.Game.Map.Search;
+using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
@@ -24,6 +29,8 @@ namespace NexusForever.WorldServer.Game.Map
 
         private readonly Dictionary<ulong, Residence> residences = new();
 
+        private readonly Dictionary</* decorId */ long, Decor> decorEntities = new Dictionary<long, Decor>();
+
         /// <summary>
         /// Initialise <see cref="ResidenceMapInstance"/> with <see cref="Residence"/>.
         /// </summary>
@@ -32,6 +39,13 @@ namespace NexusForever.WorldServer.Game.Map
             AddResidence(residence);
             foreach (ResidenceChild childResidence in residence.GetChildren())
                 AddResidence(childResidence.Residence);
+        }
+        public override void Update(double lastTick)
+        {
+            base.Update(lastTick);
+
+            foreach (Decor decor in decorEntities.Values)
+                decor.Entity?.Update(lastTick);
         }
 
         private void AddResidence(Residence residence)
@@ -114,17 +128,28 @@ namespace NexusForever.WorldServer.Game.Map
             if (entity is not Player player)
                 return;
 
+            if (player.SpellManager.GetSpell(25520) == null)
+                player.SpellManager.AddSpell(25520);
+
+            if (player.SpellManager.GetSpell(22919) == null)
+                player.SpellManager.AddSpell(22919);
+
             SendResidences(player);
             SendResidencePlots(player);
             SendResidenceDecor(player);
+            SendActionBars(player);
 
-            // this shows the housing toolbar, might need to move this to a more generic place in the future
-            player.Session.EnqueueMessageEncrypted(new ServerShowActionBar
+            foreach (Residence residence in residences.Values)
             {
-                ShortcutSet            = ShortcutSet.FloatingSpellBar,
-                ActionBarShortcutSetId = 1553,
-                Guid                   = player.Guid
-            });
+                foreach (Decor decor in residence.GetPlacedDecor())
+                    CreateEntityForDecor(residence, decor);
+            }
+        }
+
+        public override void OnRemoveFromMap(Player player)
+        {
+            foreach (Decor decor in decorEntities.Values.Where(d => d.Entity != null))
+                player.RemoveVisible(decor.Entity);
         }
 
         protected override void OnUnload()
@@ -133,7 +158,18 @@ namespace NexusForever.WorldServer.Game.Map
                 RemoveResidence(residence);
         }
 
-        private void SendResidences(Player player = null)
+        public void SendActionBars(Player player)
+        {
+            // this shows the housing toolbar, might need to move this to a more generic place in the future
+            player.Session.EnqueueMessageEncrypted(new ServerShowActionBar
+            {
+                ShortcutSet = ShortcutSet.FloatingSpellBar,
+                ActionBarShortcutSetId = 1553,
+                Guid = player.Guid
+            });
+        }
+
+        public void SendResidences(Player player = null)
         {
             var housingProperties = new ServerHousingProperties();
             foreach (Residence residence in residences.Values)
@@ -170,7 +206,7 @@ namespace NexusForever.WorldServer.Game.Map
                 EnqueueToAll(housingProperties);
         }
 
-        private void SendResidencePlots(Player player = null)
+        public void SendResidencePlots(Player player = null)
         {
             foreach (Residence residence in residences.Values)
                 SendResidencePlots(residence, player);
@@ -237,6 +273,20 @@ namespace NexusForever.WorldServer.Game.Map
             }
         }
 
+        public Residence GetMainResidence()
+        {
+            Residence ret = null;
+            foreach (Residence residence in residences.Values)
+            {
+                ret = residence;
+                if(residence.IsCommunityResidence)
+                {
+                    return residence;
+                }
+            }
+            return ret;
+        }
+
         /// <summary>
         /// Add child <see cref="Residence"/> to parent <see cref="Residence"/>.
         /// </summary>
@@ -283,6 +333,9 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 decor.Crate();
                 housingResidenceDecor.DecorData.Add(decor.Build());
+
+                if (decor.Entity != null)
+                    decor.RemoveEntity();
             }
 
             EnqueueToAll(housingResidenceDecor);
@@ -373,6 +426,8 @@ namespace NexusForever.WorldServer.Game.Map
                 decor.Position = update.Position;
                 decor.Rotation = update.Rotation;
                 decor.Scale    = update.Scale;
+
+                CreateEntityForDecor(residence, decor);
             }
 
             EnqueueToAll(new ServerHousingResidenceDecor
@@ -425,13 +480,9 @@ namespace NexusForever.WorldServer.Game.Map
 
                 if (decor.Type == DecorType.Crate)
                 {
-                    if (decor.Entry.Creature2IdActiveProp != 0u)
-                    {
-                        // TODO: used for decor that have an associated entity
-                    }
-
                     // crate->world
                     decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale, update.PlotIndex);
+                    CreateEntityForDecor(residence, decor);
                 }
                 else
                 {
@@ -442,6 +493,8 @@ namespace NexusForever.WorldServer.Game.Map
                         // world->world
                         decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale, update.PlotIndex);
                         decor.DecorParentId = update.ParentDecorId;
+                        decor.RemoveEntity();
+                        CreateEntityForDecor(residence, decor);
                     }
                 }
             }
@@ -608,6 +661,9 @@ namespace NexusForever.WorldServer.Game.Map
             residence.GardenSharing   = flagsUpdate.GardenSharing;
 
             SendResidences();
+
+            foreach (GridEntity entity in entities.Values.Where(i => i is Player))
+                entity.OnRelocate(entity.Position); // Instructs entity to update their vision.
         }
 
         /// <summary>
@@ -618,7 +674,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player))
                 throw new InvalidPacketValueException();
 
-            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            Plot plot = residence.GetPlotByPlotInfo(housingPlugUpdate.PlotInfo);
             if (plot == null)
                 throw new HousingException();
 
@@ -695,7 +751,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player))
                 throw new InvalidPacketValueException();
 
-            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            Plot plot = residence.GetPlotByPlotInfo(housingPlugUpdate.PlotInfo);
             if (plot == null)
                 throw new HousingException();
 
@@ -784,7 +840,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (!residence.CanModifyResidence(player))
                 throw new InvalidPacketValueException();
 
-            Plot plot = residence.GetPlot(housingPlugUpdate.PlotInfo);
+            Plot plot = residence.GetPlotByPlotInfo(housingPlugUpdate.PlotInfo);
             if (plot == null)
                 throw new HousingException();
 
@@ -828,6 +884,212 @@ namespace NexusForever.WorldServer.Game.Map
             {
                 TutorialId = 142
             });
+        }
+
+        /// <summary>
+        /// Used to confirm the position and PlotIndex are valid together when placing Decor
+        /// </summary>
+        private Vector3 CalculateWorldCoordinates(Vector3 position)
+        {
+            return new Vector3(1472f + position.X, -715f + position.Y, 1440f + position.Z);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="Vector3"/> representing local coordinates from a world coordinate.
+        /// </summary>
+        private Vector3 CalculateLocalCoordinates(Vector3 position)
+        {
+            return new Vector3(position.X - 1472f, position.Y - -715f, position.Z - 1440f);
+        }
+
+        private void SendDecorEntityRequestMessages(Residence residence, Player player, Decor decor)
+        {
+            if (decor.Entity == null)
+                return;
+
+            player.Session.EnqueueMessageEncrypted(decor.Entity.BuildCreatePacket());
+            player.Session.EnqueueMessageEncrypted(new Server08B3
+            {
+                MountGuid = decor.Entity.Guid,
+                Unknown1 = true
+            });
+            player.Session.EnqueueMessageEncrypted(new Server053A
+            {
+                RealmId = WorldServer.RealmId,
+                ResidenceId = residence.Id,
+                ActivePropId = (long)decor.DecorId,
+                UnitId = decor.Entity.Guid
+            });
+
+            //log.Info($"Guid: {decor.Entity.Guid}");
+        }
+
+        private void InitialiseDecorEntity(Residence residence, Decor decor, Vector3 position, Quaternion rotation)
+        {
+            Creature2Entry entry = GetCreatureEntryForDecor(decor);
+            if (entry == null)
+                return;
+
+            WorldEntity entity = CreateEntityForDecor(residence, decor, entry, position, rotation);
+            if (entity == null)
+                return;
+
+            decor.SetEntity(entity);
+            entity.InitialiseTemporaryEntity();
+        }
+
+        public bool TryGetDecorEntity(uint guid, out WorldEntity entity)
+        {
+            entity = null;
+
+            foreach (Decor decor in decorEntities.Values)
+            {
+                if (decor.Entity.Guid == guid)
+                {
+                    entity = decor.Entity;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private Creature2Entry GetCreatureEntryForDecor(Decor decor)
+        {
+            Creature2Entry creatureEntry = null;
+            if (decor.Entry?.Creature2IdActiveProp > 0 && decor.Entry?.Creature2IdActiveProp < uint.MaxValue)
+                creatureEntry = GameTableManager.Instance.Creature2.GetEntry(decor.Entry?.Creature2IdActiveProp ?? 0ul);
+
+            if (creatureEntry != null)
+                return creatureEntry;
+
+            /*if(decor.Entry.Id >= 3699)
+            {
+                // Added by spreadsheet, creature2Id should be assumed correct.
+                return null;
+            }*/
+
+            switch (decor.Entry.HousingDecorTypeId)
+            {
+                case 1:
+                case 59:
+                    return GameTableManager.Instance.Creature2.GetEntry(70052);
+                case 4:
+                case 21:
+                    return GameTableManager.Instance.Creature2.GetEntry(57195); // Generic Chair - Sitting Active Prop - Sniffs showed this was used in every seat entity.
+                case 28:
+                    return GameTableManager.Instance.Creature2.GetEntry(25282); // Target Dummy
+                default:
+                    TextTable tt = GameTableManager.Instance.GetTextTable(Language.English);
+                    //log.Warn($"Unsupported Decor CreatureEntry: {tt.GetEntry(GameTableManager.Instance.HousingDecorType.GetEntry(decor.Entry.HousingDecorTypeId).LocalizedTextId)}");
+                    break;
+            }
+
+            return null;
+        }
+
+        private WorldEntity CreateEntityForDecor(Residence residence, Decor decor, Creature2Entry creatureEntry, Vector3 position, Quaternion rotation)
+        {
+            if (creatureEntry == null)
+                throw new ArgumentNullException(nameof(creatureEntry));
+
+            switch (creatureEntry.CreationTypeEnum)
+            {
+                case 0:
+                    NonPlayer nonPlayerEntity = new NonPlayer(creatureEntry, decor.DecorId, GetPlotId(residence, decor.PlotIndex));
+                    return SetDecorEntityProperties(decor, nonPlayerEntity, position, rotation);
+                case 10:
+                    Simple activateEntity = new Simple(creatureEntry, decor.DecorId, GetPlotId(residence, decor.PlotIndex));
+
+                    return SetDecorEntityProperties(decor, activateEntity, position, rotation);
+                default:
+                    log.Warn($"Unsupported Entity CreationType: {(EntityType)creatureEntry.CreationTypeEnum} ({creatureEntry.CreationTypeEnum})");
+                    return null;
+            }
+        }
+
+        private WorldEntity SetDecorEntityProperties(Decor decor, WorldEntity entity, Vector3 position, Quaternion rotation)
+        {
+            entity.Rotation = rotation.ToEulerDegrees();
+            entity.SetPosition(position);
+            entity.IsDecorEntity = true;
+            entity.SetGuid(entityCounter.Dequeue());
+
+            //if (!(decor is TemporaryDecor) && CalculateWorldCoordinates(decor.Position) != position)
+            //    log.Trace($"Positions don't match: {CalculateWorldCoordinates(decor.Position)} ~ {position}");
+
+            //entity.OnAddToMap(this, entityCounter.Dequeue(), position);
+
+            //entity.SetGuid(entityCounter.Dequeue());
+            return entity;
+        }
+
+        private void CreateEntityForDecor(Residence residence, Decor decor)
+        {
+            if (decor.Position == Vector3.Zero)
+                return;
+
+            Creature2Entry creatureEntry = GetCreatureEntryForDecor(decor);
+
+            if (creatureEntry != null)
+                CreateEntityForDecor(residence, decor, creatureEntry, decor.Position, decor.Rotation);
+        }
+
+        private ushort GetPlotId(Residence residence, uint plotIndex)
+        {
+            HousingPlotInfoEntry entry = residence.GetPlotByIndex(plotIndex)?.PlotInfoEntry;
+            if (entry == null)
+                return (ushort)(residence.GetPlotByPlotInfo(plotIndex)?.PlotInfoEntry.WorldSocketId ?? 1159);
+
+            return (ushort)entry.WorldSocketId;
+        }
+
+        private void RemoveDecorEntity(Decor decor)
+        {
+            if (decor.Entity == null)
+                return;
+
+            entityCounter.Enqueue(decor.Entity.Guid);
+
+            decorEntities.Remove(decor.DecorId);
+        }
+
+        /// <summary>
+        /// Return all <see cref="GridEntity"/>'s in map that satisfy <see cref="ISearchCheck"/>.
+        /// </summary>
+        public override void Search(Vector3 vector, float radius, ISearchCheck check, out List<GridEntity> intersectedEntities, GridEntity searcher = null)
+        {
+            base.Search(vector, radius, check, out intersectedEntities);
+
+            if (radius < 0)
+            {
+                if (searcher != null && searcher is Player player)
+                {
+                    Residence residence = GetMainResidence();
+
+                    // TODO: Add visual requirements into database or have dominion/exile phases?
+                    foreach (GridEntity entity in intersectedEntities.ToList())
+                    {
+                        if (((WorldEntity)entity).CreatureId == 68423 && player.Faction1 != Faction.Exile) // Exile Renown Vendor
+                            intersectedEntities.Remove(entity);
+
+                        if (((WorldEntity)entity).CreatureId == 68424 && player.Faction1 != Faction.Dominion) // Dominion Renown Vendor
+                            intersectedEntities.Remove(entity);
+
+                        if (((WorldEntity)entity).CreatureId == 52542 && (player.Faction1 != Faction.Exile || (residence.Flags & ResidenceFlags.HideNeighborSkyplots) != 0)) // Exile Floating Housing Plot
+                            intersectedEntities.Remove(entity);
+
+                        if (((WorldEntity)entity).CreatureId == 52545 && (player.Faction1 != Faction.Dominion || (residence.Flags & ResidenceFlags.HideNeighborSkyplots) != 0)) // Dominion Floating Housing Plot
+                            intersectedEntities.Remove(entity);
+                    }
+                }
+                return;
+            }
+
+            //// TODO: Fix range check support
+
+            foreach (Decor decor in decorEntities.Values.Where(d => d.Entity != null && check.CheckEntity(d.Entity)))
+                intersectedEntities.Add(decor.Entity);
         }
     }
 }

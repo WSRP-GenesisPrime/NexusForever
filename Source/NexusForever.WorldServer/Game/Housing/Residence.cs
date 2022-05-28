@@ -266,7 +266,7 @@ namespace NexusForever.WorldServer.Game.Housing
         /// </remarks>
         private readonly Dictionary<ulong, ResidenceChild> children = new();
 
-        private readonly Dictionary<ulong, Decor> decors = new();
+        private readonly Dictionary<long, Decor> decors = new();
         private readonly List<Plot> plots = new();
 
         /// <summary>
@@ -371,7 +371,7 @@ namespace NexusForever.WorldServer.Game.Housing
         {
             foreach (HousingPlotInfoEntry entry in GameTableManager.Instance.HousingPlotInfo.Entries
                 .Where(e => (PropertyInfoId)e.HousingPropertyInfoId == PropertyInfoId))
-                GetPlot((byte)entry.HousingPropertyPlotIndex).PlotInfoEntry = entry;
+                GetPlotByIndex((byte)entry.HousingPropertyPlotIndex).PlotInfoEntry = entry;
         }
 
         public void Save(CharacterContext context)
@@ -828,7 +828,7 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Return <see cref="Decor"/> with the supplied id.
         /// </summary>
-        public Decor GetDecor(ulong decorId)
+        public Decor GetDecor(long decorId)
         {
             decors.TryGetValue(decorId, out Decor decor);
             return decor;
@@ -946,7 +946,7 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Return <see cref="Plot"/> at the supplied index.
         /// </summary>
-        public Plot GetPlot(byte plotIndex)
+        public Plot GetPlotByIndex(uint plotIndex)
         {
             return plots.FirstOrDefault(i => i.Index == plotIndex);
         }
@@ -954,7 +954,7 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Return <see cref="Plot"/> that matches the supploed Plot Info ID.
         /// </summary>
-        public Plot GetPlot(uint plotInfoId)
+        public Plot GetPlotByPlotInfo(uint plotInfoId)
         {
             return plots.FirstOrDefault(i => i.PlotInfoEntry.Id == plotInfoId);
         }

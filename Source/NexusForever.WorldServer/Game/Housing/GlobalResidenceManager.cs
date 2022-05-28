@@ -33,8 +33,8 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Id to be assigned to the next created residence.
         /// </summary>
-        public ulong NextDecorId => nextDecorId++;
-        private ulong nextDecorId;
+        public long NextDecorId => nextDecorId++;
+        private long nextDecorId;
 
         private readonly Dictionary<ulong, Residence> residences = new();
         private readonly Dictionary<ulong, ulong> residenceOwnerCache = new();
@@ -56,8 +56,8 @@ namespace NexusForever.WorldServer.Game.Housing
         /// </summary>
         public void Initialise()
         {
-            nextResidenceId = DatabaseManager.Instance.CharacterDatabase.GetNextResidenceId() + 1ul;
-            nextDecorId     = DatabaseManager.Instance.CharacterDatabase.GetNextDecorId() + 1ul;
+            nextResidenceId = DatabaseManager.Instance.CharacterDatabase.GetNextResidenceId() + 1L;
+            nextDecorId     = DatabaseManager.Instance.CharacterDatabase.GetNextDecorId() + 1L;
 
             InitialiseResidences();
         }

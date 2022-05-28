@@ -12,7 +12,7 @@ namespace NexusForever.WorldServer.Network.Message.Model
         public class Decor : IWritable
         {
             public ushort RealmId { get; set; }
-            public ulong DecorId { get; set; }
+            public long DecorId { get; set; }
             public ulong ResidenceId { get; set; }
             public DecorType DecorType { get; set; }
             public uint DecorData { get; set; }

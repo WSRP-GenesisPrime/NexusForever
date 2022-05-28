@@ -2096,6 +2096,16 @@ namespace NexusForever.Database.Character
                     .HasColumnType("int(10) unsigned")
                     .HasDefaultValue(0);
 
+                entity.Property(e => e.HookBagIndex)
+                    .HasColumnName("hookBagIndex")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.HookIndex)
+                    .HasColumnName("hookIndex")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
                 entity.Property(e => e.PlotIndex)
                     .HasColumnName("plotIndex")
                     .HasColumnType("int(10) unsigned")

@@ -8,7 +8,7 @@ namespace NexusForever.WorldServer.Network.Message.Model.Shared
     public class DecorInfo : IReadable
     {
         public TargetResidence TargetResidence { get; } = new();
-        public ulong DecorId { get; private set; }
+        public long DecorId { get; private set; }
         public DecorType DecorType { get; private set; }
         public uint DecorData { get; private set; }
         public uint HookBagIndex { get; private set; }
@@ -25,7 +25,7 @@ namespace NexusForever.WorldServer.Network.Message.Model.Shared
         public void Read(GamePacketReader reader)
         {
             TargetResidence.Read(reader);
-            DecorId          = reader.ReadULong();
+            DecorId          = reader.ReadLong();
             DecorType        = reader.ReadEnum<DecorType>(32u);
             DecorData        = reader.ReadUInt();
             HookBagIndex     = reader.ReadUInt();
