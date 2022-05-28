@@ -29,6 +29,7 @@ namespace NexusForever.WorldServer.Game.Map
 
         private readonly Dictionary<ulong, Residence> residences = new();
 
+        private readonly Dictionary</* decorId */ long, TemporaryDecor> instancedTemporaryDecor = new Dictionary<long, TemporaryDecor>();
         private readonly Dictionary</* decorId */ long, Decor> decorEntities = new Dictionary<long, Decor>();
 
         /// <summary>
@@ -148,7 +149,12 @@ namespace NexusForever.WorldServer.Game.Map
 
         public override void OnRemoveFromMap(Player player)
         {
+            player.HouseOutsideLocation = Vector3.Zero;
+
             foreach (Decor decor in decorEntities.Values.Where(d => d.Entity != null))
+                player.RemoveVisible(decor.Entity);
+
+            foreach (TemporaryDecor decor in instancedTemporaryDecor.Values.Where(d => d.Entity != null))
                 player.RemoveVisible(decor.Entity);
         }
 
@@ -367,6 +373,53 @@ namespace NexusForever.WorldServer.Game.Map
                         throw new InvalidPacketValueException();
                 }
             }
+        }
+
+        public void DecorUpdate(Player player, ClientHousingRemodelInterior remodelInterior)
+        {
+            /*foreach (DecorUpdate update in remodelInterior.Remodels)
+            {
+                if (!residence.CanModifyResidence(player.CharacterId))
+                    throw new InvalidPacketValueException();
+
+                Decor decor = residence.GetInteriorDecor(update.HookIndex);
+                if (decor != null && update.DecorInfoId == 0u)
+                {
+                    DecorDelete(update);
+                    continue;
+                }
+                
+                if (decor != null && update.DecorInfoId != decor.DecorInfoId)
+                    DecorDelete(update);
+                
+                if (update.DecorInfoId == 0u)
+                    continue;
+                
+                decor = residence.DecorCreate(update);
+
+                EnqueueToAll(new ServerHousingResidenceDecor
+                {
+                    Operation = 0,
+                    DecorData = new List<ServerHousingResidenceDecor.Decor>
+                {
+                    new ServerHousingResidenceDecor.Decor
+                    {
+                        RealmId     = WorldServer.RealmId,
+                        DecorId     = (ulong)decor.DecorId,
+                        ResidenceId = residence.Id,
+                        DecorType   = decor.Type,
+                        PlotIndex   = decor.PlotIndex,
+                        HookBagIndex = decor.HookBagIndex,
+                        HookIndex   = decor.HookIndex,
+                        Scale       = decor.Scale,
+                        Position    = decor.Position,
+                        Rotation    = decor.Rotation,
+                        DecorInfoId = decor.DecorInfoId,
+                        ColourShift = decor.ColourShiftId
+                    }
+                }
+                });
+            }*/
         }
 
         /// <summary>
@@ -910,6 +963,12 @@ namespace NexusForever.WorldServer.Game.Map
 
             if (propRequest.PropId == (long)residence.Id || propRequest.PropId == (long.MinValue + (long)residence.Id))
             {
+                if (instancedTemporaryDecor.TryGetValue(propRequest.PropId, out TemporaryDecor temporaryDecor))
+                    player.Session.EnqueueMessageEncrypted(new ServerEntityDestroy
+                    {
+                        Guid = temporaryDecor.Entity.Guid
+                    });
+
                 return;
             }
 
@@ -935,7 +994,22 @@ namespace NexusForever.WorldServer.Game.Map
             // Handle External and Internal 2x2 Plug Doors
             if (propRequest.PropId == (long)residence.Id || propRequest.PropId == (long.MinValue + (long)residence.Id))
             {
-                return; // can't currently handle these.
+                if (!instancedTemporaryDecor.TryGetValue(propRequest.PropId, out TemporaryDecor temporaryDecor))
+                {
+                    HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(propRequest.DecorId);
+                    if (entry == null)
+                        throw new InvalidOperationException($"HousingDecorInfoEntry {propRequest.DecorId} not found!");
+
+                    temporaryDecor = new TemporaryDecor(residence, propRequest.PropId, entry, CalculateLocalCoordinates(propRequest.Position), propRequest.Rotation);
+                    instancedTemporaryDecor.Add(temporaryDecor.DecorId, temporaryDecor);
+
+                    InitialiseDecorEntity(residence, temporaryDecor, propRequest.Position, propRequest.Rotation);
+
+                    temporaryDecor.Entity.InitialiseTemporaryEntity();
+                }
+
+                SendDecorEntityRequestMessages(residence, player, temporaryDecor);
+                return;
             }
 
             Decor decor = residence.GetDecor(propRequest.PropId);
@@ -1080,10 +1154,10 @@ namespace NexusForever.WorldServer.Game.Map
             switch (creatureEntry.CreationTypeEnum)
             {
                 case 0:
-                    NonPlayer nonPlayerEntity = new NonPlayer(creatureEntry, decor.DecorId, GetPlotIdForDecorEntity(residence, decor.PlotIndex));
+                    NonPlayer nonPlayerEntity = new NonPlayer(creatureEntry, decor is TemporaryDecor ? ((TemporaryDecor)decor).DecorId : decor.DecorId, GetPlotIdForDecorEntity(residence, decor.PlotIndex));
                     return SetDecorEntityProperties(decor, nonPlayerEntity, position, rotation);
                 case 10:
-                    Simple activateEntity = new Simple(creatureEntry, decor.DecorId, GetPlotIdForDecorEntity(residence, decor.PlotIndex));
+                    Simple activateEntity = new Simple(creatureEntry, decor is TemporaryDecor ? ((TemporaryDecor)decor).DecorId : decor.DecorId, GetPlotIdForDecorEntity(residence, decor.PlotIndex));
 
                     return SetDecorEntityProperties(decor, activateEntity, position, rotation);
                 default:
@@ -1151,7 +1225,10 @@ namespace NexusForever.WorldServer.Game.Map
 
             entityCounter.Enqueue(decor.Entity.Guid);
 
-            decorEntities.Remove(decor.DecorId);
+            if (decor is TemporaryDecor)
+                instancedTemporaryDecor.Remove(((TemporaryDecor)decor).DecorId);
+            else
+                decorEntities.Remove(decor.DecorId);
         }
 
         /// <summary>
@@ -1189,6 +1266,9 @@ namespace NexusForever.WorldServer.Game.Map
             //// TODO: Fix range check support
 
             foreach (Decor decor in decorEntities.Values.Where(d => d.Entity != null && check.CheckEntity(d.Entity)))
+                intersectedEntities.Add(decor.Entity);
+
+            foreach (Decor decor in instancedTemporaryDecor.Values.Where(d => d.Entity != null && check.CheckEntity(d.Entity)))
                 intersectedEntities.Add(decor.Entity);
         }
     }

@@ -5,6 +5,7 @@ using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -216,6 +217,49 @@ namespace NexusForever.WorldServer.Game.Spell
         [SpellEffectHandler(SpellEffectType.Scale)]
         private void HandleEffectScale(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingTeleport)]
+        private void HandleEffectHousingTeleport(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            // TODO: Confirm player actually has a house?
+
+            player.HousePreviousWorld = player.Map?.Entry.Id ?? 0u;
+            player.HousePreviousLocation = target.Position;
+
+            Residence residence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
+            if (residence == null)
+            {
+                residence = GlobalResidenceManager.Instance.CreateResidence(player);
+                if (residence == null)
+                {
+                    player.SendSystemMessage("Error occurred when trying to send you to your housing plot! Please try again.");
+                    return;
+                }
+            }
+
+            player.TeleportTo(GlobalResidenceManager.Instance.GetResidenceEntranceLocation(residence), residence.Id);
+        }
+
+        [SpellEffectHandler(SpellEffectType.HousingEscape)]
+        private void HandleEffectHousingEscape(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            if (!(target is Player player))
+                return;
+
+            if (player.Map == null || !(player.Map is ResidenceMapInstance residenceMap))
+                return;
+
+            Residence mainResidence = residenceMap.GetMainResidence();
+            if(mainResidence == null)
+            {
+                return;
+            }
+
+            player.TeleportTo(GlobalResidenceManager.Instance.GetResidenceEntranceLocation(mainResidence), mainResidence.Id);
         }
     }
 }
