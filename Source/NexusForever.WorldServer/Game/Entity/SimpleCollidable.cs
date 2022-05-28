@@ -12,11 +12,15 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         public byte QuestChecklistIdx { get; private set; }
 
-        public SimpleCollidable(uint creatureId, byte questChecklistIdx = 255)
+        public SimpleCollidable(uint creatureId, uint displayInfoId, byte questChecklistIdx = 255)
             : base(EntityType.SimpleCollidable)
         {
             CreatureId = creatureId;
+            DisplayInfo = displayInfoId;
             QuestChecklistIdx = questChecklistIdx;
+
+            Properties.Add(Property.BaseHealth, new PropertyValue(Property.BaseHealth, 101f, 101f));
+            stats.Add(Stat.Health, new StatValue(Stat.Health, 101u));
         }
 
         protected override IEntityModel BuildEntityModel()

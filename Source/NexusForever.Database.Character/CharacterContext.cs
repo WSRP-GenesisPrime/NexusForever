@@ -2023,6 +2023,10 @@ namespace NexusForever.Database.Character
                     .HasColumnType("tinyint(3) unsigned")
                     .HasDefaultValue(0);
 
+                entity.Property(e => e.ResidenceInfoId)
+                    .HasColumnName("residenceInfoId")
+                    .HasDefaultValueSql("'0'");
+
                 entity.Property(e => e.ResourceSharing)
                     .HasColumnName("resourceSharing")
                     .HasColumnType("tinyint(3) unsigned")

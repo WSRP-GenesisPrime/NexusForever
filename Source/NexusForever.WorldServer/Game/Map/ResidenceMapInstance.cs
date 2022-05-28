@@ -902,6 +902,45 @@ namespace NexusForever.WorldServer.Game.Map
             return new Vector3(position.X - 1472f, position.Y - -715f, position.Z - 1440f);
         }
 
+        public void DeleteDecorEntity(Player player, ClientHousingPropUpdate propRequest)
+        {
+            Residence residence = GlobalResidenceManager.Instance.GetResidence(propRequest.ResidenceId);
+            if (propRequest.PropId == 0u)
+                return;
+
+            Decor decor = residence.GetDecor(propRequest.PropId);
+            if (decor == null)
+                return; // Client asks to remove entities from old map if you switch from 1 Residence to another
+
+            if (decor.Type == DecorType.Crate)
+                return;
+
+            if (decor.Entity == null) // TODO: Error when all entities are supported.
+                return;
+
+            player.Session.EnqueueMessageEncrypted(new ServerEntityDestroy
+            {
+                Guid = decor.Entity.Guid
+            });
+        }
+
+        public void RequestDecorEntity(Player player, ClientHousingPropUpdate propRequest)
+        {
+            Residence residence = GlobalResidenceManager.Instance.GetResidence(propRequest.ResidenceId);
+
+            Decor decor = residence.GetDecor(propRequest.PropId);
+            if (decor == null)
+                throw new InvalidOperationException();
+
+            if (decor.Entity == null)
+                CreateOrMoveDecorEntity(player, propRequest);
+
+            if (decor.Entity == null) // TODO: Error when all entities are supported.
+                return;
+
+            SendDecorEntityRequestMessages(residence, player, decor);
+        }
+
         private void SendDecorEntityRequestMessages(Residence residence, Player player, Decor decor)
         {
             if (decor.Entity == null)
@@ -922,6 +961,41 @@ namespace NexusForever.WorldServer.Game.Map
             });
 
             //log.Info($"Guid: {decor.Entity.Guid}");
+        }
+
+        public void CreateOrMoveDecorEntity(Player player, ClientHousingPropUpdate propRequest)
+        {
+            Residence residence = GlobalResidenceManager.Instance.GetResidence(propRequest.ResidenceId);
+            if (propRequest.PropId == (long)residence.Id || propRequest.PropId == (long.MinValue + (long)residence.Id))
+                return;
+
+            Decor propRequestDecor = residence.GetDecor(propRequest.PropId);
+            if (propRequestDecor == null)
+                throw new InvalidOperationException($"Decor should exist!");
+
+            if (propRequestDecor.Type == DecorType.Crate)
+                return; // TODO: Draw Entity temporarily when the Player is placing from Crate
+
+            if (propRequestDecor.Entity != null)
+            {
+                if (propRequest.Position == propRequestDecor.Position && propRequest.Rotation == propRequestDecor.Rotation)
+                    return;
+
+                // TODO: Calculate entity locations instead of relying on client data
+                propRequestDecor.Entity.Rotation = propRequest.Rotation.ToEulerDegrees();
+                if (propRequestDecor.Entity.MovementManager != null) // happens sometimes, apparently.
+                {
+                    propRequestDecor.Entity.MovementManager.SetRotation(propRequest.Rotation.ToEulerDegrees());
+                    propRequestDecor.Entity.MovementManager.SetPosition(propRequest.Position);
+                }
+                return;
+            }
+
+            InitialiseDecorEntity(residence, propRequestDecor, propRequest.Position, propRequest.Rotation);
+            if (propRequestDecor.Entity == null)
+                return;
+
+            decorEntities.TryAdd(propRequestDecor.DecorId, propRequestDecor);
         }
 
         private void InitialiseDecorEntity(Residence residence, Decor decor, Vector3 position, Quaternion rotation)

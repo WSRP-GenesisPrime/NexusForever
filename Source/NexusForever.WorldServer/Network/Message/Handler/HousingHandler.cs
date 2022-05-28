@@ -519,5 +519,28 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             session.Player.Rotation = entrance.Rotation.ToEulerDegrees();
             session.Player.TeleportTo(entrance.Entry, entrance.Position, child.Residence.Id);
         }
+        
+        [MessageHandler(GameMessageOpcode.ClientHousingPropUpdate)]
+        public static void HandleHousingDecorPropRequest(WorldSession session, ClientHousingPropUpdate propRequest)
+        {
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
+                return; // This somehow pops when teleporting from a house to Thayd.
+                //throw new InvalidPacketValueException();
+
+            log.Info($"{propRequest.Operation}");
+
+            switch (propRequest.Operation)
+            {
+                case 0:
+                    residenceMap.RequestDecorEntity(session.Player, propRequest);
+                    break;
+                case 1:
+                    residenceMap.CreateOrMoveDecorEntity(session.Player, propRequest);
+                    break;
+                case 2:
+                    residenceMap.DeleteDecorEntity(session.Player, propRequest);
+                    break;
+            }
+        }
     }
 }
