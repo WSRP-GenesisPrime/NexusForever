@@ -1080,10 +1080,10 @@ namespace NexusForever.WorldServer.Game.Map
             switch (creatureEntry.CreationTypeEnum)
             {
                 case 0:
-                    NonPlayer nonPlayerEntity = new NonPlayer(creatureEntry, decor.DecorId, GetPlotId(residence, decor.PlotIndex));
+                    NonPlayer nonPlayerEntity = new NonPlayer(creatureEntry, decor.DecorId, GetPlotIdForDecorEntity(residence, decor.PlotIndex));
                     return SetDecorEntityProperties(decor, nonPlayerEntity, position, rotation);
                 case 10:
-                    Simple activateEntity = new Simple(creatureEntry, decor.DecorId, GetPlotId(residence, decor.PlotIndex));
+                    Simple activateEntity = new Simple(creatureEntry, decor.DecorId, GetPlotIdForDecorEntity(residence, decor.PlotIndex));
 
                     return SetDecorEntityProperties(decor, activateEntity, position, rotation);
                 default:
@@ -1119,13 +1119,29 @@ namespace NexusForever.WorldServer.Game.Map
                 CreateEntityForDecor(residence, decor, creatureEntry, decor.Position, decor.Rotation);
         }
 
-        private ushort GetPlotId(Residence residence, uint plotIndex)
+        private ushort GetPlotIdForDecorEntity(Residence residence, uint plotIndex)
         {
-            HousingPlotInfoEntry entry = residence.GetPlotByIndex(plotIndex)?.PlotInfoEntry;
+            Dictionary<PropertyInfoId, ushort> plotIdLookup = new Dictionary<PropertyInfoId, ushort> // ugliest hack. You need the root plot ID, not the actual decor plot ID.
+            {
+                { PropertyInfoId.Residence, 1159 },
+                { PropertyInfoId.Community, 2381 },
+                { PropertyInfoId.CommunityResidence1, 2304 },
+                { PropertyInfoId.CommunityResidence2, 2311 },
+                { PropertyInfoId.CommunityResidence3, 2318 },
+                { PropertyInfoId.CommunityResidence4, 2325 },
+                { PropertyInfoId.CommunityResidence5, 2332 }
+            };
+
+            if (plotIdLookup.TryGetValue(residence.PropertyInfoId, out ushort plotId))
+            {
+                return plotId;
+            }
+            return 1159;
+            /*HousingPlotInfoEntry entry = residence.GetPlotByIndex(plotIndex)?.PlotInfoEntry;
             if (entry == null)
                 return (ushort)(residence.GetPlotByPlotInfo(plotIndex)?.PlotInfoEntry.WorldSocketId ?? 1159);
 
-            return (ushort)entry.WorldSocketId;
+            return (ushort)entry.WorldSocketId;*/
         }
 
         private void RemoveDecorEntity(Decor decor)
