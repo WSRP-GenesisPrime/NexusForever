@@ -15,7 +15,7 @@ namespace NexusForever.WorldServer.Game.Housing
     public class Decor : ISaveCharacter, IBuildable<ServerHousingResidenceDecor.Decor>
     {
         public ulong Id => Residence.Id;
-        public long DecorId { get; }
+        public long DecorId { get; protected set; }
         public HousingDecorInfoEntry Entry { get; protected set; }
         public WorldEntity Entity { get; private set; }
 
@@ -128,6 +128,10 @@ namespace NexusForever.WorldServer.Game.Housing
         private uint hookIndex;
 
         private DecorSaveMask saveMask;
+
+        public Decor()
+        {
+        }
 
         /// <summary>
         /// Returns if <see cref="Decor"/> is enqueued to be saved to the database.

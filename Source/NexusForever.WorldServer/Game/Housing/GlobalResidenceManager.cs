@@ -260,6 +260,21 @@ namespace NexusForever.WorldServer.Game.Housing
             residenceSearchCache.Remove(name);
         }
 
+        /// <summary>
+        /// Get the <see cref="ResidenceEntrance"/> for the provided <see cref="Residence"/>
+        /// </summary>
+        public WorldLocation2Entry GetResidenceEntranceLocation(Residence residence)
+        {
+            HousingPropertyInfoEntry propertyEntry = GameTableManager.Instance.HousingPropertyInfo.GetEntry((ulong) residence.PropertyInfoId);
+            if (propertyEntry == null)
+                throw new HousingException();
+
+            return GameTableManager.Instance.WorldLocation2.GetEntry(propertyEntry.WorldLocation2Id);
+        }
+
+        /// <summary>
+        /// Get the <see cref="ResidenceEntrance"/> for the provided <see cref="Residence"/>
+        /// </summary>
         public ResidenceEntrance GetResidenceEntrance(PropertyInfoId propertyInfoId)
         {
             HousingPropertyInfoEntry propertyEntry = GameTableManager.Instance.HousingPropertyInfo.GetEntry((ulong)propertyInfoId);

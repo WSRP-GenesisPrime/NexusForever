@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Auth;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
+using NexusForever.Shared;
 using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Database;
 using NexusForever.Shared.Game;
@@ -229,6 +230,20 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public bool CanTeleport() => pendingTeleport == null;
         private PendingTeleport pendingTeleport;
+        
+        public uint HousePreviousWorld { get; set; }
+        public Vector3 HousePreviousLocation { get; set; }
+        public Vector3 HouseOutsideLocation {
+            get => houseOutsideLocation;
+            set
+            {
+                houseOutsideLocation = value;
+                housingMapTeleport.Reset(true);
+            }
+        }
+        private Vector3 houseOutsideLocation = Vector3.Zero;
+        private UpdateTimer housingMapTeleport = new UpdateTimer(1d);
+        public bool CanUseHousingDoors() => housingMapTeleport.HasElapsed;
 
         /// <summary>
         /// Create a new <see cref="Player"/> from supplied <see cref="WorldSession"/> and <see cref="CharacterModel"/>.
@@ -350,6 +365,9 @@ namespace NexusForever.WorldServer.Game.Entity
             SpellManager.Update(lastTick);
             CostumeManager.Update(lastTick);
             QuestManager.Update(lastTick);
+
+            if (housingMapTeleport.IsTicking)
+                housingMapTeleport.Update(lastTick);
 
             saveTimer.Update(lastTick);
             if (saveTimer.HasElapsed)
@@ -1075,6 +1093,22 @@ namespace NexusForever.WorldServer.Game.Entity
             GuildManager.OnLogout();
             ChatManager.OnLogout();
             GlobalChatManager.Instance.LeaveDefaultChatChannels(this);
+        }
+
+        /// <summary>
+        /// Teleport <see cref="Player"/> to location defined in supplied <see cref="WorldLocation2Entry"/>.
+        /// </summary>
+        public void TeleportTo(WorldLocation2Entry worldLocation2Entry, ulong? instanceId = null)
+        {
+            if (worldLocation2Entry == null)
+                throw new ArgumentException(nameof(worldLocation2Entry));
+
+            WorldEntry entry = GameTableManager.Instance.World.GetEntry(worldLocation2Entry.WorldId);
+            if (entry == null)
+                throw new ArgumentException();
+
+            Rotation = new Quaternion(worldLocation2Entry.Facing0, worldLocation2Entry.Facing1, worldLocation2Entry.Facing2, worldLocation2Entry.Facing3).ToEulerDegrees();
+            TeleportTo((ushort) entry.Id, worldLocation2Entry.Position0, worldLocation2Entry.Position1, worldLocation2Entry.Position2, instanceId);
         }
 
         /// <summary>
