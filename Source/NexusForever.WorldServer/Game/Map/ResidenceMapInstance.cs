@@ -908,6 +908,11 @@ namespace NexusForever.WorldServer.Game.Map
             if (propRequest.PropId == 0u)
                 return;
 
+            if (propRequest.PropId == (long)residence.Id || propRequest.PropId == (long.MinValue + (long)residence.Id))
+            {
+                return;
+            }
+
             Decor decor = residence.GetDecor(propRequest.PropId);
             if (decor == null)
                 return; // Client asks to remove entities from old map if you switch from 1 Residence to another
@@ -927,6 +932,11 @@ namespace NexusForever.WorldServer.Game.Map
         public void RequestDecorEntity(Player player, ClientHousingPropUpdate propRequest)
         {
             Residence residence = GlobalResidenceManager.Instance.GetResidence(propRequest.ResidenceId);
+            // Handle External and Internal 2x2 Plug Doors
+            if (propRequest.PropId == (long)residence.Id || propRequest.PropId == (long.MinValue + (long)residence.Id))
+            {
+                return; // can't currently handle these.
+            }
 
             Decor decor = residence.GetDecor(propRequest.PropId);
             if (decor == null)
