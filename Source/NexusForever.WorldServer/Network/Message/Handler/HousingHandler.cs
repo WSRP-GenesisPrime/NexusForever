@@ -527,7 +527,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return; // This somehow pops when teleporting from a house to Thayd.
                 //throw new InvalidPacketValueException();
 
-            log.Info($"{propRequest.Operation}");
+            //log.Info($"{propRequest.Operation}");
 
             switch (propRequest.Operation)
             {
