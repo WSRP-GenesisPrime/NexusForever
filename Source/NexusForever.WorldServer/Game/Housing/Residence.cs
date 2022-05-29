@@ -879,6 +879,31 @@ namespace NexusForever.WorldServer.Game.Housing
             return newDecor;
         }
 
+        public Decor DecorCreate(DecorUpdate decorUpdate)
+        {
+            HousingWallpaperInfoEntry wallpaperInfoEntry = GameTableManager.Instance.HousingWallpaperInfo.GetEntry(decorUpdate.DecorInfoId);
+            if (wallpaperInfoEntry == null)
+                throw new InvalidOperationException();
+
+            long decorId = GlobalResidenceManager.Instance.NextDecorId;
+            if (decorId == (long) Id)
+                decorId = GlobalResidenceManager.Instance.NextDecorId;
+            var decor = new Decor(decorId, wallpaperInfoEntry, decorUpdate.HookBagIndex, decorUpdate.HookIndex);
+            decors.Add(decor.DecorId, decor);
+            return decor;
+        }
+
+        public void DecorCreate(Decor decor)
+        {
+            decors.Add(decor.DecorId, decor);
+        }
+
+        public void DecorDelete(Decor decor)
+        {
+            decor.EnqueueDelete();
+
+        }
+
         /// <summary>
         /// Remove existing <see cref="Decor"/> from the <see cref="Residence"/>.
         /// </summary>

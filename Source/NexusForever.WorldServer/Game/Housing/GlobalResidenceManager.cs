@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using NexusForever.Database;
 using NexusForever.Database.Character.Model;
@@ -45,6 +47,7 @@ namespace NexusForever.WorldServer.Game.Housing
         private readonly Dictionary<ulong, PublicResidence> visitableResidences = new();
         private readonly Dictionary<ulong, PublicCommunity> visitableCommunities = new();
 
+        private ImmutableDictionary</*plotIndex*/ byte, PlotPlacement> plotPlacements;
         private double timeToSave = SaveDuration;
 
         private GlobalResidenceManager()
@@ -58,6 +61,8 @@ namespace NexusForever.WorldServer.Game.Housing
         {
             nextResidenceId = DatabaseManager.Instance.CharacterDatabase.GetNextResidenceId() + 1L;
             nextDecorId     = DatabaseManager.Instance.CharacterDatabase.GetNextDecorId() + 1L;
+
+            CachePlotPlacements();
 
             InitialiseResidences();
         }
@@ -130,6 +135,21 @@ namespace NexusForever.WorldServer.Game.Housing
                 SaveResidences();
                 timeToSave = SaveDuration;
             }
+        }
+
+        private void CachePlotPlacements()
+        {
+            var builder = ImmutableDictionary.CreateBuilder<byte, PlotPlacement>();
+
+            builder.Add(0, new PlotPlacement(62612, 35031, new Vector3(1472f, -715.01f, 1440f)));
+            builder.Add(1, new PlotPlacement(23863, 30343, new Vector3(1424f, -715.7094f, 1472f)));
+            builder.Add(2, new PlotPlacement(23789, 27767, new Vector3(1456f, -714.7094f, 1392f)));
+            builder.Add(3, new PlotPlacement(23789, 27767, new Vector3(1488f, -714.7094f, 1392f)));
+            builder.Add(4, new PlotPlacement(23789, 27767, new Vector3(1456f, -714.7094f, 1488f)));
+            builder.Add(5, new PlotPlacement(23789, 27767, new Vector3(1488f, -714.7094f, 1488f)));
+            builder.Add(6, new PlotPlacement(23863, 30343, new Vector3(1424f, -715.7094f, 1408f)));
+
+            plotPlacements = builder.ToImmutable();
         }
 
         private void SaveResidences()
@@ -351,6 +371,14 @@ namespace NexusForever.WorldServer.Game.Housing
                 .Values
                 .OrderBy(r => random.Next())
                 .Take(50);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="PlotPlacement"/> entry for the given Plot Index
+        /// </summary>
+        public PlotPlacement GetPlotPlacementInformation(byte index)
+        {
+            return plotPlacements.TryGetValue(index, out PlotPlacement placementInformation) ? placementInformation : null;
         }
     }
 }

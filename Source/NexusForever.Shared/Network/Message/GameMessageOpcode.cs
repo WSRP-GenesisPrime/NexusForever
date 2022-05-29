@@ -115,6 +115,7 @@ namespace NexusForever.Shared.Network.Message
         ClientChatWhisper               = 0x01D4,
         ServerChatWhisperFail           = 0x01D9,
         ServerChatZoneChange            = 0x01DA,
+        Server022C                      = 0x022C,
         Server0237                      = 0x0237, // UI related, opens or closes different UI windows (bank, barber, ect...)
         ClientPing                      = 0x0241,
         ClientEncrypted                 = 0x0244,
@@ -285,6 +286,7 @@ namespace NexusForever.Shared.Network.Message
         ServerQueueStatus               = 0x0717,
         ClientRandomRollRequest         = 0x071B,
         ServerRandomRollResponse        = 0x071C,
+        Client0721                      = 0x073A,
         ServerStoryCommunicatorShow     = 0x073A,
         ServerEntityInteractiveUpdate   = 0x0755,
         ServerCommunicatorMessage       = 0x0757,
@@ -332,6 +334,7 @@ namespace NexusForever.Shared.Network.Message
         Server0854                      = 0x0854, // crafting schematic
         Server0856                      = 0x0856, // tradeskills
         ServerVehiclePassengerAdd       = 0x086F,
+        Server088C                      = 0x088C,
         ServerUnitEnteredCombat         = 0x089A,
         Server089B                      = 0x089B, // mount related
         Server08B3                      = 0x08B3,

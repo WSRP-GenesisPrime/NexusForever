@@ -522,6 +522,17 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             session.Player.Rotation = entrance.Rotation.ToEulerDegrees();
             session.Player.TeleportTo(entrance.Entry, entrance.Position, child.Residence.Id);
         }
+
+        [MessageHandler(GameMessageOpcode.Client0721)]
+        public static void Handle0721(WorldSession session, Client0721 client0721)
+        {
+            session.EnqueueMessageEncrypted(new Server022C
+            {
+                Unknown0 = true,
+                Unknown1 = session.Player.Rotation.X,
+                Unknown2 = -0f
+            });
+        }
         
         [MessageHandler(GameMessageOpcode.ClientHousingPropUpdate)]
         public static void HandleHousingDecorPropRequest(WorldSession session, ClientHousingPropUpdate propRequest)

@@ -4,6 +4,7 @@ using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
+using System;
 using System.Linq;
 using System.Numerics;
 
@@ -13,7 +14,9 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         public HousingPlotInfoEntry PlotEntry { get; }
 
-        public ResidenceEntity(uint creatureId, HousingPlotInfoEntry housingPlotInfoEntry)
+        public Action OnAddToMapAction { get; }
+
+        public ResidenceEntity(uint creatureId, HousingPlotInfoEntry housingPlotInfoEntry, Action action)
             : base(EntityType.Residence)
         {
             PlotEntry = housingPlotInfoEntry;
@@ -24,6 +27,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
             DisplayInfo = 21720;
             CreateFlags = EntityCreateFlag.SpawnAnimation;
+
+            OnAddToMapAction = action;
 
             CreatureId = creatureId;
             WorldSocketId = (ushort)PlotEntry.WorldSocketId;
@@ -42,6 +47,11 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
             Guid = guid;
+
+            if (OnAddToMapAction != null)
+                OnAddToMapAction.Invoke();
+            
+            base.OnAddToMap(map, guid, vector);
         }
     }
 }

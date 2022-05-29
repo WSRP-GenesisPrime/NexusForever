@@ -45,6 +45,10 @@ namespace NexusForever.WorldServer.Game.Map
         {
             base.Update(lastTick);
 
+            foreach (Residence residence in residences.Values)
+                foreach (Plot plot in residence.GetPlots())
+                    plot.Update(lastTick);
+
             foreach (Decor decor in decorEntities.Values)
                 decor.Entity?.Update(lastTick);
         }
@@ -62,7 +66,7 @@ namespace NexusForever.WorldServer.Game.Map
         private void AddPlugEntity(Plot plot)
         {
             var plug = new Plug(plot.PlotInfoEntry, plot.PlugItemEntry);
-            plot.PlugEntity = plug;
+            plot.SetPlugEntity(plug);
 
             EnqueueAdd(plug, new MapPosition
             {
@@ -234,7 +238,9 @@ namespace NexusForever.WorldServer.Game.Map
                     PlotInfoId        = plot.PlotInfoEntry.Id,
                     PlugFacing        = plot.PlugFacing,
                     PlugItemId        = plot.PlugItemEntry?.Id ?? 0u,
-                    BuildState        = plot.BuildState
+                    BuildState        = plot.BuildState,
+                    HousingUpkeepTime = -152595.9375f,
+                    BuildStartTime    = plot.GetBuildStartTime()
                 });
             }
 
@@ -797,6 +803,54 @@ namespace NexusForever.WorldServer.Game.Map
         }
 
         /// <summary>
+        /// Handles updating the client with changes following a 2x2 Plot change
+        /// </summary>
+        /*private void HandleHouseChange(Residence residence, Player player, Plot plot, ClientHousingPlugUpdate housingPlugUpdate = null)
+        {
+            if (housingPlugUpdate == null)
+                plot.SetPlug(this, 18, player); // Defaults to Starter Tent
+            else
+                plot.SetPlug(this, housingPlugUpdate.PlugItem, player);
+
+            foreach (Decor decor in residence.GetDecor().Where(d => d.Type == DecorType.InteriorDecoration))
+            {
+                residence.DecorDelete(decor);
+
+                // TODO: send packet to remove from decor list
+                var residenceDecor = new ServerHousingResidenceDecor();
+                residenceDecor.DecorData.Add(new ServerHousingResidenceDecor.Decor
+                {
+                    RealmId = WorldServer.RealmId,
+                    ResidenceId = residence.Id,
+                    DecorId = (ulong)decor.DecorId,
+                    DecorInfoId = 0
+                });
+
+                EnqueueToAll(residenceDecor);
+            }
+
+            foreach (Decor decor in residence.GetPlacedDecor(plot.Index).ToList())
+            {
+                foreach (WorldEntity entity in entities.Values.Where(i => i is Player))
+                    entity.RemoveVisible(decor.Entity);
+
+                decor.Crate();
+            }
+
+            foreach (Decor decor in decorEntities.Values.Where(d => d.Entity != null))
+                foreach (WorldEntity entity in entities.Values.Where(i => i is Player))
+                    entity.RemoveVisible(decor.Entity);
+
+            foreach (TemporaryDecor decor in instancedTemporaryDecor.Values.Where(d => d.Entity != null).ToList())
+            {
+                foreach (WorldEntity entity in entities.Values.Where(i => i is Player))
+                    entity.RemoveVisible(decor.Entity);
+
+                RemoveDecorEntity(decor);
+            }
+        }*/
+
+        /// <summary>
         /// Install a Plug into a Plot; Should only be called on a client update.
         /// </summary>
         public void SetPlug(Residence residence, Player player, ClientHousingPlugUpdate housingPlugUpdate)
@@ -818,7 +872,7 @@ namespace NexusForever.WorldServer.Game.Map
                 SetHousePlug(residence, player, housingPlugUpdate, plugItemEntry);
             else
             {
-                // TODO: Figure out how the "Construction Yard" shows up. Appears to be related to time and not a specific packet. 
+                /*// TODO: Figure out how the "Construction Yard" shows up. Appears to be related to time and not a specific packet. 
                 //       Telling the client that the Plots were updated looks to be the only trigger for the building animation.
 
                 // Update the Plot and queue necessary plug updates
@@ -838,7 +892,8 @@ namespace NexusForever.WorldServer.Game.Map
                     PlotIndex = plot.Index,
                     BuildStage = 0,
                     BuildState = plot.BuildState
-                });
+                });*/
+                plot.SetPlug(this, housingPlugUpdate.PlugItem, player);
             }
 
             // TODO: Deduct any cost and/or items
@@ -897,7 +952,16 @@ namespace NexusForever.WorldServer.Game.Map
             if (plot == null)
                 throw new HousingException();
 
-            RemovePlug(residence, player, plot);
+            // Handle changes if plot is the house plot
+            if (plot.Index == 0)
+                RemoveHouse(residence, player, plot);
+            else
+            {
+                plot.PlugEntity.RemoveFromMap();
+                plot.RemovePlug();
+
+                SendResidencePlots();
+            }
         }
 
         /// <summary>
