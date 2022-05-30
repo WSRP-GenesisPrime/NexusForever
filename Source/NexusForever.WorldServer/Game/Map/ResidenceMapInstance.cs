@@ -355,13 +355,34 @@ namespace NexusForever.WorldServer.Game.Map
                 switch (housingDecorUpdate.Operation)
                 {
                     case DecorUpdateOperation.Create:
-                        DecorCreate(residence, player, update);
+                        try
+                        {
+                            DecorCreate(residence, player, update);
+                        }
+                        catch (Exception e)
+                        {
+                            player.SendSystemMessage("Error creating decor! Try reloading your map with /c house teleport.");
+                        } // No fucks given, continue!
                         break;
                     case DecorUpdateOperation.Move:
-                        DecorMove(residence, player, update);
+                        try
+                        {
+                            DecorMove(residence, player, update);
+                        }
+                                catch (Exception e)
+                        {
+                            player.SendSystemMessage("Moved decor does not exist! Try reloading your map with /c house teleport.");
+                        } // No fucks given, continue!
                         break;
                     case DecorUpdateOperation.Delete:
-                        DecorDelete(residence, update);
+                        try
+                        {
+                            DecorDelete(residence, update);
+                        }
+                                    catch (Exception e)
+                        {
+                            player.SendSystemMessage("Deleted decor does not exist! Try reloading your map with /c house teleport.");
+                        } // No fucks given, continue!
                         break;
                     default:
                         throw new InvalidPacketValueException();
@@ -472,7 +493,6 @@ namespace NexusForever.WorldServer.Game.Map
                             log.Error($"ColorShiftEntry null for update.ColourShiftId: {update.ColourShiftId}; actor name: {player.Name}, residence: {residence.Id} ({residence.Name})");
                             throw new InvalidPacketValueException();
                         }
-                            
                     }
 
                     decor.ColourShiftId = update.ColourShiftId;
