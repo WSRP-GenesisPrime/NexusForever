@@ -15,6 +15,7 @@ namespace NexusForever.WorldServer.Game.Entity
     public abstract class GridEntity : IUpdate
     {
         public uint Guid { get; protected set; }
+        public bool GuidLocked { get; protected set; } = false;
         public BaseMap Map { get; private set; }
         public WorldZoneEntry Zone { get; private set; }
         public Residence CurrentResidence
@@ -168,10 +169,6 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public T GetVisible<T>(uint guid) where T : WorldEntity
         {
-            if (Map is ResidenceMapInstance residenceMap)
-                if (residenceMap.TryGetDecorEntity(guid, out WorldEntity decorEntity))
-                    return (T)decorEntity;
-
             if (!visibleEntities.TryGetValue(guid, out GridEntity entity))
                 return null;
             return (T)entity;
@@ -257,6 +254,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 throw new InvalidOperationException($"Cannot directly set Guid of Entity if they are placed by a Map.");
 
             Guid = guid;
+            GuidLocked = true;
         }
     }
 }
