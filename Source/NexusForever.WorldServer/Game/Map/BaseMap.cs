@@ -418,7 +418,7 @@ namespace NexusForever.WorldServer.Game.Map
             MapGrid grid = GetGrid(vector);
             grid.AddEntity(entity, vector);
 
-            uint guid = entityCounter.Dequeue();
+            uint guid = entity.GuidLocked ? entity.Guid : entityCounter.Dequeue();
             entities.Add(guid, entity);
 
             entity.OnAddToMap(this, guid, vector);

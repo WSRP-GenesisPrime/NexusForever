@@ -48,13 +48,14 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private void SetScript()
         {
-            switch(this.CreatureId)
+            Creature2Entry creature = GameTableManager.Instance.Creature2.GetEntry(this.CreatureId);
+            if(creature == null)
             {
-                case 65852: // Housing - Decor - Doors - Gothic Gate
-                case 70052: // Housing - Decor - Activated - Door
-                case 75398: // Redmoon Door (Circular) - Decor - Housing Active Prop
-                    script = new DoorScript(this);
-                    break;
+                return;
+            }
+            if(creature.Spell4IdActivate00 == 1817) // lights and doors, plus a lot of other decor.
+            {
+                script = new SimpleStateScript(this, StandState.State1, StandState.State0);
             }
         }
 
@@ -137,27 +138,32 @@ namespace NexusForever.WorldServer.Game.Entity
 
     public abstract class EntityScript
     {
-        public abstract void OnActivateCast(Player activator);
+        public virtual void OnActivateCast(Player activator)
+        {
+        }
 
-        public abstract void OnActivate(Player activator);
+        public virtual void OnActivate(Player activator)
+        {
+        }
 
-        public abstract void OnVisible(GridEntity entity);
+        public virtual void OnVisible(GridEntity entity)
+        {
+        }
     }
 
-    public class DoorScript : EntityScript
+    public class SimpleStateScript : EntityScript
     {
-        public DoorScript(Simple owner)
+        public SimpleStateScript(Simple owner, StandState state2 = StandState.State1, StandState state1 = StandState.State0)
         {
             this.owner = owner;
+            this.state1 = state1;
+            this.state2 = state2;
         }
 
         private bool open = false;
         private Simple owner = null;
-
-        public override void OnActivate(Player activator)
-        {
-            
-        }
+        private StandState state1;
+        private StandState state2;
 
         public override void OnActivateCast(Player activator)
         {
@@ -166,18 +172,18 @@ namespace NexusForever.WorldServer.Game.Entity
             // Emit from Player due to way Decor Entities are tracked on the map being... different.
             activator.EnqueueToVisible(new ServerEmote()
             {
-                StandState = open ? StandState.State1 : StandState.State0,
+                StandState = open ? state2 : state1,
                 Guid = owner.Guid
             }, true);
         }
 
         public override void OnVisible(GridEntity entity)
         {
-            if(entity is Player player)
+            if (entity is Player player)
             {
                 player.Session.EnqueueMessageEncrypted(new ServerEmote()
                 {
-                    StandState = open ? StandState.State1 : StandState.State0,
+                    StandState = open ? state2 : state1,
                     Guid = owner.Guid
                 });
             }

@@ -111,10 +111,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             if (newAmps.Count > 0)
             {
-                foreach (ushort id in newAmps)
+                /*foreach (ushort id in newAmps)
                     actionSet.AddAmp(id);
 
-               session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());
+                session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());*/
+                session.Player.SendSystemMessage("You just tried to add an AMP to your character   :(   This is currently -horribly- broken, and we have disabled this for your benefit. Please refrain from trying to do this again, there may still be ways to get AMPs and break your character.");
             }
         }
 
