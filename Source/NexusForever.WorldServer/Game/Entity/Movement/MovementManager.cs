@@ -31,6 +31,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         private bool isDirty;
         private bool serverControlled = true;
         private uint time = 1u;
+        public bool teleportMode = false;
         private EntityCommand[] handledCommands = new EntityCommand[]
         {
             EntityCommand.SetPosition,
@@ -275,7 +276,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                 isPlayer = true;
             }
 
-            if (isPlayer)
+            if (isPlayer && teleportMode)
                 player?.Session.EnqueueMessageEncrypted(new Server0639()); // slows down the character, unsure what it does.
 
             var serverEntityCommand = new ServerEntityCommand
@@ -292,7 +293,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             owner.EnqueueToVisible(serverEntityCommand, true);
             ClearUnhandledCommands();
 
-            if (isPlayer)
+            if (isPlayer && teleportMode)
                 player?.Session.EnqueueMessageEncrypted(new ServerMovementControl // slows down the character, unsure what it does.
                 {
                     Ticket = 2,
@@ -353,6 +354,11 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
 
         public void HandleClientEntityCommands(List<(EntityCommand, IEntityCommandModel)> commands, uint time)
         {
+            if (teleportMode)
+            {
+                teleportMode = false;
+                return;
+            }
             foreach ((EntityCommand id, IEntityCommandModel command) in commands)
             {
                 switch (command)

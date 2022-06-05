@@ -577,6 +577,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return;
             }
 
+            session.Player.MovementManager.teleportMode = true;
+
             if (session.Player.HouseOutsideLocation != Vector3.Zero || session.Player.Position.Y < -720f)
             {
                 Vector3 location = session.Player.HouseOutsideLocation;
