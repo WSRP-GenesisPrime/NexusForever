@@ -7,6 +7,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using EntityModel = NexusForever.Database.World.Model.EntityModel;
 using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Game.Housing;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -38,6 +39,20 @@ namespace NexusForever.WorldServer.Game.Entity
 
             CreateFlags |= EntityCreateFlag.SpawnAnimation;
             SetScript();
+        }
+
+        public override void OnRemoveFromMap()
+        {
+            base.OnRemoveFromMap();
+            Residence residence = CurrentResidence;
+            if (residence != null)
+            {
+                Decor decor = residence.GetDecor(DecorPropId);
+                if (decor != null)
+                {
+                    decor.SetEntity(null);
+                }
+            }
         }
 
         public override void Initialise(EntityModel model)

@@ -981,34 +981,27 @@ namespace NexusForever.WorldServer.Game.Map
             if (propRequestDecor.Type == DecorType.Crate)
                 return; // TODO: Draw Entity temporarily when the Player is placing from Crate
 
+            Vector3 rotation = propRequest.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360; // Actually radians.
+
             if (propRequestDecor.Entity != null)
             {
-                if (propRequestDecor.Entity.Map == this)
-                {
-                    if (propRequest.Position == propRequestDecor.Position && propRequest.Rotation == propRequestDecor.Rotation)
-                        return;
-
-                    // TODO: Calculate entity locations instead of relying on client data
-                    propRequestDecor.Entity.Rotation = propRequest.Rotation.ToEulerDegrees();
-                    if (propRequestDecor.Entity.MovementManager != null) // happens sometimes, apparently.
-                    {
-                        propRequestDecor.Entity.MovementManager.SetRotation(propRequest.Rotation.ToEulerDegrees());
-                        propRequestDecor.Entity.MovementManager.SetPosition(propRequest.Position);
-                    }
+                if (propRequest.Position == propRequestDecor.Position && propRequest.Rotation == propRequestDecor.Rotation)
                     return;
-                }
-                else
+
+                // TODO: Calculate entity locations instead of relying on client data
+                propRequestDecor.Entity.Rotation = rotation;
+                if (propRequestDecor.Entity.MovementManager != null) // happens sometimes, apparently.
                 {
-                    propRequestDecor.SetEntity(null);
+                    propRequestDecor.Entity.MovementManager.SetRotation(rotation);
+                    propRequestDecor.Entity.MovementManager.SetPosition(propRequest.Position);
                 }
+                return;
             }
 
-            InitialiseDecorEntity(residence, propRequestDecor, propRequest.Position, propRequest.Rotation);
-            if (propRequestDecor.Entity == null)
-                return;
+            InitialiseDecorEntity(residence, propRequestDecor, propRequest.Position, rotation);
         }
 
-        private WorldEntity InitialiseDecorEntity(Residence residence, Decor decor, Vector3 position, Quaternion rotation)
+        private WorldEntity InitialiseDecorEntity(Residence residence, Decor decor, Vector3 position, Vector3 rotation)
         {
             Creature2Entry entry = GetCreatureEntryForDecor(decor);
             if (entry == null)
@@ -1067,7 +1060,7 @@ namespace NexusForever.WorldServer.Game.Map
             return null;
         }
 
-        private WorldEntity CreateEntityForDecor(Residence residence, Decor decor, Creature2Entry creatureEntry, Vector3 position, Quaternion rotation)
+        private WorldEntity CreateEntityForDecor(Residence residence, Decor decor, Creature2Entry creatureEntry, Vector3 position, Vector3 rotation)
         {
             if (creatureEntry == null)
                 throw new ArgumentNullException(nameof(creatureEntry));
@@ -1087,9 +1080,9 @@ namespace NexusForever.WorldServer.Game.Map
             }
         }
 
-        private WorldEntity SetDecorEntityProperties(Decor decor, WorldEntity entity, Vector3 position, Quaternion rotation)
+        private WorldEntity SetDecorEntityProperties(Decor decor, WorldEntity entity, Vector3 position, Vector3 rotation)
         {
-            entity.Rotation = rotation.ToEulerDegrees();
+            entity.Rotation = rotation;
             entity.SetPosition(position);
             entity.IsDecorEntity = true;
             entity.SetGuid(entityCounter.Dequeue());
