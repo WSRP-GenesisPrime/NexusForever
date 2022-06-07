@@ -889,6 +889,28 @@ namespace NexusForever.WorldServer.Game.Map
             return new Vector3(1472f + position.X, -715f + position.Y, 1440f + position.Z);
         }
 
+        private Vector3 CalculateEntityPosition(Vector3 position, PropertyInfoId propertyInfo)
+        {
+            switch (propertyInfo)
+            {
+                case PropertyInfoId.Residence:
+                    return new Vector3(1472f + position.Z - 0.00012207031f, -715f + position.Y, 1440f - position.X);
+                case PropertyInfoId.CommunityResidence1:
+                    return new Vector3(352f + position.Z, -715 + position.Y, -640f - position.X);
+                case PropertyInfoId.CommunityResidence2:
+                    return new Vector3(640f + position.Z - 0.000061035156f, -715 + position.Y, -640f - position.X - 0.000061035156f);
+                case PropertyInfoId.CommunityResidence3:
+                    return new Vector3(224f + position.Z + 0.000030517578f, -715 + position.Y, -256f - position.X);
+                case PropertyInfoId.CommunityResidence4:
+                    return new Vector3(512f + position.Z, -715 + position.Y, -256f - position.X - 0.000030517578f);
+                case PropertyInfoId.CommunityResidence5:
+                    return new Vector3(800f + position.Z, -715f + position.Y, -256f - position.X - 0.000030517578f);
+                case PropertyInfoId.Community:
+                    return new Vector3(528f + position.Z, -715f + position.Y, -464f - position.X);
+            }
+            return Vector3.Zero;
+        }
+
         /// <summary>
         /// Returns a <see cref="Vector3"/> representing local coordinates from a world coordinate.
         /// </summary>
