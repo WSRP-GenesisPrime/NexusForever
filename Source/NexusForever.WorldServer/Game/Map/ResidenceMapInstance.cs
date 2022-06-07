@@ -889,24 +889,58 @@ namespace NexusForever.WorldServer.Game.Map
             return new Vector3(1472f + position.X, -715f + position.Y, 1440f + position.Z);
         }
 
-        private Vector3 CalculateEntityPosition(Vector3 position, PropertyInfoId propertyInfo)
+        private Vector3 CalculateEntityPosition(Vector3 position, PropertyInfoId propertyInfo, uint plotIndex)
         {
+            Vector3 vec = Vector3.Zero;
             switch (propertyInfo)
             {
                 case PropertyInfoId.Residence:
-                    return new Vector3(1472f + position.Z - 0.00012207031f, -715f + position.Y, 1440f - position.X);
+                    vec = new Vector3(1472f + position.Z - 0.00012207031f, -715f + position.Y, 1440f - position.X);
+                    break;
                 case PropertyInfoId.CommunityResidence1:
-                    return new Vector3(352f + position.Z, -715 + position.Y, -640f - position.X);
+                    vec = new Vector3(352f + position.Z, -715 + position.Y, -640f - position.X);
+                    break;
                 case PropertyInfoId.CommunityResidence2:
-                    return new Vector3(640f + position.Z - 0.000061035156f, -715 + position.Y, -640f - position.X - 0.000061035156f);
+                    vec = new Vector3(640f + position.Z - 0.000061035156f, -715 + position.Y, -640f - position.X - 0.000061035156f);
+                    break;
                 case PropertyInfoId.CommunityResidence3:
-                    return new Vector3(224f + position.Z + 0.000030517578f, -715 + position.Y, -256f - position.X);
+                    vec = new Vector3(224f + position.Z + 0.000030517578f, -715 + position.Y, -256f - position.X);
+                    break;
                 case PropertyInfoId.CommunityResidence4:
-                    return new Vector3(512f + position.Z, -715 + position.Y, -256f - position.X - 0.000030517578f);
+                    vec = new Vector3(512f + position.Z, -715 + position.Y, -256f - position.X - 0.000030517578f);
+                    break;
                 case PropertyInfoId.CommunityResidence5:
-                    return new Vector3(800f + position.Z, -715f + position.Y, -256f - position.X - 0.000030517578f);
+                    vec = new Vector3(800f + position.Z, -715f + position.Y, -256f - position.X - 0.000030517578f);
+                    break;
                 case PropertyInfoId.Community:
-                    return new Vector3(528f + position.Z, -715f + position.Y, -464f - position.X);
+                    vec = new Vector3(528f + position.Z, -715f + position.Y, -464f - position.X);
+                    break;
+            }
+            if (plotIndex < 1000)
+            {
+                HousingPlotInfoEntry plotInfo = GameTableManager.Instance.HousingPlotInfo.Entries.Where(e => (e.HousingPropertyInfoId == (uint)propertyInfo && e.HousingPropertyPlotIndex == plotIndex)).FirstOrDefault();
+                if (plotInfo != null)
+                {
+                    WorldSocketEntry socket = GameTableManager.Instance.WorldSocket.GetEntry(plotInfo.WorldSocketId);
+                    if (socket != null)
+                    {
+                        vec = vec + GetPlotMidpoint(propertyInfo, plotIndex) - GetPlotMidpoint(propertyInfo, 0);
+                    }
+                }
+            }
+            return vec;
+        }
+
+        public Vector3 GetPlotMidpoint(PropertyInfoId propertyInfo, uint plotIndex)
+        {
+            HousingPlotInfoEntry plotInfo = GameTableManager.Instance.HousingPlotInfo.Entries.Where(e => (e.HousingPropertyInfoId == (uint)propertyInfo && e.HousingPropertyPlotIndex == plotIndex)).FirstOrDefault();
+            if (plotInfo != null)
+            {
+                WorldSocketEntry socket = GameTableManager.Instance.WorldSocket.GetEntry(plotInfo.WorldSocketId);
+                if (socket != null)
+                {
+                    return new Vector3((socket.BoundIds[1] + socket.BoundIds[3] - 2052) * 32 / 2, 0, (socket.BoundIds[0] + socket.BoundIds[2] - 2048) * 32 / 2);
+                }
             }
             return Vector3.Zero;
         }
