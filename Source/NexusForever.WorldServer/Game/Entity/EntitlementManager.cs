@@ -191,7 +191,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 throw new ArgumentException($"Invalid entitlement type {type}!");
             if (entry.Id == 12)
             {
-                entry.MaxCount = 48;
+                entry.MaxCount = 198;
             }
 
             AccountEntitlement entitlement = SetEntitlement(accountEntitlements, entry, value,
