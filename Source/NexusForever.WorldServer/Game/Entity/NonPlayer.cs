@@ -4,6 +4,7 @@ using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using System.Linq;
@@ -55,6 +56,20 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             CalculateProperties();
+        }
+
+        public override void OnRemoveFromMap()
+        {
+            base.OnRemoveFromMap();
+            Residence residence = CurrentResidence;
+            if (residence != null)
+            {
+                Decor decor = residence.GetDecor(DecorPropId);
+                if (decor != null)
+                {
+                    decor.SetEntity(null);
+                }
+            }
         }
 
         protected override IEntityModel BuildEntityModel()
