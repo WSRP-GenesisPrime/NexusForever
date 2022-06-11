@@ -1098,7 +1098,7 @@ namespace NexusForever.WorldServer.Game.Map
                     temporaryDecor = new TemporaryDecor(residence, propRequest.PropId, entry, CalculateLocalCoordinates(propRequest.Position), propRequest.Rotation);
                     instancedTemporaryDecor.Add(temporaryDecor.DecorId, temporaryDecor);
 
-                    InitialiseDecorEntity(residence, temporaryDecor, propRequest.Position, propRequest.Rotation);
+                    InitialiseDecorEntity(residence, temporaryDecor, propRequest.Position, propRequest.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360);
 
                     temporaryDecor.Entity.InitialiseTemporaryEntity();
                 }
