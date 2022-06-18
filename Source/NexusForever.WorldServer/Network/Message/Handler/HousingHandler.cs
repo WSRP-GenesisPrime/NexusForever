@@ -565,11 +565,6 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             Residence residence = GlobalResidenceManager.Instance.GetResidence(enterInside.ResidenceId);
 
-            if (residence.PropertyInfoId != PropertyInfoId.Residence)
-            {
-                session.Player.SendSystemMessage("You knock, but there's no answer... (community plot interiors coming soon!");
-            }
-
             if (!session.Player.CanUseHousingDoors())
             {
                 session.EnqueueMessageEncrypted(new ServerHousingResult

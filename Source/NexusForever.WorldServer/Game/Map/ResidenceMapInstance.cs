@@ -997,33 +997,37 @@ namespace NexusForever.WorldServer.Game.Map
             return new Vector3(1472f + position.X, -715f + position.Y, 1440f + position.Z);
         }
 
-        private Vector3 CalculateEntityPosition(Vector3 position, PropertyInfoId propertyInfo, uint plotIndex)
+        public static Vector3 CalculatePlotWorldCoordinates(Vector3 position, PropertyInfoId propertyInfo)
         {
-            Vector3 vec = Vector3.Zero;
+            return GetResidenceOffset(propertyInfo) + new Vector3(position.Z, position.Y, -position.X);
+        }
+
+        public static Vector3 GetResidenceOffset(PropertyInfoId propertyInfo)
+        {
             switch (propertyInfo)
             {
                 case PropertyInfoId.Residence:
-                    vec = new Vector3(1472f + position.Z - 0.00012207031f, -715f + position.Y, 1440f - position.X);
-                    break;
+                    return new Vector3(1472f - 0.00012207031f, -715f, 1440f);
                 case PropertyInfoId.CommunityResidence1:
-                    vec = new Vector3(352f + position.Z, -715 + position.Y, -640f - position.X);
-                    break;
+                    return new Vector3(352f, -715, -640f);
                 case PropertyInfoId.CommunityResidence2:
-                    vec = new Vector3(640f + position.Z - 0.000061035156f, -715 + position.Y, -640f - position.X - 0.000061035156f);
-                    break;
+                    return new Vector3(640f - 0.000061035156f, -715, -640f - 0.000061035156f);
                 case PropertyInfoId.CommunityResidence3:
-                    vec = new Vector3(224f + position.Z + 0.000030517578f, -715 + position.Y, -256f - position.X);
-                    break;
+                    return new Vector3(224f + 0.000030517578f, -715, -256f);
                 case PropertyInfoId.CommunityResidence4:
-                    vec = new Vector3(512f + position.Z, -715 + position.Y, -256f - position.X - 0.000030517578f);
-                    break;
+                    return new Vector3(512f, -715, -256f - 0.000030517578f);
                 case PropertyInfoId.CommunityResidence5:
-                    vec = new Vector3(800f + position.Z, -715f + position.Y, -256f - position.X - 0.000030517578f);
-                    break;
+                    return new Vector3(800f, -715f, -256f - 0.000030517578f);
                 case PropertyInfoId.Community:
-                    vec = new Vector3(528f + position.Z, -715f + position.Y, -464f - position.X);
-                    break;
+                    return new Vector3(528f, -715f, -464f);
             }
+            return Vector3.Zero;
+        }
+
+        public static Vector3 CalculateEntityPosition(Vector3 position, PropertyInfoId propertyInfo, uint plotIndex)
+        {
+            Vector3 vec = CalculatePlotWorldCoordinates(position, propertyInfo);
+
             if (plotIndex < 1000)
             {
                 HousingPlotInfoEntry plotInfo = GameTableManager.Instance.HousingPlotInfo.Entries.Where(e => (e.HousingPropertyInfoId == (uint)propertyInfo && e.HousingPropertyPlotIndex == plotIndex)).FirstOrDefault();
@@ -1032,6 +1036,12 @@ namespace NexusForever.WorldServer.Game.Map
                     WorldSocketEntry socket = GameTableManager.Instance.WorldSocket.GetEntry(plotInfo.WorldSocketId);
                     if (socket != null)
                     {
+                        float angle = 0;
+                        if (plotIndex > 0 && plotIndex < 10)
+                        {
+                            angle = 90;
+                        }
+                        Quaternion rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, angle);
                         vec = vec + GetPlotMidpoint(propertyInfo, plotIndex) - GetPlotMidpoint(propertyInfo, 0);
                     }
                 }
@@ -1039,7 +1049,22 @@ namespace NexusForever.WorldServer.Game.Map
             return vec;
         }
 
-        public Vector3 GetPlotMidpoint(PropertyInfoId propertyInfo, uint plotIndex)
+        public Matrix4x4 GetPlotTransform(PropertyInfoId propertyInfo, uint plotIndex)
+        {
+            Matrix4x4 transform = Matrix4x4.Identity;
+            HousingPlotInfoEntry plotInfo = GameTableManager.Instance.HousingPlotInfo.Entries.Where(e => (e.HousingPropertyInfoId == (uint)propertyInfo && e.HousingPropertyPlotIndex == plotIndex)).FirstOrDefault();
+            if (plotInfo != null)
+            {
+                WorldSocketEntry socket = GameTableManager.Instance.WorldSocket.GetEntry(plotInfo.WorldSocketId);
+                if (socket != null)
+                {
+                    transform = Matrix4x4.CreateTranslation(new Vector3(((socket.BoundIds[1] + socket.BoundIds[3]) / 2 - 1026) * 32, 0, ((socket.BoundIds[0] + socket.BoundIds[2]) / 2 - 1024) * 32));
+                }
+            }
+            return transform;
+        }
+
+        public static Vector3 GetPlotMidpoint(PropertyInfoId propertyInfo, uint plotIndex)
         {
             HousingPlotInfoEntry plotInfo = GameTableManager.Instance.HousingPlotInfo.Entries.Where(e => (e.HousingPropertyInfoId == (uint)propertyInfo && e.HousingPropertyPlotIndex == plotIndex)).FirstOrDefault();
             if (plotInfo != null)
@@ -1047,7 +1072,7 @@ namespace NexusForever.WorldServer.Game.Map
                 WorldSocketEntry socket = GameTableManager.Instance.WorldSocket.GetEntry(plotInfo.WorldSocketId);
                 if (socket != null)
                 {
-                    return new Vector3((socket.BoundIds[1] + socket.BoundIds[3] - 2052) * 32 / 2, 0, (socket.BoundIds[0] + socket.BoundIds[2] - 2048) * 32 / 2);
+                    return new Vector3(((socket.BoundIds[1] + socket.BoundIds[3])/2 - 1026) * 32, 0, ((socket.BoundIds[0] + socket.BoundIds[2])/2 - 1024) * 32);
                 }
             }
             return Vector3.Zero;

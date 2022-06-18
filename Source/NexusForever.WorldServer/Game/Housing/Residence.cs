@@ -1013,7 +1013,13 @@ namespace NexusForever.WorldServer.Game.Housing
         /// </summary>
         public Vector3 GetResidenceInsideLocation(uint residenceInfoId)
         {
-            return residenceTeleportLocation.TryGetValue(residenceInfoId, out Vector3 teleportLocation) ? teleportLocation : Vector3.Zero;
+            if (residenceTeleportLocation.TryGetValue(residenceInfoId, out Vector3 teleportLocation)) {
+                if (PropertyInfoId != PropertyInfoId.Residence) {
+                    teleportLocation = teleportLocation + ResidenceMapInstance.GetResidenceOffset(propertyInfoId) - ResidenceMapInstance.GetResidenceOffset(PropertyInfoId.Residence);
+                }
+                return teleportLocation;
+            }
+            return Vector3.Zero;
         }
 
         public void RemoveHouse()
