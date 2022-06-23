@@ -196,18 +196,18 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Unknown194)]
-        private static bool PrerequisiteCheckUnknown194(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        [PrerequisiteCheck(PrerequisiteType.GroundMountArea)]
+        private static bool PrerequisiteCheckGroundMountArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
-            // TODO: Only used in Mount check prerequisites. Its use is unknown.
+            // Check whether this is a valid area for a ground mount.
 
             return true;
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Unknown195)]
-        private static bool PrerequisiteCheckUnknown195(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        [PrerequisiteCheck(PrerequisiteType.HoverboardArea)]
+        private static bool PrerequisiteCheckHoverboardArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
-            // TODO: Only used in Mount check prerequisites. Its use is unknown.
+            // Check whether this is a valid area for a hoverboard.
 
             return true;
         }
@@ -219,6 +219,14 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             // TODO: Investigate further.
 
             // Returning true by default as many mounts used this
+            return true;
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.Loyalty)]
+        private static bool PrerequisiteCheckLoyalty(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            // Check whether we have a high enough loyalty.
+
             return true;
         }
     }

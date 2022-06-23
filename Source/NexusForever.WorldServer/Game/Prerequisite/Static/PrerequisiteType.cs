@@ -22,13 +22,14 @@
         /// <summary>
         /// Used for Mount checks
         /// </summary>
-        Unknown194      = 194,
+        GroundMountArea = 194,
         /// <summary>
         /// Used for Mount checks
         /// </summary>
-        Unknown195      = 195,
+        HoverboardArea  = 195,
         SpellBaseId     = 214,
         Plane           = 232,
-        BaseFaction     = 250
+        BaseFaction     = 250,
+        Loyalty         = 270
     }
 }
