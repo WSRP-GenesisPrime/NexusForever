@@ -108,6 +108,20 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
+        [PrerequisiteCheck(PrerequisiteType.Gender)]
+        private static bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            // Check whether we have the right gender.
+            switch(comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return (uint)player.Sex == value;
+                case PrerequisiteComparison.NotEqual:
+                    return (uint)player.Sex != value;
+            }
+            return false;
+        }
+
         [PrerequisiteCheck(PrerequisiteType.SpellBaseId)]
         private static bool PrerequisiteCheckSpellBaseId(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
