@@ -40,6 +40,15 @@ namespace NexusForever.WorldServer.Game.Map
                 AddResidence(childResidence.Residence);
         }
 
+        public override void Update(double lastTick)
+        {
+            base.Update(lastTick);
+
+            foreach (Residence residence in residences.Values)
+                foreach (Plot plot in residence.GetPlots())
+                    plot.Update(lastTick);
+        }
+
         private void AddResidence(Residence residence)
         {
             residences.Add(residence.Id, residence);
@@ -93,7 +102,7 @@ namespace NexusForever.WorldServer.Game.Map
 
             foreach (Plot plot in residence.GetPlots()
                 .Where(p => p.PlugItemEntry != null))
-                plot?.PlugEntity.RemoveFromMap();
+                plot?.PlugEntity?.RemoveFromMap();
         }
 
         protected override MapPosition GetPlayerReturnLocation(Player player)
