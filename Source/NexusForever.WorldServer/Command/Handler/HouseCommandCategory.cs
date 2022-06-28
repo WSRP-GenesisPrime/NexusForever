@@ -318,7 +318,7 @@ namespace NexusForever.WorldServer.Command.Handler
                             ResidenceId = residence.Id,
                             RealmId = WorldServer.RealmId
                         };
-                        residence.GetMap().SetPlug(residence, target, pu);
+                        residence.Map.SetPlug(residence, target, pu);
                         /*if (residence.SetHouse(plugItem))
                         {
                             residence.getMap().HandleHouseChange(target, residence.GetPlot(0));

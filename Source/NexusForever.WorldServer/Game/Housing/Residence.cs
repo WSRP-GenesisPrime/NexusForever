@@ -564,38 +564,25 @@ namespace NexusForever.WorldServer.Game.Housing
             return true;
         }
 
-        public ResidenceMapInstance GetMap()
-        {
-            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(PropertyInfoId);
-            MapInfo mi = new MapInfo
-            {
-                Entry = entrance.Entry,
-                InstanceId = Id
-            };
-            ResidenceMapInstance map = MapManager.Instance.GetMap(mi) as ResidenceMapInstance;
-            return map;
-        }
-
         public bool Set18PlusLock(bool doLock, DateTime? limit = null, string timeText = null)
         {
             if(doLock == has18PlusLock && limit == null)
             {
                 return true;
             }
-            ResidenceMapInstance map = GetMap();
-            if(map == null)
+            if(Map == null)
             {
                 Set18PlusLockInternal(doLock);
                 return true;
             }
-            if (doLock && Can18PlusLock(map))
+            if (doLock && Can18PlusLock(Map))
             {
                 string text = "18+ lock created.";
                 if (!string.IsNullOrWhiteSpace(timeText))
                 {
                     text = $"18+ lock created, and will last for {timeText}.";
                 }
-                map.EnqueueToAll(new ServerChat
+                Map.EnqueueToAll(new ServerChat
                 {
                     Channel = new Channel
                     {
@@ -616,7 +603,7 @@ namespace NexusForever.WorldServer.Game.Housing
             }
             if (!doLock)
             {
-                map.EnqueueToAll(new ServerChat
+                Map.EnqueueToAll(new ServerChat
                 {
                     Channel = new Channel
                     {
