@@ -6,6 +6,7 @@ using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Network.Message.Model;
+using System;
 
 namespace NexusForever.WorldServer.Game.Guild
 { 
@@ -48,7 +49,7 @@ namespace NexusForever.WorldServer.Game.Guild
                         else
                             residence.Parent.RemoveChild(residence);
 
-                        player.Rotation = entrance.Rotation.ToEulerDegrees();
+                        player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
                         player.TeleportTo(entrance.Entry, entrance.Position, Residence.Id);
                     }
                     else
@@ -57,7 +58,7 @@ namespace NexusForever.WorldServer.Game.Guild
                         // otherwise they will be moved to the new instance during the unload
                         if (residence.Map != player.Map)
                         {
-                            player.Rotation = entrance.Rotation.ToEulerDegrees();
+                            player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
                             player.TeleportTo(entrance.Entry, entrance.Position, Residence.Id);
                         }
 

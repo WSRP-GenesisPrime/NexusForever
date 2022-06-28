@@ -159,7 +159,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 }
 
                 ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-                target.Rotation = entrance.Rotation.ToEulerDegrees();
+                target.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
                 target.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
             }
             catch (Exception e)

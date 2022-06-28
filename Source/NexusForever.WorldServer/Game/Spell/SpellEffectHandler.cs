@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Numerics;
 using NexusForever.Shared;
@@ -123,7 +124,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             var rotation = new Quaternion(worldLocation.Facing0, worldLocation.Facing0, worldLocation.Facing2, worldLocation.Facing3);
-            player.Rotation = rotation.ToEulerDegrees();
+            player.Rotation = rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
             player.TeleportTo((ushort)worldLocation.WorldId, worldLocation.Position0, worldLocation.Position1, worldLocation.Position2);
         }
 

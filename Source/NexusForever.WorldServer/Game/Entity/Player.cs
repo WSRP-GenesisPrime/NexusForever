@@ -1107,7 +1107,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (entry == null)
                 throw new ArgumentException();
 
-            Rotation = new Quaternion(worldLocation2Entry.Facing0, worldLocation2Entry.Facing1, worldLocation2Entry.Facing2, worldLocation2Entry.Facing3).ToEulerDegrees();
+            Rotation = new Quaternion(worldLocation2Entry.Facing0, worldLocation2Entry.Facing1, worldLocation2Entry.Facing2, worldLocation2Entry.Facing3).ToEulerDegrees() * (float)Math.PI * 2 / 360;
             TeleportTo((ushort) entry.Id, worldLocation2Entry.Position0, worldLocation2Entry.Position1, worldLocation2Entry.Position2, instanceId);
         }
 
