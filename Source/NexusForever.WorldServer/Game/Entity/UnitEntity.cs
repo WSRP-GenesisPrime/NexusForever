@@ -168,10 +168,15 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void WipeEffectsByID(uint spell4Id)
         {
-            foreach(var spell in pendingSpells.Where(s => s.parameters.SpellInfo.BaseInfo.Entry.Id == spell4Id).ToList())
+            foreach(var spell in GetPendingSpellsByID(spell4Id))
             {
                 CancelEffect(spell.CastingId);
             }
+        }
+
+        public IEnumerable<Spell.Spell> GetPendingSpellsByID(uint spell4Id)
+        {
+            return pendingSpells.Where(s => s.parameters.SpellInfo.BaseInfo.Entry.Id == spell4Id || s.parameters.SpellInfo.Entry.Id == spell4Id);
         }
     }
 }

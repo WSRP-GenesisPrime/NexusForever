@@ -3,6 +3,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Prerequisite.Static;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game.Reputation.Static;
+using System.Linq;
 
 namespace NexusForever.WorldServer.Game.Prerequisite
 {
@@ -75,6 +76,39 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return Instance.Meets(player, objectId);
                 default:
                     log.Warn($"Unhandled {comparison} for {PrerequisiteType.Prerequisite}!");
+                    return false;
+            }
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.HasBuff)]
+        private static bool PrerequisiteCheckHasBuff(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            var list = player.GetPendingSpellsByID(value).ToList();
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return player.GetPendingSpellsByID(value).Any();
+                case PrerequisiteComparison.NotEqual:
+                    return !(player.GetPendingSpellsByID(value).Any());
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.HasBuff}!");
+
+                    return false;
+            }
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.Zone)]
+        private static bool PrerequisiteCheckZone(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return player.Zone.Id == value;
+                case PrerequisiteComparison.NotEqual:
+                    return player.Zone.Id != value;
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.Zone}!");
+
                     return false;
             }
         }

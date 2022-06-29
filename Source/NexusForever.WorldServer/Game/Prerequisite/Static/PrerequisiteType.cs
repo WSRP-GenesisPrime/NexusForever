@@ -13,6 +13,8 @@
         Achievement     = 7,
         Gender          = 10,
         Prerequisite    = 11,
+        HasBuff       = 15,
+        Zone            = 26,
         Path            = 52,
         Vital           = 73,
         SpellObj        = 129,
