@@ -225,6 +225,22 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
+        [PrerequisiteCheck(PrerequisiteType.Disguise)]
+        private static bool PrerequisiteCheckDisguise(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            switch (comparison)
+            { // Dummy!
+                case PrerequisiteComparison.Equal:
+                    return true;
+                case PrerequisiteComparison.NotEqual:
+                    return true;
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.Disguise}!");
+
+                    return false;
+            }
+        }
+
         [PrerequisiteCheck(PrerequisiteType.SpellObj)]
         private static bool PrerequisiteCheckSpellObj(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {

@@ -13,10 +13,11 @@
         Achievement     = 7,
         Gender          = 10,
         Prerequisite    = 11,
-        HasBuff       = 15,
+        HasBuff         = 15,
         Zone            = 26,
         Path            = 52,
         Vital           = 73,
+        Disguise        = 105,
         SpellObj        = 129,
 		    /// <summary>
         /// Checks for an ObjectId, which is a hashed petflair id.
