@@ -83,7 +83,8 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         [PrerequisiteCheck(PrerequisiteType.HasBuff)]
         private static bool PrerequisiteCheckHasBuff(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
-            var list = player.GetPendingSpellsByID(value).ToList();
+            return true;
+            /*var list = player.GetPendingSpellsByID(value).ToList();
             switch (comparison)
             {
                 case PrerequisiteComparison.Equal:
@@ -94,7 +95,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.HasBuff}!");
 
                     return false;
-            }
+            }*/ // lol fuck no
         }
 
         [PrerequisiteCheck(PrerequisiteType.Zone)]
