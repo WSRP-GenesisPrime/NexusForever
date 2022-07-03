@@ -168,7 +168,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void WipeEffectsByID(uint spell4Id)
         {
-            foreach(var spell in GetPendingSpellsByID(spell4Id))
+            var list = GetPendingSpellsByID(spell4Id).ToList();
+            foreach (var spell in list)
             {
                 CancelEffect(spell.CastingId);
             }
