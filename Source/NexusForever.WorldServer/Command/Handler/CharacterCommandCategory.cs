@@ -1,6 +1,7 @@
 ﻿using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NLog;
@@ -382,6 +383,43 @@ namespace NexusForever.WorldServer.Command.Handler
                     UserInitiatedSpellCast = false
                 });
             }
+        }
+
+        [Command(Permission.Morph, "Mount a creature by name.", "mount")]
+        public void HandleMount(ICommandContext context,
+           [Parameter("Creature ID.")]
+            uint creature2ID,
+           [Parameter("Vehicle ID.", Static.ParameterFlags.Optional)]
+            uint? vehicleID)
+        {
+            Player player = context.InvokingPlayer;
+
+            if (!player.CanMount())
+                return;
+
+            var mount = new Mount(player, 82107, creature2ID, vehicleID ?? 1, 0);
+            mount.EnqueuePassengerAdd(player, VehicleSeatType.Pilot, 0);
+
+            // usually for hover boards
+            /*if (info.Entry.DataBits04 > 0u)
+            {
+                mount.SetAppearance(new ItemVisual
+                {
+                    Slot      = ItemSlot.Mount,
+                    DisplayId = (ushort)info.Entry.DataBits04
+                });
+            }*/
+
+            var position = new MapPosition
+            {
+                Position = player.Position
+            };
+
+            if (player.Map.CanEnter(mount, position))
+                player.Map.EnqueueAdd(mount, position);
+
+            // FIXME: also cast 52539,Riding License - Riding Skill 1 - SWC - Tier 1,34464
+            // FIXME: also cast 80530,Mount Sprint  - Tier 2,36122
         }
     }
 }
