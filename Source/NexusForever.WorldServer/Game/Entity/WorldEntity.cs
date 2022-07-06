@@ -22,6 +22,8 @@ namespace NexusForever.WorldServer.Game.Entity
         public EntityCreateFlag CreateFlags { get; set; }
         public Vector3 Rotation { get; set; } = Vector3.Zero;
         public Dictionary<Property, PropertyValue> Properties { get; } = new();
+        public HashSet<Property> DirtyProperties { get; } = new();
+        public bool HasPendingPropertyChanges => DirtyProperties.Count != 0;
 
         public uint EntityId { get; protected set; }
         public uint CreatureId { get; protected set; }
@@ -143,6 +145,12 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void Update(double lastTick)
         {
             MovementManager.Update(lastTick);
+
+            var propertyUpdatePacket = BuildPropertyUpdates();
+            if (propertyUpdatePacket == null)
+                return;
+
+            EnqueueToVisible(propertyUpdatePacket, true);
         }
 
         protected abstract IEntityModel BuildEntityModel();
@@ -182,6 +190,29 @@ namespace NexusForever.WorldServer.Game.Entity
 
             return entityCreatePacket;
         }
+        
+        /// <summary>
+        /// Used to build the <see cref="ServerEntityPropertiesUpdate"/> from all modified <see cref="Property"/>
+        /// </summary>
+        private ServerEntityPropertiesUpdate BuildPropertyUpdates(bool forceUpdate = false)
+        {
+            if (!HasPendingPropertyChanges && !forceUpdate)
+                return null;
+            
+            ServerEntityPropertiesUpdate propertyUpdatePacket = new ServerEntityPropertiesUpdate()
+            {
+                UnitId = Guid
+            };
+            
+            foreach (Property propertyUpdate in DirtyProperties)
+            {
+                Properties.TryGetValue(propertyUpdate, out PropertyValue propertyValue);
+                propertyUpdatePacket.Properties.Add(propertyValue);
+            }
+
+            DirtyProperties.Clear();
+            return propertyUpdatePacket;
+        }
 
         // TODO: research the difference between a standard activation and cast activation
 
@@ -207,6 +238,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 Properties[property].Value = value;
             else
                 Properties.Add(property, new PropertyValue(property, baseValue, value));
+            DirtyProperties.Add(property);
         }
 
         protected float? GetPropertyValue(Property property)
