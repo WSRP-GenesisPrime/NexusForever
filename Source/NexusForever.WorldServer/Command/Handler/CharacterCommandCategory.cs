@@ -146,6 +146,30 @@ namespace NexusForever.WorldServer.Command.Handler
                             context.SendMessage("A giant leap for whatever-you-are!");
                         }
                         break;
+                    case "slowfall":
+                        if (val < 0f)
+                        {
+                            context.SendError("Slowfall multiplier can not be below 0.");
+                            return;
+                        }
+                        else
+                        {
+                            target.SetProperty(Property.SlowFallMultiplier, val, val);
+                            context.SendMessage("I believe I can flyyyyy...");
+                        }
+                        break;
+                    case "friction":
+                        if (val < 0f)
+                        {
+                            context.SendError("Friction can not be below 0.");
+                            return;
+                        }
+                        else
+                        {
+                            target.SetProperty(Property.FrictionMax, val, val);
+                            context.SendMessage("Grippy!");
+                        }
+                        break;
                     default:
                         context.SendMessage("I'm afraid I can't let you do that!\nValid props are: speed, mountspeed, gravity, jump.");
                         break;
@@ -159,7 +183,7 @@ namespace NexusForever.WorldServer.Command.Handler
         }
 
         [Command(Permission.CharacterProps, "Reset character properties.", "resetprops")]
-        public void HandleCharacterLevel(ICommandContext context)
+        public void HandleCharacterResetProps(ICommandContext context)
         {
             Player target = context.InvokingPlayer;
             target.SetProperty(Property.MoveSpeedMultiplier, 1f, 1f);
