@@ -301,20 +301,6 @@ namespace NexusForever.WorldServer.Game.Entity
             ChatManager             = new ChatManager(this);
             ResidenceManager        = new ResidenceManager(this);
 
-            // temp
-            Properties.Add(Property.BaseHealth, new PropertyValue(Property.BaseHealth, 200f, 800f));
-            Properties.Add(Property.ShieldCapacityMax, new PropertyValue(Property.ShieldCapacityMax, 0f, 450f));
-            Properties.Add(Property.MoveSpeedMultiplier, new PropertyValue(Property.MoveSpeedMultiplier, 1f, 1f));
-            Properties.Add(Property.FrictionMax, new PropertyValue(Property.FrictionMax, 1f, 1f));
-            Properties.Add(Property.JumpHeight, new PropertyValue(Property.JumpHeight, 5f, 5f));
-            Properties.Add(Property.GravityMultiplier, new PropertyValue(Property.GravityMultiplier, 1f, 1f));
-            Properties.Add(Property.SlowFallMultiplier, new PropertyValue(Property.SlowFallMultiplier, 1f, 1f));
-            Properties.Add(Property.MountSpeedMultiplier, new PropertyValue(Property.MountSpeedMultiplier, 2f, 2f));
-            // sprint
-            Properties.Add(Property.ResourceMax0, new PropertyValue(Property.ResourceMax0, 500f, 500f));
-            // dash
-            Properties.Add(Property.ResourceMax7, new PropertyValue(Property.ResourceMax7, 200f, 200f));
-
             Costume costume = null;
             if (CostumeIndex >= 0)
                 costume = CostumeManager.GetCostume((byte)CostumeIndex);
@@ -349,6 +335,8 @@ namespace NexusForever.WorldServer.Game.Entity
             // sprint
             SetStat(Stat.Resource0, 500f);
             SetStat(Stat.Shield, 450u);
+
+            SetStat(Stat.Health, (uint) GetPropertyValue(Property.BaseHealth));
 
             CharacterManager.Instance.RegisterPlayer(this);
         }

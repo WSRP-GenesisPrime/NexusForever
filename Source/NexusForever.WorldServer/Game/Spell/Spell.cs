@@ -269,8 +269,17 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private void SelectTargets()
         {
+            targets.Clear();
+
             targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Caster, caster));
-            targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Unknown02, parameters.OverrideTargetId > 0 ? caster.Map.GetEntity<UnitEntity>(parameters.OverrideTargetId) : (caster.TargetGuid > 0 ? caster.Map.GetEntity<UnitEntity>(caster.TargetGuid) : caster))); // probably TargetOrInvoker
+
+            if (parameters.PrimaryTargetId > 0)
+            {
+                UnitEntity primaryTargetEntity = caster.GetVisible<UnitEntity>(parameters.PrimaryTargetId);
+                if (primaryTargetEntity != null)
+                    targets.Add(new SpellTargetInfo((SpellEffectTargetFlags.Target), primaryTargetEntity));
+            }
+
             if (caster is Player)
                 InitialiseTelegraphs();
 

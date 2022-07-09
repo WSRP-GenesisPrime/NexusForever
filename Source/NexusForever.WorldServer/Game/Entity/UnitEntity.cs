@@ -163,6 +163,10 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 ServerUniqueId = castingId
             }, true);
+            foreach (var spell in pendingSpells.Where(s => s.CastingId == castingId))
+            {
+                RemoveSpellProperties(castingId);
+            }
             pendingSpells.RemoveAll(s => s.CastingId == castingId);
         }
 
