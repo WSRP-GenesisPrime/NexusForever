@@ -340,6 +340,8 @@ namespace NexusForever.WorldServer.Game.Entity
                 characterBones.Add(new Bone(bone));
             }
 
+            BuildBaseProperties();
+
             SetStat(Stat.Sheathed, 1u);
 
             // temp
@@ -349,6 +351,30 @@ namespace NexusForever.WorldServer.Game.Entity
             SetStat(Stat.Shield, 450u);
 
             CharacterManager.Instance.RegisterPlayer(this);
+        }
+
+        public override void BuildBaseProperties()
+        {
+            var baseProperties = AssetManager.Instance.GetCharacterBaseProperties();
+            foreach (PropertyValue propertyValue in baseProperties)
+            {
+                float value = propertyValue.Value; // Intentionally copying value so that the PropertyValue does not get modified inside AssetManager
+
+                if (propertyValue.Property == Property.BaseHealth || propertyValue.Property == Property.AssaultRating || propertyValue.Property == Property.SupportRating)
+                    value *= Level;
+
+                SetBaseProperty(propertyValue.Property, value);
+            }
+
+            var classProperties = AssetManager.Instance.GetCharacterClassBaseProperties(Class);
+            foreach (PropertyValue propertyValue in classProperties)
+            {
+                float value = propertyValue.Value; // Intentionally copying value so that the PropertyValue does not get modified inside AssetManager
+
+                SetBaseProperty(propertyValue.Property, value);
+            }
+
+            base.BuildBaseProperties();
         }
 
         public override void Update(double lastTick)

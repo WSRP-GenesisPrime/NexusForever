@@ -92,7 +92,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.MoveSpeedMultiplier, val, val);
+                            target.SetBaseProperty(Property.MoveSpeedMultiplier, val);
                             context.SendMessage("Gotta go fast!");
                         }
                         break;
@@ -109,7 +109,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.MountSpeedMultiplier, val, val);
+                            target.SetBaseProperty(Property.MountSpeedMultiplier, val);
                             context.SendMessage("Nyooom!");
                         }
                         break;
@@ -126,7 +126,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.GravityMultiplier, val, val);
+                            target.SetBaseProperty(Property.GravityMultiplier, val);
                             context.SendMessage("Like a feather!");
                         }
                         break;
@@ -143,7 +143,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.JumpHeight, val, val);
+                            target.SetBaseProperty(Property.JumpHeight, val);
                             context.SendMessage("A giant leap for whatever-you-are!");
                         }
                         break;
@@ -155,7 +155,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.SlowFallMultiplier, val, val);
+                            target.SetBaseProperty(Property.SlowFallMultiplier, val);
                             context.SendMessage("I believe I can flyyyyy...");
                         }
                         break;
@@ -167,7 +167,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.FrictionMax, val, val);
+                            target.SetBaseProperty(Property.FrictionMax, val);
                             context.SendMessage("Grippy!");
                         }
                         break;
@@ -187,10 +187,12 @@ namespace NexusForever.WorldServer.Command.Handler
         public void HandleCharacterResetProps(ICommandContext context)
         {
             Player target = context.InvokingPlayer;
-            target.SetProperty(Property.MoveSpeedMultiplier, 1f, 1f);
-            target.SetProperty(Property.MountSpeedMultiplier, 2f, 2f);
-            target.SetProperty(Property.GravityMultiplier, 1f, 1f);
-            target.SetProperty(Property.JumpHeight, 5f, 5f);
+            target.SetBaseProperty(Property.MoveSpeedMultiplier, 1f);
+            target.SetBaseProperty(Property.MountSpeedMultiplier, 2f);
+            target.SetBaseProperty(Property.GravityMultiplier, 1f);
+            target.SetBaseProperty(Property.JumpHeight, 5f);
+            target.SetBaseProperty(Property.SlowFallMultiplier, 1f);
+            target.SetBaseProperty(Property.FrictionMax, 1f);
         }
 
         [Command(Permission.GMFlag, "grow your character", "grow")]
