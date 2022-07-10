@@ -134,14 +134,17 @@ namespace NexusForever.WorldServer.Game
             entries.Add(new PropertyValue(Property.BaseCritChance, 0.05f, 0.05f));
             entries.Add(new PropertyValue(Property.BaseFocusRecoveryInCombat, 0, 0));
             entries.Add(new PropertyValue(Property.BaseFocusRecoveryOutofCombat, 0, 0));
+            entries.Add(new PropertyValue(Property.FrictionMax, 1f, 1f));
             entries.Add(new PropertyValue(Property.BaseMultiHitAmount, 0.3f, 0.3f));
+            entries.Add(new PropertyValue(Property.JumpHeight, 5f, 5f));
             entries.Add(new PropertyValue(Property.GravityMultiplier, 0.8f, 0.8f));
             entries.Add(new PropertyValue(Property.DamageTakenOffsetPhysical, 1, 1));
             entries.Add(new PropertyValue(Property.DamageTakenOffsetTech, 1, 1));
             entries.Add(new PropertyValue(Property.DamageTakenOffsetMagic, 1, 1));
             entries.Add(new PropertyValue(Property.BaseMultiHitChance, 0.05f, 0.05f));
             entries.Add(new PropertyValue(Property.BaseDamageReflectAmount, 0.05f, 0.05f));
-            entries.Add(new PropertyValue(Property.MountSpeedMultiplier, 1, 1));
+            entries.Add(new PropertyValue(Property.SlowFallMultiplier, 1f, 1f));
+            entries.Add(new PropertyValue(Property.MountSpeedMultiplier, 2, 2));
             entries.Add(new PropertyValue(Property.BaseGlanceAmount, 0.3f, 0.3f));
 
             characterBaseProperties = entries.ToImmutable();
