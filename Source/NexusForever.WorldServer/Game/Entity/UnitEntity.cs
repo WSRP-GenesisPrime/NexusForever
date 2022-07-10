@@ -157,7 +157,7 @@ namespace NexusForever.WorldServer.Game.Entity
             pendingSpells.Remove(spell);
         }
 
-        public void CancelEffect(uint castingId)
+        public virtual void CancelEffect(uint castingId)
         {
             EnqueueToVisible(new ServerSpellFinish
             {

@@ -399,7 +399,7 @@ namespace NexusForever.WorldServer.Command.Handler
             if (!player.CanMount())
                 return;
 
-            var mount = new Mount(player, 82107, creature2ID, vehicleID ?? 1, 0);
+            var mount = new Mount(player, 82107, creature2ID, vehicleID ?? 1, 0, 0);
             mount.EnqueuePassengerAdd(player, VehicleSeatType.Pilot, 0);
 
             // usually for hover boards

@@ -765,6 +765,19 @@ namespace NexusForever.WorldServer.Game.Entity
             };
         }
 
+        public override void CancelEffect(uint castingId)
+        {
+            base.CancelEffect(castingId);
+            if (VehicleGuid != 0u)
+            {
+                Mount mount = GetVisible<Mount>(VehicleGuid);
+                if (mount != null && mount.castingId == castingId)
+                {
+                    Dismount();
+                }
+            }
+        }
+
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
             if(guid <= 0)
@@ -1354,6 +1367,13 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 Vehicle vehicle = GetVisible<Vehicle>(VehicleGuid);
                 vehicle.PassengerRemove(this);
+                if (vehicle is Mount mount)
+                {
+                    if(mount.castingId != 0)
+                    {
+                        CancelEffect(mount.castingId);
+                    }
+                }
             }
         }
 
