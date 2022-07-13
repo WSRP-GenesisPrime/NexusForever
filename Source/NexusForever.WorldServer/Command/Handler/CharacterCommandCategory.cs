@@ -396,6 +396,11 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             Player player = context.InvokingPlayer;
 
+            if (player.VehicleGuid != 0)
+            {
+                player.Dismount();
+            }
+
             if (!player.CanMount())
                 return;
 

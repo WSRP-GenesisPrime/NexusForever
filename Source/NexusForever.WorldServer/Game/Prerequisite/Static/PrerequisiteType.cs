@@ -34,6 +34,7 @@
         SpellBaseId     = 214,
         Plane           = 232,
         BaseFaction     = 250,
+        Unhealthy       = 269,
         Loyalty         = 270
     }
 }
