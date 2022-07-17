@@ -393,7 +393,8 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "employee", 7301 },
                 { "phineas", 26454 },
                 { "phineas2", 65788 },
-                { "papaphineas", 72565 }
+                { "papaphineas", 72565 },
+                { "modificator", 51913 }
             }},
 
             // Type: Pumera
