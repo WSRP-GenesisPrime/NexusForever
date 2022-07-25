@@ -21,6 +21,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         private const double SplineGridUpdateTime = 1d;
 
         private readonly WorldEntity owner;
+        private Vector3 platformOffset = new();
         
         private readonly Dictionary<EntityCommand, IEntityCommandModel> commands = new();
 
@@ -142,7 +143,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         public uint? GetPlatform()
         {
             SetPlatformCommand command = GetCommand<SetPlatformCommand>();
-            return command?.UnitId;
+            return command?.UnitId != 0u ? command?.UnitId : null;
         }
 
         /// <summary>
@@ -308,7 +309,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         /// <summary>
         /// Add a new <see cref="IEntityCommandModel"/>, this will replaced the existing command of this type.
         /// </summary>
-        private void AddCommand(IEntityCommandModel model, bool dirty = false)
+        public void AddCommand(IEntityCommandModel model, bool dirty = false)
         {
             EntityCommand? command = EntityCommandManager.Instance.GetCommand(model.GetType());
             if (command == null)
@@ -370,11 +371,30 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
                             if (owner is Player player && player.IsCasting() && setPosition.Position.Vector.GetDistance(GetCommand<SetPositionCommand>().Position.Vector) > 0.005f)
                                 player.CancelSpellsOnMove();
 
-                            owner.Relocate(setPosition.Position.Vector);
+                            if (GetPlatform().HasValue)
+                                owner.Relocate(Vector3.Add(platformOffset, setPosition.Position.Vector));
+                            else
+                                owner.Relocate(setPosition.Position.Vector);
                             break;
                         }
                     case SetRotationCommand setRotation:
                         owner.Rotation = setRotation.Position.Vector;
+                        break;
+                    case SetPlatformCommand setPlatform:
+                        if (setPlatform.UnitId == 0u)
+                        {
+                            platformOffset = Vector3.Zero;
+                            break;
+                        }
+
+                        if (owner is not Player platformPlayer)
+                            break;
+
+                        WorldEntity entity = owner.GetVisible<WorldEntity>(setPlatform.UnitId);
+                        if (entity is Vehicle)
+                            break;
+
+                        platformOffset = new Vector3(entity.Position.X, entity.Position.Y, entity.Position.Z);
                         break;
                 }
 

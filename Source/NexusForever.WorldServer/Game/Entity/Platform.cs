@@ -1,36 +1,37 @@
 using NexusForever.Database.World.Model;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Network;
+using NexusForever.WorldServer.Game.Entity.Network.Command;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
-using NexusForever.WorldServer.Network.Message.Model;
-using System;
+using NexusForever.WorldServer.Game.Quest.Static;
+using NexusForever.WorldServer.Game.Spell;
 using System.Numerics;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
-    [DatabaseEntity(EntityType.SimpleCollidable)]
-    public class SimpleCollidable : UnitEntity
+    [DatabaseEntity(EntityType.Platform)]
+    public class Platform : WorldEntity
     {
         public byte QuestChecklistIdx { get; private set; }
-        private Action action;
 
-        public SimpleCollidable()
-            : base(EntityType.SimpleCollidable)
+        public Platform()
+            : base(EntityType.Platform)
         {
         }
 
-        public SimpleCollidable(uint creatureId, uint displayInfoId, Action action = null, byte questChecklistIdx = 255)
-            : base(EntityType.SimpleCollidable)
+        public Platform(uint creatureId)
+            : base(EntityType.Platform)
         {
             CreatureId = creatureId;
-            DisplayInfo = displayInfoId;
-            this.action = action;
-            QuestChecklistIdx = questChecklistIdx;
 
-            Properties.Add(Property.BaseHealth, new PropertyValue(Property.BaseHealth, 101f, 101f));
-            stats.Add(Stat.Health, new StatValue(Stat.Health, 101u));
+            // temp
+            DisplayInfo = 24413;
+            SetBaseProperty(Property.BaseHealth, 101f);
+
+            SetStat(Stat.Health, 101u);
         }
 
         public override void Initialise(EntityModel model)
@@ -41,7 +42,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
         protected override IEntityModel BuildEntityModel()
         {
-            return new SimpleCollidableEntityModel
+            return new PlatformEntityModel
             {
                 CreatureId        = CreatureId,
                 QuestChecklistIdx = QuestChecklistIdx
@@ -51,16 +52,14 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
             base.OnAddToMap(map, guid, vector);
-
-            if (action != null)
-                action.Invoke();
-
-            EnqueueToVisible(new Server08B3
+            MovementManager.AddCommand(new SetStateDefaultCommand
             {
-                MountGuid = Guid,
-                Unknown0 = 0,
-                Unknown1 = true
+                Strafe = true
             }, true);
+            //MovementManager.AddCommand(new SetModeCommand
+            //{
+            //    Mode = 3
+            //}, true);
         }
     }
 }
