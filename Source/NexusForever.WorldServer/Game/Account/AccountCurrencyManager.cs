@@ -96,7 +96,16 @@ namespace NexusForever.WorldServer.Game.Account
 
             // TODO: Ensure that we're not at cap - is there a cap?
             if(accountCurrency.SubtractAmount(amount))
+            {
                 SendAccountCurrencyUpdate(accountCurrency, reason);
+
+                // Reward CosmicReward Points if currency spent is Protobucks or Omnibits
+                // This is in reference to https://wildstaronline-archive.fandom.com/wiki/Cosmic_Rewards, where a user would earn 2 cosmic rewards per NCoin
+                // But, with no MTX, and the store only used as a way to acquire interesting things, figured the best way to make Cosmic Rewards "work" is to
+                // allow earning via spending in the store.
+                if (currencyType == AccountCurrencyType.Omnibit || currencyType == AccountCurrencyType.Protobuck)
+                    CurrencyAddAmount(AccountCurrencyType.CosmicReward, amount * 2);
+            }
         }
 
         /// <summary>
