@@ -56,10 +56,17 @@ namespace NexusForever.WorldServer.Game.Entity
             get => GetStatInteger(Stat.Shield) ?? 0u;
         }
 
+        public bool IsAlive => Health > 0u;
+
         public uint Level
         {
             get => GetStatInteger(Stat.Level) ?? 1u;
-            set => SetStat(Stat.Level, value);
+            set
+            {
+                SetStat(Stat.Level, value);
+                if (this is Player player)
+                    player.BuildBaseProperties();
+            }
         }
 
         public bool Sheathed
