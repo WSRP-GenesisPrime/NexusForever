@@ -31,6 +31,9 @@ namespace NexusForever.WorldServer.Game.Housing
         private DateTime unlockTime18Plus = DateTime.MinValue;
         private bool waitForEmptyPlot18Plus = false;
 
+        private ResidenceEntrance defaultEntrance = null;
+        private Dictionary<string, ResidenceEntrance> entrances = new Dictionary<string, ResidenceEntrance>();
+
         public ulong? GuildOwnerId
         {
             get => guildOwnerId;
@@ -649,6 +652,24 @@ namespace NexusForever.WorldServer.Game.Housing
                 waitForEmptyPlot18Plus = wait;
                 saveMask |= ResidenceSaveMask.NSFWLock;
             }
+        }
+
+        public ResidenceEntrance getEntranceByName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return null;
+            }
+            if (entrances.TryGetValue(name, out ResidenceEntrance entrance))
+            {
+                return entrance;
+            }
+            return null;
+        }
+
+        public ResidenceEntrance getDefaultEntrance()
+        {
+            return defaultEntrance ?? GlobalResidenceManager.Instance.GetResidenceEntrance(propertyInfoId);
         }
 
         public ServerHousingProperties.Residence Build()

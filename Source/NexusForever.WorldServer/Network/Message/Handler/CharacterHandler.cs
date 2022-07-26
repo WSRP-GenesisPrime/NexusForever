@@ -584,7 +584,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     Residence residence = session.Player.ResidenceManager.Residence;
                     residence ??= GlobalResidenceManager.Instance.CreateResidence(session.Player);
 
-                    ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+                    ResidenceEntrance entrance = residence.getDefaultEntrance();
                     session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
                     MapManager.Instance.AddToMap(session.Player, new MapPosition
                     {

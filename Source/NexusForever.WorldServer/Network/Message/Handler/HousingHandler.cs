@@ -227,7 +227,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 			}
 
             // teleport player to correct residence instance
-            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+            ResidenceEntrance entrance = residence.getDefaultEntrance();
             session.Player.Rotation    = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
             session.Player.TeleportTo(new MapPosition
             {
@@ -255,7 +255,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 throw new InvalidPacketValueException();
 
             // return player to correct residence instance
-            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+            ResidenceEntrance entrance = residence.getDefaultEntrance();
             session.Player.Rotation    = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
             session.Player.TeleportTo(new MapPosition
             {
@@ -586,7 +586,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 session.Player.HouseOutsideLocation = Vector3.Zero;
                 if (location == Vector3.Zero)
                 {
-                    ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+                    ResidenceEntrance entrance = residence.getDefaultEntrance();
                     session.Player.TeleportTo(entrance.Entry, entrance.Position, enterInside.ResidenceId);
                 }
                 else

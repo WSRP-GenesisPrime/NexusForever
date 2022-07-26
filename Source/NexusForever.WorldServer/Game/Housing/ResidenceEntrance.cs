@@ -16,5 +16,12 @@ namespace NexusForever.WorldServer.Game.Housing
             Position = new Vector3(entry.Position0, entry.Position1, entry.Position2);
             Rotation = new Quaternion(entry.Facing0, entry.Facing1, entry.Facing2, entry.Facing3);
         }
+
+        public ResidenceEntrance(WorldEntry world, Vector3 position, Quaternion rotation)
+        {
+            Entry = world;
+            Position = position;
+            Rotation = rotation;
+        }
     }
 }

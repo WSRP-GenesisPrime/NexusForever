@@ -98,7 +98,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("", ParameterFlags.Optional)]
             string firstName,
             [Parameter("", ParameterFlags.Optional)]
-            string lastName)
+            string lastName,
+            [Parameter("", ParameterFlags.Optional)]
+            string entranceName)
         {
             try
             {
@@ -158,7 +160,15 @@ namespace NexusForever.WorldServer.Command.Handler
                     }
                 }
 
-                ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+                ResidenceEntrance entrance = null;
+                if (!string.IsNullOrWhiteSpace(entranceName))
+                {
+                    entrance = residence.getEntranceByName(entranceName.ToLowerInvariant());
+                }
+                if (entrance == null)
+                {
+                    entrance = residence.getDefaultEntrance();
+                }
                 target.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
                 target.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
             }

@@ -110,7 +110,7 @@ namespace NexusForever.WorldServer.Game.Map
             // if the residence is unloaded return player to their own residence
             Residence returnResidence = GlobalResidenceManager.Instance.GetResidenceByOwner(player.Name);
             returnResidence ??= GlobalResidenceManager.Instance.CreateResidence(player);
-            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(returnResidence.PropertyInfoId);
+            ResidenceEntrance entrance = returnResidence.getDefaultEntrance();
 
             return new MapPosition
             {
