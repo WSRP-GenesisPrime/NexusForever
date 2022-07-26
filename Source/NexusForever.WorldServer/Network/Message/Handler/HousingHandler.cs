@@ -228,7 +228,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             // teleport player to correct residence instance
             ResidenceEntrance entrance = residence.getDefaultEntrance();
-            session.Player.Rotation    = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+            session.Player.Rotation    = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(new MapPosition
             {
                 Info     = new MapInfo
@@ -256,7 +256,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             // return player to correct residence instance
             ResidenceEntrance entrance = residence.getDefaultEntrance();
-            session.Player.Rotation    = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+            session.Player.Rotation    = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(new MapPosition
             {
                 Info     = new MapInfo
@@ -454,7 +454,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 else
                     residence.Parent.RemoveChild(residence);
 
-                session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                 session.Player.TeleportTo(entrance.Entry, entrance.Position, community.Residence.Id);
             }
             else
@@ -463,7 +463,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 // otherwise they will be moved to the new instance during the unload
                 if (residence.Map != session.Player.Map)
                 {
-                    session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                    session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                     session.Player.TeleportTo(entrance.Entry, entrance.Position, community.Residence.Id);
                 }
 
@@ -519,7 +519,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             // shouldn't need to check for existing instance
             // individual residence instances are unloaded when transfered to a community
             // if for some reason the instance is still unloading the residence will be initalised again after
-            session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+            session.Player.Rotation = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(entrance.Entry, entrance.Position, child.Residence.Id);
         }
 

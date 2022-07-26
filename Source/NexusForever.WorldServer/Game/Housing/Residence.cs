@@ -660,11 +660,16 @@ namespace NexusForever.WorldServer.Game.Housing
             {
                 return null;
             }
-            if (entrances.TryGetValue(name, out ResidenceEntrance entrance))
+            if (entrances.TryGetValue(name.ToLower(), out ResidenceEntrance entrance))
             {
                 return entrance;
             }
             return null;
+        }
+
+        public void SetEntrance(string name, ResidenceEntrance entrance)
+        {
+            entrances.Add(name.ToLower(), entrance);
         }
 
         public ResidenceEntrance getDefaultEntrance()

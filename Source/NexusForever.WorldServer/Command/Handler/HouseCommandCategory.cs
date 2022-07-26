@@ -163,13 +163,13 @@ namespace NexusForever.WorldServer.Command.Handler
                 ResidenceEntrance entrance = null;
                 if (!string.IsNullOrWhiteSpace(entranceName))
                 {
-                    entrance = residence.getEntranceByName(entranceName.ToLowerInvariant());
+                    entrance = residence.getEntranceByName(entranceName);
                 }
                 if (entrance == null)
                 {
                     entrance = residence.getDefaultEntrance();
                 }
-                target.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                target.Rotation = entrance.Rotation.ToEulerRadians();
                 target.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
             }
             catch (Exception e)
@@ -177,6 +177,40 @@ namespace NexusForever.WorldServer.Command.Handler
                 log.Error($"Exception caught in HouseCommandCategory.HandleHouseTeleport!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
+        }
+
+        [Command(Permission.HouseTeleport, "Add a named spawn point.", "addspawn")]
+        public void HandleHouseAddSpawn(ICommandContext context,
+           [Parameter("Spawn point name.", ParameterFlags.Optional)]
+            string entranceName)
+        {
+            if (string.IsNullOrWhiteSpace(entranceName))
+            {
+                context.SendError("Your spawn point name is empty.");
+            }
+
+            Player player = context.InvokingPlayer;
+            ResidenceMapInstance map = player.Map as ResidenceMapInstance;
+            if (map == null) {
+                context.SendError("This command can only be used on housing plots you can edit.");
+                return;
+            }
+
+            Residence res = player.CurrentResidence;
+            if (res == null)
+            {
+                context.SendError("Can't find the residence for your current location.");
+                return;
+            }
+
+            if (!res.CanModifyResidence(player))
+            {
+                context.SendError("You are not allowed to edit this plot.");
+                return;
+            }
+
+            ResidenceEntrance entrance = new ResidenceEntrance(player.Map.Entry, player.Position, player.Rotation.ToQuaternionFromRadians());
+            res.SetEntrance(entranceName, entrance);
         }
 
         [Command(Permission.AdultPlotLockOwner, "Toggle the 18+ lock on your plot.", "nsfwlock")]

@@ -59,6 +59,15 @@ namespace NexusForever.Shared
         /// </summary>
         public static Vector3 ToEulerDegrees(this Quaternion q)
         {
+            Vector3 radians = q.ToEulerRadians();
+            return new Vector3(radians.X.ToDegrees(), radians.Y.ToDegrees(), radians.Z.ToDegrees());
+        }
+
+        /// <summary>
+        /// Convert <see cref="Quaternion"/> to <see cref="Vector3"/> in radians.
+        /// </summary>
+        public static Vector3 ToEulerRadians(this Quaternion q)
+        {
             float xx = q.X * q.X;
             float xy = q.X * q.Y;
             float xz = q.X * q.Z;
@@ -72,7 +81,12 @@ namespace NexusForever.Shared
             float p = MathF.Asin(-2f * (yz - xw));
             float y = MathF.Atan2(2f * (xz + yw), 1f - 2f * (xx + yy));
             float r = MathF.Atan2(2f * (xy + zw), 1f - 2f * (xx + zz));
-            return new Vector3(y.ToDegrees(), p.ToDegrees(), r.ToDegrees());
+            return new Vector3(y, p, r);
+        }
+
+        public static Quaternion ToQuaternionFromRadians(this Vector3 v)
+        {
+            return Quaternion.CreateFromYawPitchRoll(v.X, v.Y, v.Z);
         }
 
         /// <summary>

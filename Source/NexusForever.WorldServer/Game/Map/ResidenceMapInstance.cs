@@ -1132,7 +1132,7 @@ namespace NexusForever.WorldServer.Game.Map
                     temporaryDecor = new TemporaryDecor(residence, propRequest.PropId, entry, CalculateLocalCoordinates(propRequest.Position), propRequest.Rotation);
                     instancedTemporaryDecor.Add(temporaryDecor.DecorId, temporaryDecor);
 
-                    InitialiseDecorEntity(residence, temporaryDecor, propRequest.Position, propRequest.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360);
+                    InitialiseDecorEntity(residence, temporaryDecor, propRequest.Position, propRequest.Rotation.ToEulerRadians());
 
                     temporaryDecor.Entity.InitialiseTemporaryEntity();
                 }
@@ -1189,7 +1189,7 @@ namespace NexusForever.WorldServer.Game.Map
             if (propRequestDecor.Type == DecorType.Crate)
                 return; // TODO: Draw Entity temporarily when the Player is placing from Crate
 
-            Vector3 rotation = propRequest.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360; // Actually radians.
+            Vector3 rotation = propRequest.Rotation.ToEulerRadians();
 
             if (propRequestDecor.Entity != null)
             {
