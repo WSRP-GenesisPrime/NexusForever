@@ -119,28 +119,28 @@ namespace NexusForever.WorldServer.Game.Loot
             switch (lootEntityType)
             {
                 case LootEntityType.Creature:
-                    if (!creatureLoot.TryGetValue(entityId, out List<LootGroup> creatureLootGroups))
-                        return null;
 
-                    foreach (LootGroup lootGroup in creatureLootGroups)
-                        foreach ((LootItem item, uint count) in lootGroup.GenerateLootDrops(player))
-                            lootInstance.AddLootItem(item.StaticId, item.Type, count);
+                    if (creatureLoot.TryGetValue(entityId, out List<LootGroup> creatureLootGroups))
+                        foreach (LootGroup lootGroup in creatureLootGroups)
+                            foreach ((LootItem item, uint count) in lootGroup.GenerateLootDrops(player))
+                                lootInstance.AddLootItem(item.StaticId, item.Type, count);
+
+                    // TODO: Generate currency rewards extra?
+
+                    // TODO: Generate account currency rewards extra?
+                    uint omnibitsAmount = (uint)new Random().Next(7, (int)(25 + player.Level));
+                    if (new Random().NextDouble() < 0.35d)
+                        GiveLoot(player.Session, AccountCurrencyType.Omnibit, omnibitsAmount, entityGuid);
 
                     break;
                 case LootEntityType.Item:
-                    if (!itemLoot.TryGetValue(entityId, out List<LootGroup> itemLootGroups))
-                        return null;
-
-                    foreach (LootGroup lootGroup in itemLootGroups)
-                        foreach ((LootItem item, uint count) in lootGroup.GenerateLootDrops(player))
-                            lootInstance.AddLootItem(item.StaticId, item.Type, count);
+                    if (itemLoot.TryGetValue(entityId, out List<LootGroup> itemLootGroups))
+                        foreach (LootGroup lootGroup in itemLootGroups)
+                            foreach ((LootItem item, uint count) in lootGroup.GenerateLootDrops(player))
+                                lootInstance.AddLootItem(item.StaticId, item.Type, count);
 
                     break;
             }
-
-            // TODO: Generate currency rewards extra?
-
-            // TODO: Generate account currency rewards extra?
 
             return lootInstance;
         }
@@ -158,8 +158,8 @@ namespace NexusForever.WorldServer.Game.Loot
             if (entry == null)
                 throw new InvalidOperationException($"Creature2 Entry {lootedEntity.CreatureId} not found.");
 
-            if (!creatureLoot.ContainsKey(entry.Id))
-                return null;
+            //if (!creatureLoot.ContainsKey(entry.Id))
+            //    return null;
 
             // Build Dictionary of IDs for the Player. Need CharacterID in case player logs out and back in before loot expires.
             Dictionary<ulong, uint> playerIds = new Dictionary<ulong, uint>();
@@ -168,6 +168,8 @@ namespace NexusForever.WorldServer.Game.Loot
             playerIds.Add(looter.Player.CharacterId, looter.Player.Guid);
 
             LootInstance lootInstance = GenerateLootInstance(entry.Id, lootedEntity.Guid, looter.Player, playerIds, LooterType.Player, LootEntityType.Creature);
+            if (lootInstance == null)
+                return null;
             if (lootInstance.HasExpired)
                 return null;
 
@@ -323,10 +325,18 @@ namespace NexusForever.WorldServer.Game.Loot
         /// </summary>
         public void GiveLoot(WorldSession looter, AccountCurrencyType accountCurrencyType, uint count, uint lootUnitId)
         {
-            LootInstanceItem lootInstance = new LootInstanceItem((uint)accountCurrencyType, LootItemType.AccountCurrency, count);
-            lootInstance.SetWinner(looter.Player.CharacterId, looter.Player.Guid);
-            lootInstance.SetLootUnit(lootUnitId);
-            lootInstance.DeliverItem(looter);
+            // TODO: Confirm with AccountCurrencyManager that the user is eligible for the currency.
+
+            LootInstance lootInstance = new LootInstance(lootUnitId, new Dictionary<ulong, uint> { { looter.Player.CharacterId, looter.Player.Guid } }, LooterType.Player, LootEntityType.Creature);
+            lootInstance.Explosion = true;
+            lootInstance.AddLootItem((uint)accountCurrencyType, LootItemType.AccountCurrency, count);
+            foreach (LootInstanceItem lootItem in lootInstance)
+            {
+                lootItem.SetWinner(looter.Player.CharacterId, looter.Player.Guid);
+                lootItem.SetLootUnit(lootUnitId);
+                lootItem.DeliverItem(looter);
+            }
+            lootInstance.SendLootNotify(looter);
         }
 
         /// <summary>
