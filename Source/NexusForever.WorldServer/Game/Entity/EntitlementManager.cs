@@ -41,6 +41,10 @@ namespace NexusForever.WorldServer.Game.Entity
                 accountEntitlements.Add(entitlement.Type, entitlement);
             }
 
+            // TODO: This is temporary. Move default entitlements to database or configuration.
+            if (GetAccountEntitlement(EntitlementType.CanPurchasePromotionToken) == null)
+                AddEntitlement(EntitlementType.CanPurchasePromotionToken, 1);
+
             UpdateRewardPropertiesPremiumModifiers(false);
         }
 
@@ -177,9 +181,6 @@ namespace NexusForever.WorldServer.Game.Entity
                 EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
                 if (value > entry.MaxCount)
                     return GenericError.AccountItemMaxEntitlementCount;
-
-                if (entitlementFlags.HasFlag(EntitlementFlags.Disabled))
-                    return GenericError.DbFailure;
 
                 if (entitlementFlags.HasFlag(EntitlementFlags.Character))
                 {
