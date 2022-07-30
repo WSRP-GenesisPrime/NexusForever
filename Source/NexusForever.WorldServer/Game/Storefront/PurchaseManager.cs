@@ -67,6 +67,9 @@ namespace NexusForever.WorldServer.Game.Storefront
                 {
                     ulong id = session.AccountInventory.ItemCreate(itemData.Entry);
                     session.AccountInventory.BindItem(id);
+
+                    if (itemData.Entry.Id == 875)
+                        session.Player?.QuestManager.ObjectiveUpdate(21267u, 1u);
                 }
                 session.AccountCurrencyManager.CurrencySubtractAmount(accountCurrencyType, (ulong)cost);
                 transactionsAllowed = true;
