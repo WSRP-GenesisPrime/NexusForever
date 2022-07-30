@@ -88,6 +88,7 @@ namespace NexusForever.WorldServer.Game.Quest
         private readonly List<QuestObjective> objectives = new();
 
         private UpdateTimer questTimer;
+        private bool checkState = false;
 
         /// <summary>
         /// Create a new <see cref="Quest"/> from an existing database model.
@@ -106,6 +107,8 @@ namespace NexusForever.WorldServer.Game.Quest
 
             foreach (CharacterQuestObjectiveModel objectiveModel in model.QuestObjective.OrderBy(o => o.Index))
                 objectives.Add(new QuestObjective(info, info.Objectives[objectiveModel.Index], objectiveModel));
+
+            checkState = true;
         }
 
         /// <summary>
@@ -121,6 +124,8 @@ namespace NexusForever.WorldServer.Game.Quest
                 objectives.Add(new QuestObjective(info, info.Objectives[i], i));
 
             saveMask = QuestSaveMask.Create;
+
+            checkState = true;
         }
 
         public void InitialiseTimer()
@@ -214,6 +219,13 @@ namespace NexusForever.WorldServer.Game.Quest
                     State = QuestState.Botched;
                     questTimer = null;
                 }
+            }
+
+            if (checkState)
+            {
+                // TODO: Objectives should check, when they become active, to see if portions of them are already complete.
+                ScriptManager.Instance.GetScript<QuestScript>(Id)?.OnQuestStateChange(player, this, state);
+                checkState = false;
             }
         }
 
