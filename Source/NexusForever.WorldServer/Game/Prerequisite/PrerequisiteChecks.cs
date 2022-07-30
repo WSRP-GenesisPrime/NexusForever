@@ -513,5 +513,20 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return false;
             }
         }
+
+        [PrerequisiteCheck(PrerequisiteType.PurchasedTitle)]
+        private static bool PrerequisiteCheckPurchasedTitle(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        {
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return player.TitleManager.HasTitle((ushort)objectId);
+                case PrerequisiteComparison.NotEqual:
+                    return !player.TitleManager.HasTitle((ushort)objectId);
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {(PrerequisiteType)288}!");
+                    return true;
+            }
+        }
     }
 }

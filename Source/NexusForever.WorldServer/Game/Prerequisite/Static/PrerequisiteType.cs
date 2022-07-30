@@ -65,6 +65,7 @@
         Unhealthy           = 269,
         Entitlement         = 273,
         CostumeUnlocked     = 275,
-        CosmicRewards       = 270
+        CosmicRewards       = 270,
+        PurchasedTitle      = 288
     }
 }
