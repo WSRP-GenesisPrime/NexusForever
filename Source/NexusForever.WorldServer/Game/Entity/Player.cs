@@ -734,8 +734,14 @@ namespace NexusForever.WorldServer.Game.Entity
             base.AddVisible(entity);
             Session.EnqueueMessageEncrypted(((WorldEntity)entity).BuildCreatePacket());
 
-            if (entity is Player player)
-                player.PathManager.SendSetUnitPathTypePacket();
+            if (entity is Player playerEntity)
+            {
+                Session.EnqueueMessageEncrypted(new ServerSetUnitPathType
+                {
+                    Guid = playerEntity.Guid,
+                    Path = playerEntity.Path
+                });
+            }
             else
                 Session.EnqueueMessageEncrypted(new Server08B3
                 {
