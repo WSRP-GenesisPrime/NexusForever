@@ -68,6 +68,20 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         };
 
         /// <summary>
+        /// <see cref="EntityCommand[]"/> containing all commands that are sent to a client when creating the entity.
+        /// </summary>
+        private EntityCommand[] initialCommands = new EntityCommand[]
+        {
+            EntityCommand.SetPlatform,
+            EntityCommand.SetPosition,
+            EntityCommand.SetVelocity,
+            EntityCommand.SetMove,
+            EntityCommand.SetRotation,
+            EntityCommand.SetState,
+            EntityCommand.SetMode
+        };
+
+        /// <summary>
         /// Create a new <see cref="MovementManager"/> for supplied <see cref="WorldEntity"/>.
         /// </summary>
         public MovementManager(WorldEntity entity, Vector3 position, Vector3 rotation)
@@ -686,6 +700,35 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         public void SetVelocity (SetVelocityCommand setVelocity)
         {
             isMoving = !setVelocity.VelocityData.HasStopped();
+        }
+
+        /// <summary>
+        /// Returns a <see cref="List{T}"/> containing <see cref="EntityCommand"/> and corresponding <see cref="IEntityCommandModel"/> used to instantiate an entity. To be used when sending ServerEntityCreate.
+        /// </summary>
+        /// <remarks>
+        /// Data returned is adjusted for use by ServerEntityCreate. This method should not be used for other reasons.
+        /// All entities should have no blending and be "static" when create is sent to clients.
+        /// </remarks>
+        public List<(EntityCommand, IEntityCommandModel)> GetInitialCommands()
+        {
+            List<(EntityCommand, IEntityCommandModel)> initialCommandsToSend = new();
+
+            foreach (var command in initialCommands)
+            {
+                IEntityCommandModel commandModel;
+                if (!commands.TryGetValue(command, out commandModel))
+                    commandModel = EntityCommandManager.Instance.NewEntityCommand(command);
+
+                if (commandModel is SetPositionCommand)
+                    (commandModel as SetPositionCommand).Blend = false;
+
+                if (commandModel is SetRotationCommand)
+                    (commandModel as SetRotationCommand).Blend = false;
+
+                initialCommandsToSend.Add((command, commandModel));
+            }
+
+            return initialCommandsToSend;
         }
 
         public IEnumerator<(EntityCommand, IEntityCommandModel)> GetEnumerator()

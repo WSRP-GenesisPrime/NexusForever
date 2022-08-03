@@ -26,6 +26,7 @@ using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NexusForever.WorldServer.Script;
 using NexusForever.Shared.Game.Events;
 using NexusForever.WorldServer.Game.Loot;
+using NexusForever.WorldServer.Game.Entity.Network.Command;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -323,7 +324,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 EntityModel  = BuildEntityModel(),
                 CreateFlags  = (byte)CreateFlags,
                 Stats        = stats.Values.ToList(),
-                Commands     = MovementManager.ToList(),
+                Commands     = MovementManager.GetInitialCommands(),
                 VisibleItems = itemVisuals.Values.ToList(),
                 Properties   = Properties.Values.ToList(),
                 Faction1     = Faction1,
