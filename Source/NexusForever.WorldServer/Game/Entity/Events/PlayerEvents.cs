@@ -1,7 +1,7 @@
-﻿using NexusForever.Shared.Game.Events;
-using NexusForever.Shared.GameTable;
+﻿using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.GameTable.Static;
+using NexusForever.WorldServer.Game.Cinematic.Cinematics;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Quest.Static;
@@ -45,28 +45,44 @@ namespace NexusForever.WorldServer.Game.Entity
             GlobalChatManager.Instance.LeaveDefaultChatChannels(this);
         }
 
-        public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
+        public override void OnEnqueueAddToMap(MapPosition mapPosition)
         {
             IsLoading = true;
 
+            CreateFlags &= ~EntityCreateFlag.NoSpawnAnimation;
+            CreateFlags |= EntityCreateFlag.SpawnAnimation;
+
             Session.EnqueueMessageEncrypted(new ServerChangeWorld
             {
-                WorldId  = (ushort)map.Entry.Id,
-                Position = new Position(vector),
-                Yaw      = Rotation.X
+                WorldId = (ushort)mapPosition.Info.Entry.Id,
+                Position = new Position(mapPosition.Position),
+                Yaw = Rotation.X
             });
 
-            // this must come before OnAddToMap
-            // the client UI initialises the Holomark checkboxes during OnDocumentReady
-            SendCharacterFlagsUpdated();
+            base.OnEnqueueAddToMap(mapPosition);
+        }
 
+        public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
+        {
+            Guid     = guid;
+            Map      = map;
+            Position = vector;
+            MovementManager = new Movement.MovementManager(this, vector, Rotation);
+
+            // TODO: If player is logging in to this character for first time, we should wait for confirmation from client that it's in loading screen before dumping all packets to it.
+            // Currently, dumping the packets to the client works fine, but seems to have a higher chance of crashing or bugging up.
+
+            // Send Packets for Player, its Entity, and all Map, Character, and Account Data
+            SendPacketsOnAddToMap();
+
+            // TODO: May be better not calling the base Classes on this, especially when logging into character from character select, when we should wait for client confirmation that it's ready for data.
+            // Send all Map Entities
             base.OnAddToMap(map, guid, vector);
 
-            PetManager.OnAddToMap(pendingTeleport);
+            // Send all Packets that wrap up Entities and inform client about any final Map Settings
+            SendPacketsAfterEntities();
 
             pendingTeleport = null;
-            
-            SendPacketsAfterAddToMap();
 
             if (Health == 0u)
                 SetDeathState(DeathState.JustDied);
@@ -75,8 +91,34 @@ namespace NexusForever.WorldServer.Game.Entity
 
             if (PreviousMap == null)
                 OnLogin();
+        }
 
+        /// <summary>
+        /// This handles informing the client of any final pieces of information and passing them control of their character. Only to be called after receiving <see cref="ClientEnteredWorld"/>.
+        /// </summary>
+        public void OnEnterWorld()
+        {
+            // Send Cinematics Data for Load In (likely indicates that scripts were executed at this point)
             ScriptManager.Instance.GetScript<MapScript>(Map.Entry.Id)?.OnAddToMap(this);
+            // TODO: Move this to a script
+            if (Map.Entry.Id == 3460 && firstTimeLoggingIn)
+                CinematicManager.QueueCinematic(new NoviceTutorialOnEnter(this));
+
+            // 0x0091
+            // Passive Spells Start for Player
+
+            // 0x0636 ServerUnitControlSet
+            SetControl(this);
+
+            // Multiple sets of following 3 packets are sent. These appear to be all related to events, specifically holiday events.
+            // 0x0700
+            // 0x0112
+            // 0x0135
+
+            // 0x0061 ServerPlayerEnteredWorld
+            // This allows player to exit loading screen
+            Session.EnqueueMessageEncrypted(new ServerPlayerEnteredWorld());
+            IsLoading = false;
         }
 
         public override void OnRemoveFromMap()
@@ -85,7 +127,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
             base.OnRemoveFromMap();
         }
-
 
         public override void OnRelocate(Vector3 vector)
         {

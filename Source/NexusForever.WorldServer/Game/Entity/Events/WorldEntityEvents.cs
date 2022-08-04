@@ -1,16 +1,13 @@
 ﻿using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.CSI;
 using NexusForever.WorldServer.Game.Entity.Movement;
-using NexusForever.WorldServer.Game.Entity.Movement.Spline.Static;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Script;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 
 namespace NexusForever.WorldServer.Game.Entity
@@ -22,7 +19,9 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             LeashPosition = vector;
             LeashRotation = Rotation;
-            MovementManager = new MovementManager(this, vector, Rotation);
+                
+            if (this is not Player)
+                MovementManager = new MovementManager(this, vector, Rotation);
             
             base.OnAddToMap(map, guid, vector);
 

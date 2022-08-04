@@ -14,7 +14,7 @@ namespace NexusForever.WorldServer.Game.Entity
     public abstract class GridEntity : IUpdate
     {
         public uint Guid { get; protected set; }
-        public BaseMap Map { get; private set; }
+        public BaseMap Map { get; protected set; }
         public WorldZoneEntry Zone { get; private set; }
         public Vector3 Position { get; protected set; }
 
@@ -50,7 +50,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Invoked when <see cref="GridEntity"/> is enqueued to be added to <see cref="BaseMap"/>.
         /// </summary>
-        public virtual void OnEnqueueAddToMap()
+        public virtual void OnEnqueueAddToMap(MapPosition mapPosition)
         {
             // deliberately empty
         }

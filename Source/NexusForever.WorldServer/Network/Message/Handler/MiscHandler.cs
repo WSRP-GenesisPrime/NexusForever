@@ -111,8 +111,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (!session.Player.IsLoading)
                 throw new InvalidPacketValueException();
 
-            session.EnqueueMessageEncrypted(new ServerPlayerEnteredWorld());
-            session.Player.IsLoading = false;
+            session.Player.OnEnterWorld();
         }
         
         [MessageHandler(GameMessageOpcode.ClientCinematicState)]

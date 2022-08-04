@@ -14,14 +14,9 @@ using NexusForever.Shared.Game;
 using NexusForever.Shared.Game.Events;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.Shared.GameTable.Static;
 using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Achievement;
 using NexusForever.WorldServer.Game.CharacterCache;
-using NexusForever.WorldServer.Game.Contact;
-using NexusForever.WorldServer.Game.Cinematic;
-using NexusForever.WorldServer.Game.Cinematic.Cinematics;
-using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
@@ -30,7 +25,6 @@ using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Map;
-using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Reputation;
@@ -632,22 +626,74 @@ namespace NexusForever.WorldServer.Game.Entity
             };
         }
 
-        private void SendPacketsAfterAddToMap()
+        private void SendPacketsOnAddToMap()
+        {
+            SendPrePackets();
+            SendPlayerCreatePackets();
+            SendPlayerDataPackets();
+        }
+
+        /// <summary>
+        /// Send the packets needed prior to Player or Entity Data
+        /// </summary>
+        /// /// <remark>
+        /// This must come before entities are sent, including the Players.
+        /// e.g. The client UI initialises the Holomark checkboxes during OnDocumentReady
+        /// </remark>
+        private void SendPrePackets()
+        {
+            // 0x0845 ServerTimeOfDay
+            SendInGameTime();
+            // 0x0984
+            // 0x00FE ServerCharacterFlagsUpdated
+            SendCharacterFlagsUpdated();
+            // 0x084C
+            // 0x07C8
+            // 0x0171 ServerPhase
+            // 0x0172
+        }
+
+        /// <summary>
+        /// Send the packets needed to spawn the Player entity for the client.
+        /// </summary>
+        private void SendPlayerCreatePackets()
+        {
+            // 0x0355 ServerEntityDestroy
+            // Destroy any entities that match the Guid for the player's new entity. This is what WS packet captures showed was happening.
+            Session.EnqueueMessageEncrypted(new ServerEntityDestroy
+            {
+                Guid = Guid,
+                Unknown0 = false
+            });
+            // 0x0262 ServerEntityCreate
+            // Send the client its new entity to use.
+            Session.EnqueueMessageEncrypted(BuildCreatePacket());
+            // 0x08B8 ServerSetUnitPathType
+            Session.EnqueueMessageEncrypted(new ServerSetUnitPathType
+            {
+                Guid = Guid,
+                Path = Path,
+            });
+            // 0x019B ServerPlayerChanged
+            Session.EnqueueMessageEncrypted(new ServerPlayerChanged
+            {
+                Guid = Guid,
+                Unknown1 = 1
+            });
+        }
+
+        /// <summary>
+        /// Send the client all data associated with this Player that is used to initialise systems.
+        /// </summary>
+        private void SendPlayerDataPackets()
         {
             DateTime start = DateTime.UtcNow;
 
-            SendInGameTime();
-            PathManager.SendInitialPackets();
-            BuybackManager.Instance.SendBuybackItems(this);
+            // Initialise Pets, they will get used in ServerPlayerCreate
+            PetManager.OnAddToMap(pendingTeleport);
 
-            ResidenceManager.SendHousingBasics();
-            Session.EnqueueMessageEncrypted(new ServerHousingNeighbors());
-            Session.EnqueueMessageEncrypted(new ServerInstanceSettings());
-
-            SetControl(this);
-
-            CostumeManager.SendInitialPackets();
-
+            // 0x025E ServerPlayerCreate
+            // - Inform the player of all necessary data. Used at start of new session or after switching characters.
             if (PreviousMap == null)
             {
                 var playerCreate = new ServerPlayerCreate
@@ -699,24 +745,98 @@ namespace NexusForever.WorldServer.Game.Entity
                 Session.EnqueueMessageEncrypted(playerCreate);
             }
 
-            TitleManager.SendTitles();
-            SpellManager.SendInitialPackets();
-            PetCustomisationManager.SendInitialPackets();
-            KeybindingManager.SendInitialPackets();
-            DatacubeManager.SendInitialPackets();
-            MailManager.SendInitialPackets();
-            ZoneMapManager.SendInitialPackets();
-            Session.AccountCurrencyManager.SendInitialPackets();
+            // 0x035F ServerQuestInit
             QuestManager.SendInitialPackets();
+            // 0x00AE ServerAchievementsInit
             AchievementManager.SendInitialPackets(null);
-            Session.EntitlementManager.SendInitialPackets();
-            Session.RewardTrackManager.SendInitialPackets();
+            // 0x06BC ServerPathLog
+            PathManager.SendInitialPackets();
+            // 0x0104 ServerGalacticArchiveInit
+            // 0x00E0 ServerDatacubeUpdateList
+            DatacubeManager.SendInitialPackets();
+            // 0x01B4 ServerZoneMap
+            ZoneMapManager.SendInitialPackets();
+            // 0x018B ServerPlayerTitleUpdate
+            TitleManager.SendTitles();
 
-            // TODO: Move this to a script
-            if (Map.Entry.Id == 3460 && firstTimeLoggingIn)
-                CinematicManager.QueueCinematic(new NoviceTutorialOnEnter(this));
+            // 0x0140
+            // 0x013C
+            // 0x0252
+
+            // 0x025A ServerCostumeItemList
+            CostumeManager.SendInitialPackets();
+
+            // 0x04AE ServerEntityGuildAffiliation
+            // 0x0905 ServerEntityVisualUpdate
+            // - Assume this is done if the Player had affiliation with guild with holomarks checked
+            // 0x01B3 ServerResurrectionShow
+            // - Seems to be if the player spawns in dead, this would be shown or it's sent as a way to let client know to hide it
+            // 0x0188 ServerFlightPathUpdate
+
+            // 0x0111 ServerItemAdd
+            // - Spells are delivered to client
+            SpellManager.SendInitialPackets();
+            // 0x092C ServerRewardPropertySet
+            // - Character Entitlements are sent on load, as well as a "refresh" of account ones.
+            Session.EntitlementManager.SendInitialPackets();
+            // 0x01A0
+            // 0x0169
+
+            // 0x07CD ServerRewardTrackUpdate
+            Session.RewardTrackManager.SendInitialPackets();
+            // 0x0967 ServerAccountCurrencyGrant
+            // - All Account currencies are sent to the client
+            Session.AccountCurrencyManager.SendInitialPackets();
+            // 0x019D
+            // 0x0914 ServerSpellAbilityCharges
+            // - These are sent for all spells. We do this as part of SpellManager init.
+            // 0x01A3
+            // 0x0856
+            // 0x0854
+            // 0x00D9 ServerCostumeList
+            // - This is sent as part of CostumeManager init.
+            // 0x012E ServerPetCustomizationList
+            PetCustomisationManager.SendInitialPackets();
+            // 0x01B2
+            // 0x06DF
+            // 0x019F ServerStanceChanged
+            // - We do this as part of SpellManager init.
+            // 0x036F
+            // - Many of these are sent.
+
+            // Map Entities Are Sent To Client
+
+            // 0x01A6 ServerGearscoreUpdate
+
+            // 0x056B
+
+
+            BuybackManager.Instance.SendBuybackItems(this);
+            MailManager.SendInitialPackets();
+            ResidenceManager.SendHousingBasics();
+            Session.EnqueueMessageEncrypted(new ServerHousingNeighbors());
 
             log.Trace($"Player {Name} took {(DateTime.UtcNow - start).TotalMilliseconds}ms to send packets after add to map.");
+        }
+
+        public void SendPacketsAfterEntities()
+        {
+            // 0x0567
+            // Some spells for the Player get started
+            // 0x00F1 ServerInstanceSettings
+            Session.EnqueueMessageEncrypted(new ServerInstanceSettings());
+            // 0x007E
+
+            // Client packet 0x018F usually sent around here
+            // 0x07CA
+            // - Lots of these are sent
+
+            // 0x064D ServerOwnedItemAuctions
+            // 0x064C ServerOwnedCommodityOrders
+            // 0x064D ServerOwnedItemAuctions
+
+            // 0x0970 ServerAccountOperationResults
+            // - CREDD Exchange loaded update
         }
 
         public ItemProficiency GetItemProficiencies()
@@ -732,6 +852,10 @@ namespace NexusForever.WorldServer.Game.Entity
                 return;
 
             base.AddVisible(entity);
+
+            if (entity == this)
+                return;
+
             Session.EnqueueMessageEncrypted(((WorldEntity)entity).BuildCreatePacket());
 
             if (entity is Player playerEntity)
@@ -750,22 +874,12 @@ namespace NexusForever.WorldServer.Game.Entity
                     Unknown1 = true
                 });
 
-            if (entity == this)
-            {
-                Session.EnqueueMessageEncrypted(new ServerPlayerChanged
-                {
-                    Guid     = entity.Guid,
-                    Unknown1 = 1
-                });
-            } 
-            else
-            {
+            if (entity != this)
                 Session.EnqueueMessageEncrypted(new ServerEmote
                 {
                     Guid = Guid,
                     StandState = (entity as WorldEntity).StandState
                 });
-            }
 
             if (entity is UnitEntity unitEntity && unitEntity.InCombat) 
             {
