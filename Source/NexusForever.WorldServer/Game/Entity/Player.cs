@@ -62,6 +62,8 @@ namespace NexusForever.WorldServer.Game.Entity
             }
         }
 
+        private bool firstLoad = true;
+
         public CharacterFlag Flags
         {
             get => flags;
@@ -875,50 +877,55 @@ namespace NexusForever.WorldServer.Game.Entity
 
             CostumeManager.SendInitialPackets();
 
-            var playerCreate = new ServerPlayerCreate
+            if (firstLoad)
             {
-                ItemProficiencies = GetItemProficiencies(),
-                FactionData       = new ServerPlayerCreate.Faction
+                var playerCreate = new ServerPlayerCreate
                 {
-                    FactionId          = Faction1, // This does not do anything for the player's "main" faction. Exiles/Dominion
-                    FactionReputations = ReputationManager
-                        .Select(r => new ServerPlayerCreate.Faction.FactionReputation
-                        {
-                            FactionId = r.Id,
-                            Value     = r.Amount
-                        })
-                        .ToList()
-                },
-                ActiveCostumeIndex    = CostumeIndex,
-                InputKeySet           = (uint)InputKeySet,
-                CharacterEntitlements = Session.EntitlementManager.GetCharacterEntitlements()
-                    .Select(e => new ServerPlayerCreate.CharacterEntitlement
+                    ItemProficiencies = GetItemProficiencies(),
+                    FactionData = new ServerPlayerCreate.Faction
                     {
-                        Entitlement = e.Type,
-                        Count       = e.Amount
-                    })
-                    .ToList(),
-                TradeskillMaterials   = SupplySatchelManager.BuildNetworkPacket(),
-                Xp                    = XpManager.TotalXp,
-                RestBonusXp           = XpManager.RestBonusXp
-            };
+                        FactionId = Faction1, // This does not do anything for the player's "main" faction. Exiles/Dominion
+                        FactionReputations = ReputationManager
+                            .Select(r => new ServerPlayerCreate.Faction.FactionReputation
+                            {
+                                FactionId = r.Id,
+                                Value = r.Amount
+                            })
+                            .ToList()
+                    },
+                    ActiveCostumeIndex = CostumeIndex,
+                    InputKeySet = (uint)InputKeySet,
+                    CharacterEntitlements = Session.EntitlementManager.GetCharacterEntitlements()
+                        .Select(e => new ServerPlayerCreate.CharacterEntitlement
+                        {
+                            Entitlement = e.Type,
+                            Count = e.Amount
+                        })
+                        .ToList(),
+                    TradeskillMaterials = SupplySatchelManager.BuildNetworkPacket(),
+                    Xp = XpManager.TotalXp,
+                    RestBonusXp = XpManager.RestBonusXp
+                };
 
-            foreach (Currency currency in CurrencyManager)
-                playerCreate.Money[(byte)currency.Id - 1] = currency.Amount;
+                foreach (Currency currency in CurrencyManager)
+                    playerCreate.Money[(byte)currency.Id - 1] = currency.Amount;
 
-            foreach (Item item in Inventory
-                .Where(b => b.Location != InventoryLocation.Ability)
-                .SelectMany(i => i))
-            {
-                playerCreate.Inventory.Add(new InventoryItem
+                foreach (Item item in Inventory
+                    .Where(b => b.Location != InventoryLocation.Ability)
+                    .SelectMany(i => i))
                 {
-                    Item   = item.BuildNetworkItem(),
-                    Reason = ItemUpdateReason.NoReason
-                });
-            }
+                    playerCreate.Inventory.Add(new InventoryItem
+                    {
+                        Item = item.BuildNetworkItem(),
+                        Reason = ItemUpdateReason.NoReason
+                    });
+                }
 
-            playerCreate.SpecIndex = SpellManager.ActiveActionSet;
-            Session.EnqueueMessageEncrypted(playerCreate);
+                playerCreate.SpecIndex = SpellManager.ActiveActionSet;
+                Session.EnqueueMessageEncrypted(playerCreate);
+
+                firstLoad = false;
+            }
 
             TitleManager.SendTitles();
             SpellManager.SendInitialPackets();
