@@ -386,6 +386,7 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "greyarmored2", 30462 },
                 { "greyarmored3", 49352 },
                 { "greyarmored4", 49346 },
+                //Added by Archive Update ********************
                 { "white", 37326 },
                 { "white2", 37351 },
                 { "white3", 35914 },
@@ -635,7 +636,11 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "reptile", 71483 },
                 { "skeletal", 72355 },
                 { "armoredred", 73076 },
-                { "greybase", 44457 },
+                //Added by Archive Update ********************
+                { "direred", 77113 },
+                { "diregrey", 77114 },
+                { "direbrown", 77115 },
+                { "direpurple", 77116 },
                 { "ice", 73305 }
             }},
 
