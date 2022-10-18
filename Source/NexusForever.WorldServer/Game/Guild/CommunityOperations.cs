@@ -48,7 +48,7 @@ namespace NexusForever.WorldServer.Game.Guild
                         else
                             residence.Parent.RemoveChild(residence);
 
-                        player.Rotation = entrance.Rotation.ToEulerDegrees();
+                        player.Rotation = entrance.Rotation.ToEulerRadians();
                         player.TeleportTo(entrance.Entry, entrance.Position, Residence.Id);
                     }
                     else
@@ -57,7 +57,7 @@ namespace NexusForever.WorldServer.Game.Guild
                         // otherwise they will be moved to the new instance during the unload
                         if (residence.Map != player.Map)
                         {
-                            player.Rotation = entrance.Rotation.ToEulerDegrees();
+                            player.Rotation = entrance.Rotation.ToEulerRadians();
                             player.TeleportTo(entrance.Entry, entrance.Position, Residence.Id);
                         }
 

@@ -203,7 +203,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             // teleport player to correct residence instance
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            session.Player.Rotation    = entrance.Rotation.ToEulerDegrees();
+            session.Player.Rotation    = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(new MapPosition
             {
                 Info     = new MapInfo
@@ -231,7 +231,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             // return player to correct residence instance
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            session.Player.Rotation    = entrance.Rotation.ToEulerDegrees();
+            session.Player.Rotation    = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(new MapPosition
             {
                 Info     = new MapInfo
@@ -429,7 +429,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 else
                     residence.Parent.RemoveChild(residence);
 
-                session.Player.Rotation = entrance.Rotation.ToEulerDegrees();
+                session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                 session.Player.TeleportTo(entrance.Entry, entrance.Position, community.Residence.Id);
             }
             else
@@ -438,7 +438,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 // otherwise they will be moved to the new instance during the unload
                 if (residence.Map != session.Player.Map)
                 {
-                    session.Player.Rotation = entrance.Rotation.ToEulerDegrees();
+                    session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                     session.Player.TeleportTo(entrance.Entry, entrance.Position, community.Residence.Id);
                 }
 

@@ -913,7 +913,7 @@ namespace NexusForever.WorldServer.Game.Map
 
         private WorldEntity SetDecorEntityProperties(Decor decor, WorldEntity entity, Vector3 position, Quaternion rotation)
         {
-            entity.Rotation = rotation.ToEulerDegrees();
+            entity.Rotation = rotation.ToEulerRadians();
             entity.SetPosition(position);
             entity.IsDecorEntity = true;
             if (entity.Guid > 0)
@@ -979,8 +979,8 @@ namespace NexusForever.WorldServer.Game.Map
                     return;
 
                 // TODO: Calculate entity locations instead of relying on client data
-                propRequestDecor.Entity.Rotation = propRequest.Rotation.ToEulerDegrees();
-                propRequestDecor.Entity.MovementManager.SetRotation(propRequest.Rotation.ToEulerDegrees());
+                propRequestDecor.Entity.Rotation = propRequest.Rotation.ToEulerRadians();
+                propRequestDecor.Entity.MovementManager.SetRotation(propRequest.Rotation.ToEulerRadians());
                 propRequestDecor.Entity.MovementManager.SetPosition(propRequest.Position);
                 return;
             }

@@ -103,7 +103,7 @@ namespace NexusForever.WorldServer.Game.Guild
             // shouldn't need to check for existing instance
             // individual residence instances are unloaded when transfered to a community
             // if for some reason the instance is still unloading the residence will be initalised again after
-            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.Rotation = entrance.Rotation.ToEulerRadians();
             player.TeleportTo(entrance.Entry, entrance.Position, child.Residence.Id);
         }
     }

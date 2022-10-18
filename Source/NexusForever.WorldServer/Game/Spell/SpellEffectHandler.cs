@@ -254,14 +254,14 @@ namespace NexusForever.WorldServer.Game.Spell
                 ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
                 if (player.CanTeleport())
                 {
-                    player.Rotation = entrance.Rotation.ToEulerDegrees();
+                    player.Rotation = entrance.Rotation.ToEulerRadians();
                     player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
                     return;
                 }
             }
 
             if (player.CanTeleport()) {
-                player.Rotation = new Quaternion(locationEntry.Facing0, locationEntry.Facing1, locationEntry.Facing2, locationEntry.Facing3).ToEulerDegrees();
+                player.Rotation = new Quaternion(locationEntry.Facing0, locationEntry.Facing1, locationEntry.Facing2, locationEntry.Facing3).ToEulerRadians();
                 player.TeleportTo((ushort)locationEntry.WorldId, locationEntry.Position0, locationEntry.Position1, locationEntry.Position2);
             }
         }
@@ -291,7 +291,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             var rotation = new Quaternion(worldLocation.Facing0, worldLocation.Facing0, worldLocation.Facing2, worldLocation.Facing3);
-            player.Rotation = rotation.ToEulerDegrees();
+            player.Rotation = rotation.ToEulerRadians();
             player.TeleportTo((ushort)worldLocation.WorldId, worldLocation.Position0, worldLocation.Position1, worldLocation.Position2);
         }
 
@@ -552,7 +552,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 residence = GlobalResidenceManager.Instance.CreateResidence(player);
 
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.Rotation = entrance.Rotation.ToEulerRadians();
             player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
         }
 
@@ -570,7 +570,7 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            player.Rotation = entrance.Rotation.ToEulerDegrees();
+            player.Rotation = entrance.Rotation.ToEulerRadians();
             player.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
         }
     }

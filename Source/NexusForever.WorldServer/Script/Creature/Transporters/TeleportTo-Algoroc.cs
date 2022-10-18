@@ -30,7 +30,7 @@ namespace NexusForever.WorldServer.Script.Creature.Transporters
                 return;
 
             var rotation = new Quaternion(entry.Facing0, entry.Facing1, entry.Facing2, entry.Facing3);
-            player.Rotation = rotation.ToEulerDegrees();
+            player.Rotation = rotation.ToEulerRadians();
             player.TeleportTo((ushort)entry.WorldId, entry.Position0, entry.Position1, entry.Position2);
         }
     }
