@@ -51,7 +51,7 @@ namespace NexusForever.WorldServer.Game.Map
         private uint instanceLimit;
 
         private readonly UpdateTimer unloadTimer 
-            = new(/*ConfigurationManager<WorldServerConfiguration>.Instance.Config.Map.GridUnloadTimer ??*/ 60d);
+            = new(ConfigurationManager<WorldServerConfiguration>.Instance.Config.Map.GridUnloadTimer ?? 600d);
 
         private readonly HashSet<uint> playerEntities = new();
         private readonly Dictionary<uint, MapInstanceRemoval> instanceRemovals = new();

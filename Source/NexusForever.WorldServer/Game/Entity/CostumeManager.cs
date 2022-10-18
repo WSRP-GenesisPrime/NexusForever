@@ -237,7 +237,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private uint GetMaxUnlockItemCount()
         {
-            // client defaults to 1000 if entry doesn't exist
+            return 2000u;
+            /*// client defaults to 1000 if entry doesn't exist
             GameFormulaEntry entry = GameTableManager.Instance.GameFormula.GetEntry(1203);
             if (entry == null)
                 return 1000u;

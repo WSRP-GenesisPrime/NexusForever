@@ -18,7 +18,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount to modify the reputation.")]
             float value)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             target.ReputationManager.UpdateReputation(factionId, value);
         }
     }

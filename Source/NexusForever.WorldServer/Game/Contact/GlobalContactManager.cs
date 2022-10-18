@@ -144,7 +144,8 @@ namespace NexusForever.WorldServer.Game.Contact
         public void UnsubscribeFrom(ulong characterId, List<ulong> characterIdList)
         {
             if (!contactSubscriptions.ContainsKey(characterId))
-                throw new ArgumentOutOfRangeException($"Cannot unsubscribe from characters when the subscriber doesn't exist.");
+                return;
+                //throw new ArgumentOutOfRangeException($"Cannot unsubscribe from characters when the subscriber doesn't exist.");
 
             contactSubscriptions[characterId].RemoveWhere(i => characterIdList.Contains(i));
         }
