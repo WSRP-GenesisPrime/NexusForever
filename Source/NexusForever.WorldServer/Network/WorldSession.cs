@@ -35,6 +35,15 @@ namespace NexusForever.WorldServer.Network
         public AccountInventory AccountInventory { get; set; }
         public PurchaseManager PurchaseManager { get; set; }
 
+        public TimeSpan Uptime
+        {
+            get
+            {
+                return DateTime.UtcNow.Subtract(sessionCreated);
+            }
+        }
+        private DateTime sessionCreated;
+
         public AccountTier AccountTier => AccountRbacManager.HasPermission(Permission.Signature) ? AccountTier.Signature : AccountTier.Basic;
 
         /// <summary>
@@ -96,6 +105,8 @@ namespace NexusForever.WorldServer.Network
             AccountInventory       = new AccountInventory(this, account); // Must be initialised before RewardTrackManager
             RewardTrackManager     = new RewardTrackManager(this, account);
             PurchaseManager        = new PurchaseManager(this, account);
+
+            sessionCreated = DateTime.UtcNow;
         }
 
         public void SetEncryptionKey(byte[] sessionKey)
