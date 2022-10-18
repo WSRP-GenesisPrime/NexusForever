@@ -100,6 +100,7 @@ namespace NexusForever.Database.Auth
         /// </summary>
         public void CreateAccount(string email, string s, string v, uint role)
         {
+            email = email.ToLower();
             if (AccountExists(email))
                 throw new InvalidOperationException($"Account with that username already exists.");
 
@@ -151,6 +152,7 @@ namespace NexusForever.Database.Auth
         /// </summary>
         public void SetPasswordForAccount(string email, string s, string v)
         {
+            email = email.ToLower();
             if (!AccountExists(email))
                 throw new InvalidOperationException($"Account with that username already exists.");
 
