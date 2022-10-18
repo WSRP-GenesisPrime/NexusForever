@@ -13,7 +13,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount of XP to grant character.")]
             uint amount)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (target.Level >= 50)
             {
                 context.SendMessage("You must be less than max level.");
@@ -28,7 +28,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Level to set character.")]
             byte level)
         {
-            Player target = context.GetTargetOrInvoker<Player>();
+            Player target = context.InvokingPlayer;
             if (level <= target.Level || level > 50)
             {
                 context.SendMessage("Level must be greater than your current level and less than max level.");
@@ -41,7 +41,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.CharacterSave, "Save any pending changes to the character to the database.", "save")]
         public void HandleCharacterSave(ICommandContext context)
         {
-            context.GetTargetOrInvoker<Player>().Save();
+            context.InvokingPlayer.Save();
         }
     }
 }

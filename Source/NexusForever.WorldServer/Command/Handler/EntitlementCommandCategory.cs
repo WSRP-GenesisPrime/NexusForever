@@ -18,7 +18,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Command(Permission.EntitlementAccountList, "List all entitlements for character.", "list")]
             public void HandleEntitlementCommandAccountList(ICommandContext context)
             {
-                Player player = context.GetTargetOrInvoker<Player>();
+                Player player = context.InvokingPlayer;
                 context.SendMessage($"Entitlements for account {player.Session.Account.Id}:");
                 foreach (AccountEntitlement entitlement in player.Session.EntitlementManager.GetAccountEntitlements()) 
                     context.SendMessage($"Entitlement: {entitlement.Type}, Value: {entitlement.Amount}");
@@ -31,7 +31,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Command(Permission.EntitlementCharacterList, "List all entitlements for account.", "list")]
             public void HandleEntitlementCommandCharacterList(ICommandContext context)
             {
-                Player player = context.GetTargetOrInvoker<Player>();
+                Player player = context.InvokingPlayer;
                 context.SendMessage($"Entitlements for character {player.Session.Player.CharacterId}:");
                 foreach (CharacterEntitlement entitlement in player.Session.EntitlementManager.GetCharacterEntitlements())
                     context.SendMessage($"Entitlement: {entitlement.Type}, Value: {entitlement.Amount}");

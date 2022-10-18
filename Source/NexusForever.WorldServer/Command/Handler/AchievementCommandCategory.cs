@@ -23,7 +23,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Update count for matched criteria.")]
             uint count)
         {
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
             player.AchievementManager.CheckAchievements(player, type, objectId, objectIdAlt, count);
         }
 
@@ -39,7 +39,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 return;
             }
 
-            context.GetTargetOrInvoker<Player>().AchievementManager.GrantAchievement(achievementId);
+            context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Generic unlock entry to unlock.")]
             ushort genericUnlockEntryId)
         {
-            context.GetTargetOrInvoker<Player>().Session.GenericUnlockManager.Unlock(genericUnlockEntryId);
+            context.InvokingPlayer.Session.GenericUnlockManager.Unlock(genericUnlockEntryId);
         }
 
         [Command(Permission.GenericUnlockAll, "Unlock all generic unlocks of type for an account.", "unlockall")]
@@ -25,7 +25,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Generic unlock type to unlock all entries from.", ParameterFlags.None, typeof(EnumParameterConverter<GenericUnlockType>))]
             GenericUnlockType genericUnlockType)
         {
-            context.GetTargetOrInvoker<Player>().Session.GenericUnlockManager.UnlockAll(genericUnlockType);
+            context.InvokingPlayer.Session.GenericUnlockManager.UnlockAll(genericUnlockType);
         }
 
         [Command(Permission.GenericList, "ist all acquired generic unlock entries for an account.", "list")]
@@ -34,7 +34,7 @@ namespace NexusForever.WorldServer.Command.Handler
             context.SendMessage("Acquired generic unlock entries:");
 
             TextTable tt = GameTableManager.Instance.GetTextTable(context.Language);
-            foreach (GenericUnlock unlock in context.GetTargetOrInvoker<Player>().Session.GenericUnlockManager)
+            foreach (GenericUnlock unlock in context.InvokingPlayer.Session.GenericUnlockManager)
             {
                 string name = tt.GetEntry(unlock.Entry.LocalizedTextIdDescription);
                 context.SendMessage($"{unlock.Entry.Id}, {unlock.Type}, {name}");
