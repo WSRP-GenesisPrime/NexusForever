@@ -6,7 +6,7 @@ namespace NexusForever.WorldServer.Game.Guild
 {
     public class Circle : GuildChat
     {
-        public override uint MaxMembers => 20u;
+        public override uint MaxMembers => 1000u;
 
         /// <summary>
         /// Create a new <see cref="Circle"/> using an existing database model.

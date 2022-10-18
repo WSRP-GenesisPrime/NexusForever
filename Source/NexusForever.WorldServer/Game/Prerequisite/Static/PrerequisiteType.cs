@@ -11,11 +11,13 @@
         Reputation          = 5,
         Quest               = 6,
         Achievement         = 7,
+        Gender              = 10,
         Prerequisite        = 11,
         /// <summary>
         /// Checks for whether or not the Player is affected by this spell. Used in cases to check for if player has AMP.
         /// </summary>
         Spell               = 15,
+        Zone                = 26,
         /// <summary>
         /// Appears to check whether the user is in combat. Error Msg: "You must be in combat"
         /// </summary>
@@ -37,6 +39,7 @@
         QuestObjective2     = 68,
         VitalPercent        = 71,
         Vital               = 73,
+        Disguise            = 105,
         /// <summary>
         /// Checks to see if a PositionalRequirement Entry is met.
         /// </summary>

@@ -123,6 +123,11 @@ namespace NexusForever.WorldServer.Game.Map
                         RelocateEntity(actionRelocate.Entity, actionRelocate.Vector);
                         break;
                     case GridActionRemove actionRemove:
+                        if(actionRemove.Entity.Map == null)
+                        {
+                            log.Info("Tried to remove entity that was already removed.");
+                            break;
+                        }
                         RemoveEntity(actionRemove.Entity);
                         break;
                 }

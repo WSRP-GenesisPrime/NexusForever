@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Contact.Static;
+using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Map.Search;
+using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 
@@ -82,6 +86,19 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (randomRoll.MaxRandom > 1000000u)
                 throw new InvalidPacketValueException();
 
+            int RandomRollResult = new Random().Next((int)randomRoll.MinRandom, (int)randomRoll.MaxRandom+1);
+
+            // get players in local chat range
+            session.Player.Map.Search(
+                session.Player.Position,
+                GlobalChatManager.LocalChatDistance,
+                new SearchCheckRangePlayerOnly(session.Player.Position, GlobalChatManager.LocalChatDistance, session.Player),
+                out List<GridEntity> intersectedEntities
+            );
+
+            string systemMessage = $"{session.Player.Name} rolls {RandomRollResult} ({randomRoll.MinRandom}-{randomRoll.MaxRandom})";
+            intersectedEntities.ForEach(e => ((Player)e).SendSystemMessage(systemMessage));
+
             session.EnqueueMessageEncrypted(new ServerRandomRollResponse
             {
                 TargetPlayerIdentity = new TargetPlayerIdentity
@@ -91,7 +108,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 },
                 MinRandom = randomRoll.MinRandom,
                 MaxRandom = randomRoll.MaxRandom,
-                RandomRollResult = new Random().Next((int)randomRoll.MinRandom, (int)randomRoll.MaxRandom)
+                RandomRollResult = RandomRollResult
             });
         }
 

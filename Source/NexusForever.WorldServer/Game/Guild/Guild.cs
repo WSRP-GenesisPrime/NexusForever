@@ -12,7 +12,7 @@ namespace NexusForever.WorldServer.Game.Guild
 {
     public partial class Guild : GuildChat
     {
-        public override uint MaxMembers => 40u;
+        public override uint MaxMembers => 200u;
 
         public GuildStandard Standard { get; }
         public GuildAchievementManager AchievementManager { get; }

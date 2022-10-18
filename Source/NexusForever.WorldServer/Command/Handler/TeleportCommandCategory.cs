@@ -69,10 +69,7 @@ namespace NexusForever.WorldServer.Command.Handler
             target.TeleportTo((ushort)entry.WorldId, entry.Position0, entry.Position1, entry.Position2);
         }
 
-        [Command(Permission.TeleportName, "Teleport to the specified zone name.", "name")]
-        public void HandleTeleportName(ICommandContext context,
-            [Parameter("Name of the zone for target teleport position.")]
-            string name)
+        public static void teleportByName(ICommandContext context, string name)
         {
             Player target = context.GetTargetOrInvoker<Player>();
             if (target != context.Invoker)
@@ -96,7 +93,15 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        private IEnumerable<uint> GetTextIds(WorldLocation2Entry entry)
+        [Command(Permission.TeleportName, "Teleport to the specified zone name.", "name")]
+        public void HandleTeleportName(ICommandContext context,
+            [Parameter("Name of the zone for target teleport position.")]
+            string name)
+        {
+            teleportByName(context, name);
+        }
+
+        private static IEnumerable<uint> GetTextIds(WorldLocation2Entry entry)
         {
             WorldZoneEntry worldZone = GameTableManager.Instance.WorldZone.GetEntry(entry.WorldZoneId);
             if (worldZone != null && worldZone.LocalizedTextIdName != 0)

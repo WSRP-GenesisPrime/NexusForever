@@ -57,6 +57,12 @@ namespace NexusForever.WorldServer.Game.Entity
         public Faction Faction { get; }
         public List<float> Bones { get; } = new();
         public WorldZoneEntry PreviousZone { get; private set; }
+        public bool IsAdult {
+            get
+            {
+                return Session.AccountRbacManager.HasPermission(RBAC.Static.Permission.Adult);
+            }
+        }
 
         public CharacterFlag Flags
         {

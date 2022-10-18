@@ -146,12 +146,12 @@ namespace NexusForever.WorldServer.Game.Spell
                 return;
 
             PropertyModifier modifier = new PropertyModifier(info.Entry.DataBits01, BitConverter.Int32BitsToSingle((int)info.Entry.DataBits02), BitConverter.Int32BitsToSingle((int)info.Entry.DataBits03));
-            player.AddSpellModifierProperty((Property)info.Entry.DataBits00, parameters.SpellInfo.Entry.Id, modifier);
+            player.AddSpellModifierProperty((Property)info.Entry.DataBits00, this.CastingId, modifier);
 
             if (info.Entry.DurationTime > 0d)
                 events.EnqueueEvent(new SpellEvent(info.Entry.DurationTime / 1000d, () =>
                 {
-                    player.RemoveSpellProperty((Property)info.Entry.DataBits00, parameters.SpellInfo.Entry.Id);
+                    player.RemoveSpellProperty((Property)info.Entry.DataBits00, this.CastingId);
                 }));
         }
 
