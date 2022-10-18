@@ -5,21 +5,24 @@ using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
+using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
     [Command(Permission.Account, "A collection of commands to modify game accounts.", "acc", "account")]
     public class AccountCommandCategory : CommandCategory
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.AccountCreate, "Create a new account.", "create")]
         public void HandleAccountCreate(ICommandContext context,
             [Parameter("Email address for the new account", converter: typeof(StringLowerParameterConverter))]
             string email,
             [Parameter("Password for the new account")]
             string password,
-            [Parameter("Role")]
+            [Parameter("Role", ParameterFlags.Optional)]
             uint? role = null)
         {
             if (DatabaseManager.Instance.AuthDatabase.AccountExists(email))
@@ -27,12 +30,20 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendMessage("Account with that username already exists. Please try another.");
                 return;
             }
-
-            if (role == null)
-                role = (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? 1u);
-
+                
+            role ??= (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? (uint)Role.Player);
+                
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
             DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role);
+
+            if (context.InvokingPlayer != null)
+            {
+                log.Info($"Account {email} created successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+            }
+            else
+            {
+                log.Info($"Account {email} created successfully.");
+            }
 
             context.SendMessage($"Account {email} created successfully");
         }

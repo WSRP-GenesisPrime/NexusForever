@@ -33,7 +33,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
             quantity ??= 1u;
             charges ??= info.Entry.MaxCharges;
-            context.GetTargetOrInvoker<Player>().Inventory.ItemCreate(InventoryLocation.Inventory, itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
+            context.InvokingPlayer.Inventory.ItemCreate(InventoryLocation.Inventory, itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
         }
 
         [Command(Permission.ItemLookup, "Lookup an item by partial name.", "lookup")]
@@ -56,7 +56,7 @@ namespace NexusForever.WorldServer.Command.Handler
 
             context.SendMessage($"Item lookup results for '{name}' ({searchResults.Count}):");
 
-            var target = context.GetTargetOrInvoker<Player>();
+            var target = context.InvokingPlayer;
             foreach (Item2Entry itemEntry in searchResults)
             {
                 var builder = new ChatMessageBuilder

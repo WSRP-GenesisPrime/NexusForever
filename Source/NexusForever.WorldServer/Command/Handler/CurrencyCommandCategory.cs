@@ -31,7 +31,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
 
-                context.GetTargetOrInvoker<Player>().Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
+                context.InvokingPlayer.Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
             }
 
             [Command(Permission.CurrencyAccountList, "List all account currency types", "list")]
@@ -60,7 +60,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
 
-                context.GetTargetOrInvoker<Player>().CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
+                context.InvokingPlayer.CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
             }
 
             [Command(Permission.CurrencyCharacterList, "List all currency types.", "list")]

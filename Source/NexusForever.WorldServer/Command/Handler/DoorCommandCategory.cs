@@ -17,7 +17,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             searchRange ??= 10f;
 
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
             player.Map.Search(
                 player.Position,
                 searchRange.Value,
@@ -40,7 +40,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             searchRange ??= 10f;
 
-            Player player = context.GetTargetOrInvoker<Player>();
+            Player player = context.InvokingPlayer;
             player.Map.Search(
                 player.Position,
                 searchRange.Value,
