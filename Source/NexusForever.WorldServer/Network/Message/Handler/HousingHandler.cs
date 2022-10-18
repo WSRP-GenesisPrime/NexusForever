@@ -552,6 +552,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return;
             }
 
+            session.Player.Dismount(); // All observing clients crash if going in while mounted?
+
             if (session.Player.HouseOutsideLocation != Vector3.Zero || session.Player.Position.Y < -720f)
             {
                 Vector3 location = session.Player.HouseOutsideLocation;
