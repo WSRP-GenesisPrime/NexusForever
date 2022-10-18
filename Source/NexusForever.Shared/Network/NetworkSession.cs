@@ -75,7 +75,7 @@ namespace NexusForever.Shared.Network
             if (!disconnectState.HasValue)
                 Heartbeat.Update(lastTick);
 
-            if (Heartbeat.Flatline || disconnectState == DisconnectState.Pending)
+            if ((Heartbeat.Flatline && disconnectState != DisconnectState.Complete) || disconnectState == DisconnectState.Pending)
             {
                 // no defibrillator is going to save this session
                 if (Heartbeat.Flatline)
@@ -147,6 +147,13 @@ namespace NexusForever.Shared.Network
             {
                 ForceDisconnect();
             }
+        }
+
+        public bool IsLocalIp()
+        {
+            IPEndPoint ep = socket.RemoteEndPoint as IPEndPoint;
+            byte[] bytes = ep.Address.GetAddressBytes();
+            return (bytes[0] == 192 && bytes[1] == 168);
         }
 
         /// <summary>

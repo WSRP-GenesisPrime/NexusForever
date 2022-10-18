@@ -170,7 +170,7 @@ namespace NexusForever.Database.Character
                 .Include(r => r.Character)
                 .Include(r => r.Guild)
                 // only load residences where the owner character or guild hasn't been deleted
-                .Where(r => (r.OwnerId.HasValue && !r.Character.DeleteTime.HasValue) || (r.GuildOwnerId.HasValue && !r.Guild.DeleteTime.HasValue))
+                .Where(r => (r.OwnerId.HasValue && !r.Character.DeleteTime.HasValue) || (r.GuildOwnerId.HasValue && !r.Guild.DeleteTime.HasValue)).AsSplitQuery()
                 .ToList();
         }
 
