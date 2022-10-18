@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexusForever.Database.Auth;
 
@@ -10,9 +11,10 @@ using NexusForever.Database.Auth;
 namespace NexusForever.Database.Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    partial class AuthContextModelSnapshot : ModelSnapshot
+    [Migration("20221018092333_LocalIP")]
+    partial class LocalIP
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1105,96 +1107,6 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
-                            Id = 50000u,
-                            Name = "Category: Morph"
-                        },
-                        new
-                        {
-                            Id = 50001u,
-                            Name = "Command: MorphStoryTeller"
-                        },
-                        new
-                        {
-                            Id = 50100u,
-                            Name = "Category: Emote"
-                        },
-                        new
-                        {
-                            Id = 50200u,
-                            Name = "Category: Chron"
-                        },
-                        new
-                        {
-                            Id = 50300u,
-                            Name = "Category: XRoll"
-                        },
-                        new
-                        {
-                            Id = 50400u,
-                            Name = "Command: CharacterProps"
-                        },
-                        new
-                        {
-                            Id = 50500u,
-                            Name = "Category: Boost"
-                        },
-                        new
-                        {
-                            Id = 50600u,
-                            Name = "Command: HouseRemodel"
-                        },
-                        new
-                        {
-                            Id = 50700u,
-                            Name = "Command: RealmOnline"
-                        },
-                        new
-                        {
-                            Id = 50710u,
-                            Name = "Command: RealmUptime"
-                        },
-                        new
-                        {
-                            Id = 50900u,
-                            Name = "Flag: GM"
-                        },
-                        new
-                        {
-                            Id = 60000u,
-                            Name = "Category: Costume"
-                        },
-                        new
-                        {
-                            Id = 60010u,
-                            Name = "Command: CostumeOverride"
-                        },
-                        new
-                        {
-                            Id = 60020u,
-                            Name = "Command: CostumeOverrideId"
-                        },
-                        new
-                        {
-                            Id = 61000u,
-                            Name = "Flag: Adult"
-                        },
-                        new
-                        {
-                            Id = 61100u,
-                            Name = "Command: AdultPlotLockSelf"
-                        },
-                        new
-                        {
-                            Id = 61150u,
-                            Name = "Command: AdultPlotLockNonOwner"
-                        },
-                        new
-                        {
-                            Id = 61200u,
-                            Name = "Command: AdultPlotAlert"
-                        },
-                        new
-                        {
                             Id = 10000u,
                             Name = "Other: InstantLogout"
                         },
@@ -1269,24 +1181,6 @@ namespace NexusForever.Database.Auth.Migrations
                             Id = 5u,
                             Flags = 2u,
                             Name = "WebSocket"
-                        },
-                        new
-                        {
-                            Id = 6u,
-                            Flags = 1u,
-                            Name = "Storyteller"
-                        },
-                        new
-                        {
-                            Id = 7u,
-                            Flags = 1u,
-                            Name = "NSFWS"
-                        },
-                        new
-                        {
-                            Id = 8u,
-                            Flags = 1u,
-                            Name = "NFSWSMod"
                         });
                 });
 
