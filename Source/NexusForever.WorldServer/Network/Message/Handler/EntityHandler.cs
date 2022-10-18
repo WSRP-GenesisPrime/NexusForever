@@ -53,7 +53,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
                 entity.OnInteract(session.Player);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 session.Player.SendSystemMessage("Error while interacting with unit!");
             }

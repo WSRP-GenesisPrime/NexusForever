@@ -666,7 +666,7 @@ namespace NexusForever.WorldServer.Game.Spell
             if (targets.Count > 0 && CastMethod == CastMethod.Aura)
                 log.Trace($"Target exited spell {CastingId}'s range, removing effects.");
 
-            target.Entity?.RemoveSpellProperties(Spell4Id);
+            target.Entity?.RemoveSpellProperties(CastingId);
             target.Entity?.RemoveProc(parameters.SpellInfo.Entry.Id);
             target.Entity?.RemoveTemporaryDisplayItem(Spell4Id);
         }

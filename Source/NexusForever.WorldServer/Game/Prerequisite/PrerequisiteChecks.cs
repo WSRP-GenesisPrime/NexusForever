@@ -81,6 +81,36 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
+        [PrerequisiteCheck(PrerequisiteType.Gender)]
+        private static bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            // Check whether we have the right gender.
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return (uint)player.Sex == value;
+                case PrerequisiteComparison.NotEqual:
+                    return (uint)player.Sex != value;
+            }
+            return false;
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.Zone)]
+        private static bool PrerequisiteCheckZone(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            switch (comparison)
+            {
+                case PrerequisiteComparison.Equal:
+                    return player.Zone.Id == value;
+                case PrerequisiteComparison.NotEqual:
+                    return player.Zone.Id != value;
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.Zone}!");
+
+                    return false;
+            }
+        }
+
         [PrerequisiteCheck(PrerequisiteType.Path)]
         private static bool PrerequisiteCheckPath(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
@@ -374,18 +404,26 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Unknown194)]
-        private static bool PrerequisiteCheckUnknown194(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        [PrerequisiteCheck(PrerequisiteType.Loyalty)]
+        private static bool PrerequisiteCheckLoyalty(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
-            // TODO: Only used in Mount check prerequisites. Its use is unknown.
+            // Check whether we have a high enough loyalty.
 
             return true;
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Unknown195)]
-        private static bool PrerequisiteCheckUnknown195(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        [PrerequisiteCheck(PrerequisiteType.GroundMountArea)]
+        private static bool PrerequisiteCheckGroundMountArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {
-            // TODO: Only used in Mount check prerequisites. Its use is unknown.
+            // Check whether this is a valid area for a ground mount.
+
+            return true;
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.HoverboardArea)]
+        private static bool PrerequisiteCheckHoverboardArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            // Check whether this is a valid area for a hoverboard.
 
             return true;
         }
@@ -456,6 +494,22 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                     return percentage < value;
                 default:
                     log.Warn($"Unhandled {comparison} for {PrerequisiteType.Vital}!");
+                    return false;
+            }
+        }
+
+        [PrerequisiteCheck(PrerequisiteType.Disguise)]
+        private static bool PrerequisiteCheckDisguise(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            switch (comparison)
+            { // Dummy!
+                case PrerequisiteComparison.Equal:
+                    return true;
+                case PrerequisiteComparison.NotEqual:
+                    return true;
+                default:
+                    log.Warn($"Unhandled PrerequisiteComparison {comparison} for {PrerequisiteType.Disguise}!");
+
                     return false;
             }
         }

@@ -1404,7 +1404,16 @@ namespace NexusForever.WorldServer.Game.Entity
         public void Dismount()
         {
             if (GetVehicle(out Vehicle vehicle))
+            {
                 vehicle.PassengerRemove(this);
+                if (vehicle is Mount mount)
+                {
+                    if (mount.castingId != 0)
+                    {
+                        CancelEffect(mount.castingId);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1427,7 +1436,62 @@ namespace NexusForever.WorldServer.Game.Entity
 
             // TODO: Remove pets, scanbots
         }
-        
+
+        public void DestroyPet()
+        {
+            VanityPet pet = PetManager.GetVanityPet();
+            // enqueue removal of existing vanity pet if summoned
+            if (pet != null)
+            {
+                PetManager.RemovePetGuid(PetType.VanityPet, pet);
+                pet.RemoveFromMap();
+            }
+        }
+
+        public void SetPetFollowing(bool isPetFollowing)
+        {
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
+            {
+                pet?.SetIsFollowingPlayer(isPetFollowing);
+            }
+        }
+
+        public void SetPetFacingPlayer(bool isPetFacingPlayer)
+        {
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
+            {
+                pet?.SetIsFacingPlayer(isPetFacingPlayer);
+            }
+        }
+
+        public void SetPetFollowingOnSide(bool isPetFollowingOnSide)
+        {
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
+            {
+                pet?.SetFollowingOnSide(isPetFollowingOnSide);
+            }
+        }
+
+        public void SetPetFollowDistance(float dist)
+        {
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
+            {
+                pet?.SetFollowDistance(dist);
+            }
+        }
+        public void SetPetFollowRecalculateDistance(float dist)
+        {
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
+            {
+                pet?.SetFollowFollowMinRecalculateDistance(dist);
+            }
+        }
+
         /// <summary>
         /// Returns the time in seconds that has past since the last <see cref="Player"/> save.
         /// </summary>
