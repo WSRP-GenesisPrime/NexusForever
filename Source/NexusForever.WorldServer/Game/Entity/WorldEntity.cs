@@ -54,7 +54,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public Dictionary<Property, PropertyValue> Properties { get; } = new();
         private Dictionary<Property, float> BaseProperties { get; } = new();
         private Dictionary<Property, Dictionary<ItemSlot, /*value*/float>> ItemProperties { get; } = new();
-        private Dictionary<Property, Dictionary</*castingId*/uint, PropertyModifier>> SpellProperties { get; } = new();
+        private Dictionary<Property, Dictionary</*spell4Id*/uint, PropertyModifier>> SpellProperties { get; } = new();
         private HashSet<Property> DirtyProperties { get; } = new();
         public Dictionary<uint, List<EntityStatus>> StatusEffects { get; } = new();
 
@@ -514,20 +514,22 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Add a <see cref="Property"/> modifier given a Spell4Id and <see cref="PropertyModifier"/> instance
         /// </summary>
-        public void AddSpellModifierProperty(Property property, uint castingId, PropertyModifier modifier)
+        public void AddSpellModifierProperty(Property property, uint spell4Id, PropertyModifier modifier)
         {
-            if (SpellProperties.TryGetValue(property, out var spellDict))
+            if (SpellProperties.ContainsKey(property))
             {
-                if (spellDict.ContainsKey(castingId))
-                    spellDict[castingId] = modifier;
+                var spellDict = SpellProperties[property];
+
+                if (spellDict.ContainsKey(spell4Id))
+                    spellDict[spell4Id] = modifier;
                 else
-                    spellDict.Add(castingId, modifier);
+                    spellDict.Add(spell4Id, modifier);
             }
             else
             {
                 SpellProperties.Add(property, new Dictionary<uint, PropertyModifier>
                 {
-                    { castingId, modifier }
+                    { spell4Id, modifier }
                 });
             }
 
@@ -537,12 +539,14 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Remove a <see cref="Property"/> modifier by a Spell that is currently affecting this <see cref="WorldEntity"/>
         /// </summary>
-        public void RemoveSpellProperty(Property property, uint castingId)
+        public void RemoveSpellProperty(Property property, uint spell4Id)
         {
-            if (SpellProperties.TryGetValue(property, out var spellDict))
-            {
-                if (spellDict.ContainsKey(castingId))
-                    spellDict.Remove(castingId);
+            if (SpellProperties.ContainsKey(property))
+        {
+                var spellDict = SpellProperties[property];
+
+                if (spellDict.ContainsKey(spell4Id))
+                    spellDict.Remove(spell4Id);
             }
 
             DirtyProperties.Add(property);
@@ -551,12 +555,12 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Remove all <see cref="Property"/> modifiers by a Spell that is currently affecting this <see cref="WorldEntity"/>
         /// </summary>
-        public void RemoveSpellProperties(uint castingId)
+        public void RemoveSpellProperties(uint spell4Id)
         {
-            List<Property> propertiesWithSpell = SpellProperties.Where(i => i.Value.Keys.Contains(castingId)).Select(p => p.Key).ToList();
+            List<Property> propertiesWithSpell = SpellProperties.Where(i => i.Value.Keys.Contains(spell4Id)).Select(p => p.Key).ToList();
 
             foreach (Property property in propertiesWithSpell)
-                RemoveSpellProperty(property, castingId);
+                RemoveSpellProperty(property, spell4Id);
         }
 
         /// <summary>

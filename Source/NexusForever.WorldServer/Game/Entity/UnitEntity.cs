@@ -284,17 +284,13 @@ namespace NexusForever.WorldServer.Game.Entity
             spell?.CancelCast(CastResult.SpellCancelled);
         }
 
-        public virtual void CancelEffect(uint castingId)
+        public void CancelEffect(uint castingId)
         {
-            EnqueueToVisible(new ServerSpellFinish
+            var spell = pendingSpells.Where(s => s.CastingId == castingId).FirstOrDefault();
+            if (spell != null)
             {
-                ServerUniqueId = castingId
-            }, true);
-            foreach (var spell in pendingSpells.Where(s => s.CastingId == castingId))
-            {
-                RemoveSpellProperties(castingId);
+                WipeEffectsByID(spell.Spell4Id);
             }
-            pendingSpells.RemoveAll(s => s.CastingId == castingId);
         }
 
         public void WipeEffectsByID(uint spell4Id)
@@ -302,8 +298,13 @@ namespace NexusForever.WorldServer.Game.Entity
             var list = GetPendingSpellsByID(spell4Id).ToList();
             foreach (var spell in list)
             {
-                CancelEffect(spell.CastingId);
+                RemoveSpellProperties(spell4Id);
+                EnqueueToVisible(new ServerSpellFinish
+                {
+                    ServerUniqueId = spell.CastingId
+                }, true);
             }
+            pendingSpells.RemoveAll(s => s.Spell4Id == spell4Id);
         }
 
         public IEnumerable<Spell.Spell> GetPendingSpellsByID(uint spell4Id)
