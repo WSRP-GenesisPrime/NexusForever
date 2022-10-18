@@ -617,10 +617,19 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public void QuestIgnore(ushort questId, bool ignored)
         {
-            if (GlobalQuestManager.Instance.GetQuestInfo(questId) == null)
+            QuestInfo questInfo = GlobalQuestManager.Instance.GetQuestInfo(questId);
+            if (questInfo == null)
                 throw new ArgumentException($"Invalid quest {questId}!");
 
-            // TODO:
+            Quest.Quest quest = GetQuest((ushort)questInfo.Entry.Id);
+            if (quest == null)
+                quest = new Quest.Quest(player, questInfo);
+            else
+                QuestRemove(quest);
+
+            quest.State = ignored ? QuestState.Ignored : QuestState.Mentioned;
+
+            inactiveQuests.Add(questId, quest);
         }
 
         /// <summary>

@@ -626,6 +626,19 @@ namespace NexusForever.WorldServer.Game.Entity
             };
         }
 
+        public override void CancelEffect(uint castingId)
+        {
+            base.CancelEffect(castingId);
+            if (VehicleGuid != 0u)
+            {
+                Mount mount = GetVisible<Mount>(VehicleGuid);
+                if (mount != null && mount.castingId == castingId)
+                {
+                    Dismount();
+                }
+            }
+        }
+
         private void SendPacketsOnAddToMap()
         {
             SendPrePackets();

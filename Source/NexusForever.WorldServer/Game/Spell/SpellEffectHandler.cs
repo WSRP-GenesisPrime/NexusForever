@@ -192,7 +192,7 @@ namespace NexusForever.WorldServer.Game.Spell
             if (!player.CanMount())
                 return;
 
-            var mount = new Mount(player, parameters.SpellInfo.Entry.Id, info.Entry.DataBits00, info.Entry.DataBits01, info.Entry.DataBits04);
+            var mount = new Mount(player, parameters.SpellInfo.Entry.Id, info.Entry.DataBits00, info.Entry.DataBits01, info.Entry.DataBits04, this.CastingId);
             mount.EnqueuePassengerAdd(player, VehicleSeatType.Pilot, 0);
 
             var position = new MapPosition

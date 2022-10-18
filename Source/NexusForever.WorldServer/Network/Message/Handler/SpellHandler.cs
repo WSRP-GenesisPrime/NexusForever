@@ -56,13 +56,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         }
 
         [MessageHandler(GameMessageOpcode.ClientCancelEffect)]
-        public static void HandlePlayerCastSpell(WorldSession session, ClientCancelEffect cancelSpell)
+        public static void HandlePlayerCancelEffect(WorldSession session, ClientCancelEffect cancelSpell)
         {
-            //TODO: integrate into some Spell System removal queue & do the checks & handle stopped effects
-            session.Player.EnqueueToVisible(new ServerSpellFinish
-            {
-                ServerUniqueId  = cancelSpell.ServerUniqueId
-            },true);
+            session.Player.CancelEffect(cancelSpell.ServerUniqueId);
         }
 
         [MessageHandler(GameMessageOpcode.ClientChangeActiveActionSet)]
@@ -115,12 +111,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             if (newAmps.Count > 0)
             {
-               // TODO: Look into AMP Support
+                /*foreach (ushort id in newAmps)
+                    actionSet.AddAmp(id);
 
-               // foreach (ushort id in newAmps)
-               //     actionSet.AddAmp(id);
-
-               //session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());
+                session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());*/
+                session.Player.SendSystemMessage("You just tried to add an AMP to your character   :(   This is currently -horribly- broken, and we have disabled this for your benefit. Please refrain from trying to do this again, there may still be ways to get AMPs and break your character.");
             }
         }
 

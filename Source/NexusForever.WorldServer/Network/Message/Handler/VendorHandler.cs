@@ -18,10 +18,14 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         {
             var vendorEntity = session.Player.Map.GetEntity<NonPlayer>(vendor.Guid);
             if (vendorEntity == null)
-                throw new InvalidOperationException();
+            {
+                return;
+            }
 
             if (vendorEntity.VendorInfo == null)
-                throw new InvalidOperationException();
+            {
+                return;
+            }
 
             session.Player.SelectedVendorInfo = vendorEntity.VendorInfo;
             var serverVendor = new ServerVendorItemsUpdated

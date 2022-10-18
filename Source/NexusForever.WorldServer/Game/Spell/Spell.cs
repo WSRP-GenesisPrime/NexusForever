@@ -35,7 +35,7 @@ namespace NexusForever.WorldServer.Game.Spell
         public bool HasGroup(uint groupId) => parameters.SpellInfo.GroupList?.SpellGroupIds.Contains(groupId) ?? false;
 
         protected readonly UnitEntity caster;
-        protected readonly SpellParameters parameters;
+        public readonly SpellParameters parameters;
 
         protected SpellStatus status
         {

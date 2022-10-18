@@ -17,21 +17,14 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         public uint OwnerGuid { get; }
         public PetType MountType { get; }
+        public uint castingId = 0;
 
         /// <summary>
         /// Display info applied to the pilot in the <see cref="ItemSlot.Mount"/> slot.
         /// </summary>
         public ItemDisplayEntry PilotDisplayInfo { get; }
 
-        private List<uint> playerSpellList = new()
-        {
-            80530,
-            80531,
-            52539,
-            52543
-        };
-
-        public Mount(Player owner, uint spell4Id, uint creatureId, uint vehicleId, uint itemDisplayId)
+        public Mount(Player owner, uint spell4Id, uint creatureId, uint vehicleId, uint itemDisplayId, uint castingId)
             : base(EntityType.Mount, creatureId, vehicleId, spell4Id)
         {
             OwnerGuid        = owner.Guid;
@@ -39,6 +32,8 @@ namespace NexusForever.WorldServer.Game.Entity
             PilotDisplayInfo = GameTableManager.Instance.ItemDisplay.GetEntry(itemDisplayId);
             Rotation         = owner.Rotation;
             Position         = owner.Position;
+
+            this.castingId = castingId;
 
             Creature2DisplayGroupEntryEntry displayGroupEntry = GameTableManager.Instance.Creature2DisplayGroupEntry.Entries
                 .SingleOrDefault(x => x.Creature2DisplayGroupId == CreatureEntry.Creature2DisplayGroupId);
@@ -150,7 +145,6 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateVisuals(player);
-            RemoveSpells(player);
             player.HandleMovementSpeedApply();
         }
 
@@ -171,14 +165,6 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             EnqueueToVisible(visualUpdate, true);
-        }
-
-        private void RemoveSpells(Player player)
-        {
-            foreach (uint spellId in playerSpellList)
-                player.FinishSpells(spellId);
-
-            player.FinishSpells(SpellEntry.Id);
         }
     }
 }

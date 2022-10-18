@@ -284,6 +284,33 @@ namespace NexusForever.WorldServer.Game.Entity
             spell?.CancelCast(CastResult.SpellCancelled);
         }
 
+        public virtual void CancelEffect(uint castingId)
+        {
+            EnqueueToVisible(new ServerSpellFinish
+            {
+                ServerUniqueId = castingId
+            }, true);
+            foreach (var spell in pendingSpells.Where(s => s.CastingId == castingId))
+            {
+                RemoveSpellProperties(castingId);
+            }
+            pendingSpells.RemoveAll(s => s.CastingId == castingId);
+        }
+
+        public void WipeEffectsByID(uint spell4Id)
+        {
+            var list = GetPendingSpellsByID(spell4Id).ToList();
+            foreach (var spell in list)
+            {
+                CancelEffect(spell.CastingId);
+            }
+        }
+
+        public IEnumerable<Spell.Spell> GetPendingSpellsByID(uint spell4Id)
+        {
+            return pendingSpells.Where(s => s.parameters.SpellInfo.BaseInfo.Entry.Id == spell4Id || s.parameters.SpellInfo.Entry.Id == spell4Id);
+        }
+
         /// <summary>
         /// Check if this <see cref="UnitEntity"/> has a spell active with the provided <see cref="Spell4Entry"/> Id
         /// </summary>
