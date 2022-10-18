@@ -43,13 +43,20 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientActivateUnit)]
         public static void HandleActivateUnit(WorldSession session, ClientActivateUnit unit)
         {
-            WorldEntity entity = session.Player.GetVisible<WorldEntity>(unit.UnitId);
-            if (entity == null)
-                throw new InvalidPacketValueException();
+            try
+            {
+                WorldEntity entity = session.Player.GetVisible<WorldEntity>(unit.UnitId);
+                if (entity == null)
+                    throw new InvalidPacketValueException();
 
-            // TODO: sanity check for range etc.
+                // TODO: sanity check for range etc.
 
-            entity.OnInteract(session.Player);
+                entity.OnInteract(session.Player);
+            }
+            catch (Exception e)
+            {
+                session.Player.SendSystemMessage("Error while interacting with unit!");
+            }
         }
 
         [MessageHandler(GameMessageOpcode.ClientEntityInteract)]

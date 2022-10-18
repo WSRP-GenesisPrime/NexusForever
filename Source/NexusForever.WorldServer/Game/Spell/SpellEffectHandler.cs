@@ -541,6 +541,11 @@ namespace NexusForever.WorldServer.Game.Spell
             }
         }
 
+        [SpellEffectHandler(SpellEffectType.Scale)]
+        private void HandleEffectScale(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+        }
+
         [SpellEffectHandler(SpellEffectType.HousingTeleport)]
         private void HandleEffectHousingTeleport(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
         {

@@ -505,21 +505,35 @@ namespace NexusForever.WorldServer.Game.Map
         protected virtual void RelocateEntity(GridEntity entity, Vector3 vector)
         {
             Debug.Assert(entity.Map != null);
-
-            ActivateGrid(entity, vector);
-            MapGrid newGrid = GetGrid(vector);
-            MapGrid oldGrid = GetGrid(entity.Position);
-
-            if (newGrid.Coord.X != oldGrid.Coord.X
-                || newGrid.Coord.Z != oldGrid.Coord.Z)
+            try
             {
-                oldGrid.RemoveEntity(entity);
-                newGrid.AddEntity(entity, vector);
-            }
-            else
-                oldGrid.RelocateEntity(entity, vector);
+                ActivateGrid(entity, vector);
+                MapGrid newGrid = GetGrid(vector);
+                MapGrid oldGrid = GetGrid(entity.Position);
 
-            entity.OnRelocate(vector);
+                if (newGrid.Coord.X != oldGrid.Coord.X
+                    || newGrid.Coord.Z != oldGrid.Coord.Z)
+                {
+                    oldGrid.RemoveEntity(entity);
+                    newGrid.AddEntity(entity, vector);
+                }
+                else
+                    oldGrid.RelocateEntity(entity, vector);
+
+                if (entity.Map != null)
+                {
+                    entity.OnRelocate(vector);
+                }
+                else
+                {
+                    throw new NullReferenceException($"Entity (guid {entity.Guid}) BaseMap was null!");
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error($"Exception caught while invoking BaseMap.RelocateEntity! :\n{e}");
+            }
+
         }
 
         /// <summary>
