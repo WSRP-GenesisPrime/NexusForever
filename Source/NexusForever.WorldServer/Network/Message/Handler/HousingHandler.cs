@@ -535,7 +535,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 return;
 
-            if (session.Player.Map.Entry.Id != 1229)
+            if (session.Player.Map.Entry.Id != 1229 && session.Player.Map.Entry.Id != 3174)
                 return;
 
             Residence residence = GlobalResidenceManager.Instance.GetResidence(enterInside.ResidenceId);
@@ -571,7 +571,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return;
             }
 
-            Vector3 teleportPosition = GlobalResidenceManager.Instance.GetResidenceInsideLocation(residence.ResidenceInfoEntry.Id);
+            Vector3 teleportPosition = GlobalResidenceManager.Instance.GetResidenceInsideLocation(residence.ResidenceInfoEntry.Id, residence.PropertyInfoId);
             if (teleportPosition != Vector3.Zero)
             {
                 session.Player.HouseOutsideLocation = session.Player.Position;

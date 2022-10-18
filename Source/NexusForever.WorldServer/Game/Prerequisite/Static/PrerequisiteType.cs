@@ -68,7 +68,6 @@
         AccountItemClaimed  = 246,
         BaseFaction         = 250,
         Unhealthy           = 269,
-        Loyalty             = 270,
         Entitlement         = 273,
         CostumeUnlocked     = 275,
         CosmicRewards       = 270,

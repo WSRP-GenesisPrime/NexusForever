@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Threading.Tasks;
 using NexusForever.Database;
 using NexusForever.Database.Character.Model;
@@ -15,6 +16,7 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing.Static;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NLog;
@@ -449,9 +451,39 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Returns the <see cref="Vector3"/> location for the house inside
         /// </summary>
-        public Vector3 GetResidenceInsideLocation(uint residenceInfoId)
+        public Vector3 GetResidenceInsideLocation(uint residenceInfoId, PropertyInfoId propertyInfoId)
         {
-            return residenceTeleportLocation.TryGetValue(residenceInfoId, out Vector3 teleportLocation) ? teleportLocation : Vector3.Zero;
+            if (residenceTeleportLocation.TryGetValue(residenceInfoId, out Vector3 teleportLocation))
+            {
+                if (propertyInfoId != PropertyInfoId.Residence)
+                {
+                    teleportLocation = teleportLocation + GetResidenceOffset(propertyInfoId) - GetResidenceOffset(PropertyInfoId.Residence);
+                }
+                return teleportLocation;
+            }
+            return Vector3.Zero;
+        }
+
+        public static Vector3 GetResidenceOffset(PropertyInfoId propertyInfo)
+        {
+            switch (propertyInfo)
+            {
+                case PropertyInfoId.Residence:
+                    return new Vector3(1472f - 0.00012207031f, -715f, 1440f);
+                case PropertyInfoId.CommunityResidence1:
+                    return new Vector3(352f, -715, -640f);
+                case PropertyInfoId.CommunityResidence2:
+                    return new Vector3(640f - 0.000061035156f, -715, -640f - 0.000061035156f);
+                case PropertyInfoId.CommunityResidence3:
+                    return new Vector3(224f + 0.000030517578f, -715, -256f);
+                case PropertyInfoId.CommunityResidence4:
+                    return new Vector3(512f, -715, -256f - 0.000030517578f);
+                case PropertyInfoId.CommunityResidence5:
+                    return new Vector3(800f, -715f, -256f - 0.000030517578f);
+                case PropertyInfoId.Community:
+                    return new Vector3(528f, -715f, -464f);
+            }
+            return Vector3.Zero;
         }
 
         /// <summary>

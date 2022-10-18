@@ -82,7 +82,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Gender)]
-        private static bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        private static bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Check whether we have the right gender.
             switch (comparison)
@@ -96,7 +96,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Zone)]
-        private static bool PrerequisiteCheckZone(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        private static bool PrerequisiteCheckZone(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -404,16 +404,8 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Loyalty)]
-        private static bool PrerequisiteCheckLoyalty(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
-        {
-            // Check whether we have a high enough loyalty.
-
-            return true;
-        }
-
         [PrerequisiteCheck(PrerequisiteType.GroundMountArea)]
-        private static bool PrerequisiteCheckGroundMountArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        private static bool PrerequisiteCheckGroundMountArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Check whether this is a valid area for a ground mount.
 
@@ -421,7 +413,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.HoverboardArea)]
-        private static bool PrerequisiteCheckHoverboardArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        private static bool PrerequisiteCheckHoverboardArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Check whether this is a valid area for a hoverboard.
 
@@ -499,7 +491,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Disguise)]
-        private static bool PrerequisiteCheckDisguise(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        private static bool PrerequisiteCheckDisguise(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             { // Dummy!
