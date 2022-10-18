@@ -214,10 +214,6 @@
         RealmOnline                 = 50700,
         RealmUptime                 = 50710,
 
-        // GP: Change account password
-        AccountChangePass           = 50800,
-        AccountChangeMyPass         = 50810,
-
         // GP: Costume commands
         Costume                     = 60000,
         CostumeOverride             = 60010,

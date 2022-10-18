@@ -31,7 +31,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
 
             ulong? characterId = CharacterManager.Instance.GetCharacterIdByName(request.PlayerName);
-            if (characterId != null)
+            if (characterId != null && characterId > 0)
             {
                 // TODO: Handle Rival, Ignore, and Account Requests
                 if (request.Type == ContactType.Account)
