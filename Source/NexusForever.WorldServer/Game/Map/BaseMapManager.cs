@@ -75,7 +75,7 @@ namespace NexusForever.WorldServer.Game.Map
         private MapFile LoadBaseMap(string assetPath)
         {
             string mapPath  = ConfigurationManager<WorldServerConfiguration>.Instance.Config.Map.MapPath;
-            string asset    = Path.Combine(mapPath, Path.GetFileName(assetPath));
+            string asset    = Path.Combine(mapPath, Path.GetFileName(FixPathSeparators(assetPath)));
             string filePath = Path.ChangeExtension(asset, ".nfmap");
 
             using FileStream stream = File.OpenRead(filePath);
@@ -86,6 +86,15 @@ namespace NexusForever.WorldServer.Game.Map
 
             log.Trace($"Initialised base map file for asset {assetPath}.");
             return mapFile;
+        }
+
+        private string FixPathSeparators(string assetPath)
+        {
+            string[] parts = assetPath.Split('\\');
+            string ret = Path.Combine(parts);
+            log.Info("Map path: " + ret);
+            return ret;
+            //return Path.Combine(assetPath.Split('\\'));
         }
     }
 }
