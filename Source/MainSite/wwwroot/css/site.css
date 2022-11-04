@@ -1,0 +1,109 @@
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
+for details on configuring this project to bundle and minify static web assets. */
+body {
+    background-image: url('https://stmed.net/sites/default/files/wildstar-hd-wallpapers-33898-741305.png');   /*THIS IS AN EXAMPLE OF WEB BASED BackgroundIMG*/
+    /*background-image: url('/images/Mainbackground.png'); THIS IS AN EXAMPLE OF USING LOCAL IMAGE AS BACKGROUND*/
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    background-size: auto;
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: inherit;
+    height: 50px; /* Height of the footer */
+    text-align: center;
+    color: white;
+    text-shadow: 3px 3px 3px black;
+    border-color: black;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid white;
+    margin: 1em 0;
+    padding: 0;
+}
+
+#inputField {
+    background-color: rgba(130, 251, 245, 0.4);
+    width: 100%;
+    border: dashed;
+    border-width: thin;
+    border-bottom: none;
+    border-color: black;
+}
+
+#inputFieldBottom {
+    background-color: rgba(130, 251, 245, 0.4);
+    width: 100%;
+    border: dashed;
+    border-width: thin;
+    border-color: black;
+    position: absolute;
+}
+
+#buttonReg {
+    background: rgba(130, 251, 245, 0.4);
+    border: solid;
+    border-color: aqua;
+    position: relative;
+}
+
+#registrationDiv {
+    background-color: black;
+    border-color: paleturquoise;
+    width: auto;
+    height: auto;
+    position: center;
+}
+
+#textConsistency {
+    color: black;
+}
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+    /* Hide captions */
+    .carousel-caption {
+        display: none;
+    }
+}
+
+#mainContainer {
+    background-color: black;
+    border-color: paleturquoise;
+    margin-bottom: 50px;
+    height: inherit;
+    width: inherit;
+}
+
+#serverStatusContainer {
+    background-color: rgba(40, 40, 55, 1.0);
+    border: dashed;
+    position: absolute;
+    bottom: 150px;
+    height: inherit;
+    width: inherit;
+    border-color: paleturquoise;
+}
+
+#serverStatusText {
+    font-weight: bold;
+    font-size: 45px;
+    color: paleturquoise;
+}
