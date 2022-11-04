@@ -25,6 +25,15 @@ namespace NexusForever.WorldServer.Command.Handler
                 [Parameter("Quantity of decor to add to the crate.")]
                 uint? quantity)
             {
+                DecorAdd_impl(context, decorInfoId, quantity);
+            }
+
+            public static void DecorAdd_impl(ICommandContext context,
+                [Parameter("Decor info id entry to add to the crate.")]
+                uint decorInfoId,
+                [Parameter("Quantity of decor to add to the crate.")]
+                uint? quantity)
+            {
                 quantity ??= 1u;
 
                 HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
@@ -55,6 +64,16 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 context.SendMessage(sw.ToString());
             }
+        }
+
+        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
+        public void HandleHouseDecorAddDummy(ICommandContext context,
+            [Parameter("Decor info id entry to add to the crate.")]
+            uint decorInfoId,
+            [Parameter("Quantity of decor to add to the crate.")]
+            uint? quantity)
+        {
+            HouseDecorCommandCategory.DecorAdd_impl(context, decorInfoId, quantity);
         }
 
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]
