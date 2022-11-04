@@ -313,7 +313,10 @@ namespace NexusForever.WorldServer.Game.Housing
             {
                 HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorModel.DecorInfoId);
                 if (entry == null && (DecorType)decorModel.DecorType != DecorType.InteriorDecoration)
-                    throw new DatabaseDataException($"Decor {decorModel.Id} has invalid decor entry {decorModel.DecorInfoId}!");
+                {
+                    log.Warn($"Decor {decorModel.Id} has invalid decor entry {decorModel.DecorInfoId}!");
+                    continue;
+                }
 
                 var decor = new Decor(this, decorModel, entry);
                 decors.Add(decor.DecorId, decor);
