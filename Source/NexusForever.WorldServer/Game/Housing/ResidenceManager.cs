@@ -37,16 +37,16 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <remarks>
         /// Decor will be created for your residence regardless of the current residence you are on.
         /// </remarks>
-        public void DecorCreate(HousingDecorInfoEntry entry, uint quantity = 1u)
+        public void DecorCreate(HousingDecorInfoEntry entry, uint quantity = 1u, ushort? color = null)
         {
             Residence ??= GlobalResidenceManager.Instance.CreateResidence(owner);
 
             if (Residence.Map != null)
-                Residence.Map.DecorCreate(Residence, entry, quantity);
+                Residence.Map.DecorCreate(Residence, entry, quantity, color);
             else
             {
                 for (uint i = 0u; i < quantity; i++)
-                    Residence.DecorCreate(entry);
+                    Residence.DecorCreate(entry, color);
             }
         }
 

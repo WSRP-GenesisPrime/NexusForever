@@ -856,9 +856,13 @@ namespace NexusForever.WorldServer.Game.Housing
         /// <summary>
         /// Create a new <see cref="Decor"/> from supplied <see cref="HousingDecorInfoEntry"/> for <see cref="Residence"/>.
         /// </summary>
-        public Decor DecorCreate(HousingDecorInfoEntry entry)
+        public Decor DecorCreate(HousingDecorInfoEntry entry, ushort? color = null)
         {
             var decor = new Decor(this, GlobalResidenceManager.Instance.NextDecorId, entry);
+            if (color != null)
+            {
+                decor.ColourShiftId = (ushort) color;
+            }
             decors.Add(decor.DecorId, decor);
             return decor;
         }

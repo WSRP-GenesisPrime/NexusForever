@@ -365,12 +365,16 @@ namespace NexusForever.WorldServer.Game.Map
         /// <summary>
         /// Create and add <see cref="Decor"/> from supplied <see cref="HousingDecorInfoEntry"/> to your crate.
         /// </summary>
-        public void DecorCreate(Residence residence, HousingDecorInfoEntry entry, uint quantity)
+        public void DecorCreate(Residence residence, HousingDecorInfoEntry entry, uint quantity, ushort? color = null)
         {
             var residenceDecor = new ServerHousingResidenceDecor();
             for (uint i = 0u; i < quantity; i++)
             {
                 Decor decor = residence.DecorCreate(entry);
+                if(color != null)
+                {
+                    decor.ColourShiftId = (ushort) color;
+                }
                 residenceDecor.DecorData.Add(decor.Build());
             }
 

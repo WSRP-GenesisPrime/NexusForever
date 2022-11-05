@@ -23,16 +23,14 @@ namespace NexusForever.WorldServer.Command.Handler
                 [Parameter("Decor info id entry to add to the crate.")]
                 uint decorInfoId,
                 [Parameter("Quantity of decor to add to the crate.")]
-                uint? quantity)
+                uint? quantity,
+                [Parameter("Color of the decor to add to the crate.")]
+                ushort? color)
             {
-                DecorAdd_impl(context, decorInfoId, quantity);
+                DecorAdd_impl(context, decorInfoId, quantity, color);
             }
 
-            public static void DecorAdd_impl(ICommandContext context,
-                [Parameter("Decor info id entry to add to the crate.")]
-                uint decorInfoId,
-                [Parameter("Quantity of decor to add to the crate.")]
-                uint? quantity)
+            public static void DecorAdd_impl(ICommandContext context, uint decorInfoId, uint? quantity, ushort? color = null)
             {
                 quantity ??= 1u;
 
@@ -43,7 +41,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
 
-                context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value);
+                context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value, color);
             }
 
             [Command(Permission.HouseDecorLookup, "Returns a list of decor ids that match the supplied name.", "lookup")]
@@ -71,9 +69,11 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Decor info id entry to add to the crate.")]
             uint decorInfoId,
             [Parameter("Quantity of decor to add to the crate.")]
-            uint? quantity)
+            uint? quantity,
+            [Parameter("Color of the decor to add to the crate.")]
+            ushort? color)
         {
-            HouseDecorCommandCategory.DecorAdd_impl(context, decorInfoId, quantity);
+            HouseDecorCommandCategory.DecorAdd_impl(context, decorInfoId, quantity, color);
         }
 
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]
