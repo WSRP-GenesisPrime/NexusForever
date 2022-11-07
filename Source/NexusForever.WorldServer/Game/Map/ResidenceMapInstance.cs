@@ -422,6 +422,7 @@ namespace NexusForever.WorldServer.Game.Map
                 decor.Position = update.Position;
                 decor.Rotation = update.Rotation;
                 decor.Scale = update.Scale;
+                decor.PlotIndex = update.PlotIndex;
             }
 
             SendDecorUpdate(decor);
