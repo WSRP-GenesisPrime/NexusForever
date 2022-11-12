@@ -117,7 +117,7 @@ namespace NexusForever.WorldServer.Game.Account
                 AccountEntitlement entitlement =
                     session.EntitlementManager.GetAccountEntitlement((EntitlementType) item.Entry.EntitlementId);
                 if (entitlement != null)
-                    if (entitlement.Amount + item.Entry.EntitlementCount > entitlement.Entry.MaxCount)
+                    if (entitlement.Amount + item.Entry.EntitlementCount > EntitlementManager.GetEntitlementMax(entitlement.Entry))
                     {
                         SendAccountOperationResult(AccountOperation.TakeItem, AccountOperationResult.MaxEntitlementCount);
                         return;

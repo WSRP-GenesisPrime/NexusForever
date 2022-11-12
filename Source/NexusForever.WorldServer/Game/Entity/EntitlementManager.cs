@@ -181,7 +181,32 @@ namespace NexusForever.WorldServer.Game.Entity
                     .ToList()
             });
         }
-        
+
+        public static uint GetEntitlementMax(EntitlementType type, uint val)
+        {
+            switch (type)
+            {
+                case EntitlementType.BaseCharacterSlots:
+                    return 98;
+                case EntitlementType.ExtraDecorSlots:
+                    return 20000;
+                case EntitlementType.AdditionalCostumeUnlocks:
+                    return 10000;
+                default:
+                    return val;
+            }
+        }
+
+        public static uint GetEntitlementMax(uint id, uint val)
+        {
+            return GetEntitlementMax((EntitlementType)id, val);
+        }
+
+        public static uint GetEntitlementMax(EntitlementEntry entry)
+        {
+            return GetEntitlementMax((EntitlementType)entry.Id, entry.MaxCount);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -194,17 +219,17 @@ namespace NexusForever.WorldServer.Game.Entity
             GenericError CheckEntitlement(EntitlementEntry entry)
             {
                 EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
-                if (value > entry.MaxCount)
+                if (value > GetEntitlementMax(entry))
                     return GenericError.AccountItemMaxEntitlementCount;
 
                 if (entitlementFlags.HasFlag(EntitlementFlags.Character))
                 {
-                    if (GetCharacterEntitlement(type)?.Amount + value > entry.MaxCount)
+                    if (GetCharacterEntitlement(type)?.Amount + value > GetEntitlementMax(entry))
                         return GenericError.AccountItemMaxEntitlementCount;
                 }
                 else
                 {
-                    if (GetAccountEntitlement(type)?.Amount + value > entry.MaxCount)
+                    if (GetAccountEntitlement(type)?.Amount + value > GetEntitlementMax(entry))
                         return GenericError.AccountItemMaxEntitlementCount;
                 }
 
@@ -280,15 +305,15 @@ namespace NexusForever.WorldServer.Game.Entity
                 if (value < 1)
                     throw new ArgumentException($"Failed to create entitlement {entry.Id}, {value} isn't positive!");
 
-                if (value > entry.MaxCount)
-                    throw new ArgumentException($"Failed to create entitlement {entry.Id}, {value} is larger than max value {entry.MaxCount}!");
+                if (value > GetEntitlementMax(entry))
+                    throw new ArgumentException($"Failed to create entitlement {entry.Id}, {value} is larger than max value {GetEntitlementMax(entry)}!");
 
                 entitlement = creator.Invoke();
                 collection.Add(entitlement.Type, entitlement);
             }
             else
             {
-                if (value > 0 && entitlement.Amount + (uint)value > entry.MaxCount)
+                if (value > 0 && entitlement.Amount + (uint)value > EntitlementManager.GetEntitlementMax(entry))
                     throw new ArgumentException($"Failed to update entitlement {entry.Id}, incrementing by {value} exceeds max value!");
 
                 if (value < 0 && (int)entitlement.Amount + value < 0)

@@ -22,8 +22,8 @@ namespace NexusForever.WorldServer.Game.Entity
             get => amount;
             set
             {
-                if (value > Entry.MaxCount)
-                    value = Entry.MaxCount;
+                if (value > EntitlementManager.GetEntitlementMax(Entry))
+                    value = EntitlementManager.GetEntitlementMax(Entry);
 
                 saveMask |= SaveMask.Amount;
                 amount = value;
@@ -42,8 +42,8 @@ namespace NexusForever.WorldServer.Game.Entity
             Entry  = entry;
 
             // This is here to correct entitlements already existing in database.
-            if (value > Entry.MaxCount)
-                Amount = Entry.MaxCount;
+            if (value > EntitlementManager.GetEntitlementMax(Entry))
+                Amount = EntitlementManager.GetEntitlementMax(Entry);
             else
                 amount = value;
 
