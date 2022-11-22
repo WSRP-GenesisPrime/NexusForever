@@ -121,7 +121,8 @@ namespace NexusForever.WorldServer.Game.Housing
                 {
                     ICharacter character = CharacterManager.Instance.GetCharacterInfo(model.OwnerId.Value);
                     if (character == null)
-                        throw new DatabaseDataException($"Character owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
+                        continue;
+                        //throw new DatabaseDataException($"Character owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
 
                     var residence = new Residence(model);
                     StoreResidence(residence, character);
@@ -130,7 +131,8 @@ namespace NexusForever.WorldServer.Game.Housing
                 {
                     Community community = GlobalGuildManager.Instance.GetGuild<Community>(model.GuildOwnerId.Value);
                     if (community == null)
-                        throw new DatabaseDataException($"Community owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
+                        continue;
+                        //throw new DatabaseDataException($"Community owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
 
                     var residence = new Residence(model);
                     community.Residence = residence;
