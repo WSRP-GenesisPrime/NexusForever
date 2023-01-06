@@ -12,6 +12,7 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NLog;
+using static NexusForever.WorldServer.Network.Message.Model.ServerVendorItemsUpdated;
 using NetworkCostume = NexusForever.WorldServer.Network.Message.Model.Shared.Costume;
 
 namespace NexusForever.WorldServer.Game.Entity
@@ -213,7 +214,18 @@ namespace NexusForever.WorldServer.Game.Entity
                 return;
             }
 
-            if (costumeUnlocks.TryGetValue(item.Id, out CostumeUnlock costumeUnlock) && !costumeUnlock.PendingDelete)
+            UnlockItemByItem2Id(item.Id);
+        }
+
+        public void UnlockItemByItem2Id(uint id)
+        {
+            if (GameTableManager.Instance.Item.GetEntry(id) == null)
+            {
+                SendCostumeItemUnlock(CostumeUnlockResult.InvalidItem);
+                return;
+            }
+
+            if (costumeUnlocks.TryGetValue(id, out CostumeUnlock costumeUnlock) && !costumeUnlock.PendingDelete)
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.AlreadyKnown);
                 return;
@@ -230,9 +242,9 @@ namespace NexusForever.WorldServer.Game.Entity
             if (costumeUnlock != null)
                 costumeUnlock.EnqueueDelete(false);
             else
-                costumeUnlocks.Add(item.Id, new CostumeUnlock(player.Session.Account, item.Id));
-            
-            SendCostumeItemUnlock(CostumeUnlockResult.UnlockSuccess, item.Id);
+                costumeUnlocks.Add(id, new CostumeUnlock(player.Session.Account, id));
+
+            SendCostumeItemUnlock(CostumeUnlockResult.UnlockSuccess, id);
         }
 
         private uint GetMaxUnlockItemCount()
