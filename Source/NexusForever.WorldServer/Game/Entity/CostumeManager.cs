@@ -219,7 +219,15 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void UnlockItemByItem2Id(uint id)
         {
-            if (GameTableManager.Instance.Item.GetEntry(id) == null)
+            Item2Entry item = GameTableManager.Instance.Item.GetEntry(id);
+            if (item == null)
+            {
+                SendCostumeItemUnlock(CostumeUnlockResult.InvalidItem);
+                return;
+            }
+
+            ItemDisplayEntry display = GameTableManager.Instance.ItemDisplay.GetEntry(item.ItemDisplayId);
+            if (display == null)
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.InvalidItem);
                 return;
