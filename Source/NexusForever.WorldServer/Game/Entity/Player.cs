@@ -18,6 +18,7 @@ using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Achievement;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Contact;
+using NexusForever.WorldServer.Game.Cinematic.Cinematics;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
@@ -218,6 +219,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public GuildManager GuildManager { get; }
         public ChatManager ChatManager { get; }
         public ResidenceManager ResidenceManager { get; }
+        public CinematicManager CinematicManager { get; }
         public ContactManager ContactManager { get; }
 
         public VendorInfo SelectedVendorInfo { get; set; } // TODO unset this when too far away from vendor
@@ -246,6 +248,8 @@ namespace NexusForever.WorldServer.Game.Entity
         private Vector3 houseOutsideLocation = Vector3.Zero;
         private UpdateTimer housingMapTeleport = new UpdateTimer(1d);
         public bool CanUseHousingDoors() => housingMapTeleport.HasElapsed;
+
+        private bool firstTimeLoggingIn;
 
         /// <summary>
         /// Create a new <see cref="Player"/> from supplied <see cref="WorldSession"/> and <see cref="CharacterModel"/>.
@@ -302,6 +306,7 @@ namespace NexusForever.WorldServer.Game.Entity
             ContactManager          = new ContactManager(this, model);
             ChatManager             = new ChatManager(this);
             ResidenceManager        = new ResidenceManager(this);
+            CinematicManager        = new CinematicManager(this);
 
             Costume costume = null;
             if (CostumeIndex >= 0)
@@ -341,6 +346,7 @@ namespace NexusForever.WorldServer.Game.Entity
             SetStat(Stat.Health, (uint) GetPropertyValue(Property.BaseHealth));
 
             CharacterManager.Instance.RegisterPlayer(this);
+            firstTimeLoggingIn = model.TimePlayedTotal == 0;
         }
 
         public override void BuildBaseProperties()
@@ -945,6 +951,10 @@ namespace NexusForever.WorldServer.Game.Entity
             });
 
             log.Trace($"Player {Name} took {(DateTime.UtcNow - start).TotalMilliseconds}ms to send packets after add to map.");
+            
+            // TODO: Move this to a script
+            if (Map.Entry.Id == 3460 && firstTimeLoggingIn)
+                CinematicManager.QueueCinematic(new NoviceTutorialOnEnter(this));
         }
 
         public ItemProficiency GetItemProficiencies()
@@ -973,8 +983,12 @@ namespace NexusForever.WorldServer.Game.Entity
             base.AddVisible(entity);
             Session.EnqueueMessageEncrypted(((WorldEntity)entity).BuildCreatePacket());
 
-            if (entity is Player player)
-                player.PathManager.SendSetUnitPathTypePacket();
+            if (entity is Player playerEntity)
+                Session.EnqueueMessageEncrypted(new ServerSetUnitPathType
+                {
+                    Guid = playerEntity.Guid,
+                    Path = playerEntity.Path
+                });
 
             if (entity == this)
             {
