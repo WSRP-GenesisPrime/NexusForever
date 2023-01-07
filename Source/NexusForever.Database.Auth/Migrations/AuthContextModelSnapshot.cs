@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexusForever.Database.Auth;
 
+#nullable disable
+
 namespace NexusForever.Database.Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
@@ -14,12 +16,13 @@ namespace NexusForever.Database.Auth.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 64)
-                .HasAnnotation("ProductVersion", "5.0.2");
+                .HasAnnotation("ProductVersion", "6.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountCostumeUnlockModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -39,12 +42,13 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasKey("Id", "ItemId")
                         .HasName("PRIMARY");
 
-                    b.ToTable("account_costume_unlock");
+                    b.ToTable("account_costume_unlock", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountCurrencyModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -64,12 +68,13 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasKey("Id", "CurrencyId")
                         .HasName("PRIMARY");
 
-                    b.ToTable("account_currency");
+                    b.ToTable("account_currency", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountEntitlementModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -89,12 +94,13 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasKey("Id", "EntitlementId")
                         .HasName("PRIMARY");
 
-                    b.ToTable("account_entitlement");
+                    b.ToTable("account_entitlement", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountGenericUnlockModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -114,12 +120,13 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasKey("Id", "Entry")
                         .HasName("PRIMARY");
 
-                    b.ToTable("account_generic_unlock");
+                    b.ToTable("account_generic_unlock", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountKeybindingModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -205,7 +212,7 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasKey("Id", "InputActionId")
                         .HasName("PRIMARY");
 
-                    b.ToTable("account_keybinding");
+                    b.ToTable("account_keybinding", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountModel", b =>
@@ -267,12 +274,13 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasIndex("SessionKey")
                         .HasDatabaseName("sessionKey");
 
-                    b.ToTable("account");
+                    b.ToTable("account", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountPermissionModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -287,12 +295,13 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("account_permission");
+                    b.ToTable("account_permission", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRoleModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -307,7 +316,7 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("account_role");
+                    b.ToTable("account_role", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.PermissionModel", b =>
@@ -326,7 +335,7 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("permission");
+                    b.ToTable("permission", (string)null);
 
                     b.HasData(
                         new
@@ -467,7 +476,7 @@ namespace NexusForever.Database.Auth.Migrations
                         new
                         {
                             Id = 41u,
-                            Name = "Command: EntitlementAccountAdd"
+                            Name = "Command: EntitlementAdd"
                         },
                         new
                         {
@@ -478,11 +487,6 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 37u,
                             Name = "Category: EntitlementCharacter"
-                        },
-                        new
-                        {
-                            Id = 38u,
-                            Name = "Command: EntitlementCharacterAdd"
                         },
                         new
                         {
@@ -998,6 +1002,11 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 10003u,
                             Name = "Other: GMFlag"
+                        },
+                        new
+                        {
+                            Id = 10004u,
+                            Name = "Other: EntitlementGrantOther"
                         });
                 });
 
@@ -1023,7 +1032,7 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("role");
+                    b.ToTable("role", (string)null);
 
                     b.HasData(
                         new
@@ -1079,6 +1088,7 @@ namespace NexusForever.Database.Auth.Migrations
             modelBuilder.Entity("NexusForever.Database.Auth.Model.RolePermissionModel", b =>
                 {
                     b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int(10) unsigned")
                         .HasDefaultValue(0u)
                         .HasColumnName("id");
@@ -1093,7 +1103,7 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("role_permission");
+                    b.ToTable("role_permission", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.ServerMessageModel", b =>
@@ -1118,7 +1128,7 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasKey("Index", "Language")
                         .HasName("PRIMARY");
 
-                    b.ToTable("server_message");
+                    b.ToTable("server_message", (string)null);
 
                     b.HasData(
                         new
@@ -1176,7 +1186,7 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("server");
+                    b.ToTable("server", (string)null);
 
                     b.HasData(
                         new
@@ -1195,9 +1205,9 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountCostumeUnlock")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_costume_item_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_costume_item_id__account_id");
 
                     b.Navigation("Account");
                 });
@@ -1207,9 +1217,9 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountCurrency")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_currency_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_currency_id__account_id");
 
                     b.Navigation("Account");
                 });
@@ -1219,9 +1229,9 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountEntitlement")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_entitlement_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_entitlement_id__account_id");
 
                     b.Navigation("Account");
                 });
@@ -1231,9 +1241,9 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountGenericUnlock")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_generic_unlock_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_generic_unlock_id__account_id");
 
                     b.Navigation("Account");
                 });
@@ -1243,9 +1253,9 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountKeybinding")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_keybinding_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_keybinding_id__account_id");
 
                     b.Navigation("Account");
                 });
@@ -1255,16 +1265,16 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountPermission")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_permission_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_permission_id__account_id");
 
                     b.HasOne("NexusForever.Database.Auth.Model.PermissionModel", "Permission")
                         .WithMany("AccountPermission")
                         .HasForeignKey("PermissionId")
-                        .HasConstraintName("FK__account_permission_permission_id__permission_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_permission_permission_id__permission_id");
 
                     b.Navigation("Account");
 
@@ -1276,16 +1286,16 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
                         .WithMany("AccountRole")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__account_role_id__account_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_role_id__account_id");
 
                     b.HasOne("NexusForever.Database.Auth.Model.RoleModel", "Role")
                         .WithMany("AccountRole")
                         .HasForeignKey("RoleId")
-                        .HasConstraintName("FK__account_role_role_id__role_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__account_role_role_id__role_id");
 
                     b.Navigation("Account");
 
@@ -1297,16 +1307,16 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasOne("NexusForever.Database.Auth.Model.RoleModel", "Role")
                         .WithMany("RolePermission")
                         .HasForeignKey("Id")
-                        .HasConstraintName("FK__role_permission_id__role_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__role_permission_id__role_id");
 
                     b.HasOne("NexusForever.Database.Auth.Model.PermissionModel", "Permission")
                         .WithMany("RolePermission")
                         .HasForeignKey("PermissionId")
-                        .HasConstraintName("FK__role_permission_permission_id__permission_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__role_permission_permission_id__permission_id");
 
                     b.Navigation("Permission");
 

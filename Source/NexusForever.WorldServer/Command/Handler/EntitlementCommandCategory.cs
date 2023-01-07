@@ -88,5 +88,25 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendMessage($"Entitlement: {entitlement.Type}, Value: {entitlement.Amount}");
             }
         }
+
+        [Command(Permission.EntitlementAdd, "Create or update an entitlement.", "add")]
+        public void HandleEntitlementCommandAdd(ICommandContext context,
+                [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
+                EntitlementType entitlementType,
+                [Parameter("Value to modify the entitlement.")]
+                int value)
+        {
+            if (GameTableManager.Instance.Entitlement.GetEntry((ulong)entitlementType) == null)
+            {
+                context.SendMessage($"{entitlementType} isn't a valid entitlement id!");
+                return;
+            }
+
+            Player targetPlayer = context.GetTargetOrInvoker<Player>();
+            if (targetPlayer != context.Invoker && !(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.EntitlementGrantOther))
+                targetPlayer = context.Invoker as Player;
+
+            targetPlayer.Session.EntitlementManager.UpdateEntitlement(entitlementType, value);
+        }
     }
 }
