@@ -3,10 +3,10 @@
 }
 <head>
     <style>
-        /* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
-        for details on configuring this project to bundle and minify static web assets. */
+        /* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\
+                for details on configuring this project to bundle and minify static web assets. */
         body {
-            background-image: url('https://images.alphacoders.com/721/721671.jpg');
+            background-image: url('https://i.imgur.com/emubXkn.jpeg');
             /*background-image: url('Mainbackground.jpg');*/
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -14,10 +14,11 @@
             background-size: auto;
             padding-top: 50px;
             padding-bottom: 20px;
+            font-family: 'DM Sans', Verdana, sans-serif;
         }
 
         a {
-            color: orange;
+            color: greenyellow;
         }
 
         /* Wrapping element */
@@ -29,33 +30,37 @@
 
 
         #footer {
-            background-color: black;
+            background-color: #1D3030;
             position: absolute;
             bottom: 1px;
             width: inherit;
-            height: 48px; /* Height of the footer */
+            height: 48px;
             text-align: center;
             padding-top: 12px;
-            color: paleturquoise;
-            text-shadow: 6px 6px 6px black;
-            border-color: paleturquoise;
-            border-radius: 8px;
+            color: greenyellow;
+            border-radius: 3px;
+            font-family: 'Audiowide', Verdana, sans-serif;
+            background-image: linear-gradient(to bottom right, darkslategray, rgb(40, 40, 55));
+            font-size: 12pt;
+            text-shadow: 6px 6px 12px black;
+            border: 1px solid darkslategray;
         }
 
         #header {
-            background-color: black;
+            background-color: #1D3030;
             position: absolute;
             top: 0;
             width: inherit;
-            height: 72px; /* Height of the header */
+            height: 72px;
             text-align: center;
             font-size: 36px;
             padding: 8px;
-            color: orange;
-            text-shadow: 6px 6px 6px black;
-            border-color: paleturquoise;
-            border-radius: 8px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            color: greenyellow;
+            text-shadow: 6px 6px 12px black;
+            border-radius: 3px;
+            font-family: 'Audiowide', Verdana, sans-serif;
+            background-image: linear-gradient(to bottom right, darkslategray, rgb(40, 40, 55));
+            border: 1px solid darkslategray;
         }
 
         hr {
@@ -68,46 +73,55 @@
         }
 
         #inputField {
-            background-color: rgba(130, 251, 245, 0.4);
+            background-color: darkslategray;
             width: 100%;
-            border: 1px solid paleturquoise;
-            border-radius: 8px;
-            color: paleturquoise;
+            border: 1px solid lightyellow;
+            border-radius: 3px;
+            color: lightyellow;
             font-weight: normal;
         }
 
         #buttonReg {
-            background: rgba(40, 40, 55, 1.0);
-            border: 1px solid paleturquoise;
-            border-radius: 8px;
+            border: 1px solid lightyellow;
+            border-radius: 3px;
             position: center;
-            color: orange;
+            color: greenyellow;
+            width: 120px;
+            height: 40px;
+            font-family: 'Audiowide', Verdana, sans-serif;
+            font-size: 14pt;
+            font-style: italic;
+            box-shadow: -3px 3px 5px black;
+            background-color: darkslategray;
+            background-image: linear-gradient(to bottom right, darkslategray, rgb(40, 40, 55));
         }
 
         #registrationDiv {
-            background-color: black;
-            border: 1px solid paleturquoise;
+            background-color: #1D3030;
+            border: 1px solid lightyellow;
             position: center;
-            border-radius: 8px;
-            width: 50%;
+            border-radius: 3px;
+            width: 60%;
             height: 50%;
-            
+            box-shadow: -3px 10px 10px black;
         }
 
         #textConsistency {
-            color: paleturquoise;
+            color: lightyellow;
         }
 
         #inputTitle {
-            color: orange;
+            color: greenyellow;
             font-size: 12pt;
             font-weight: bold;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-family: 'Audiowide', Verdana, sans-serif;
+            text-shadow: 0px 6px 12px black;
         }
 
         #inputSubtitle {
-            color: paleturquoise;
-            font-size: 8pt;
+            color: lightyellow;
+            font-size: 10pt;
+            text-shadow: 0px 6px 12px black;
         }
 
         #mainContainer {
@@ -115,16 +129,16 @@
             position: absolute;
             top: 128px;
             border: none;
-            border-radius: 8px;
+            border-radius: 3px;
             margin-bottom: 50px;
             height: inherit;
             width: inherit;
         }
 
         #serverStatusContainer {
-            background-color: black;
-            border: 1px solid paleturquoise;
-            border-radius: 8px;
+            background-color: #1D3030;
+            border: 1px solid lightyellow;
+            border-radius: 3px;
             position: center;
             bottom: 150px;
             height: 10%;
@@ -134,11 +148,24 @@
         #serverStatusText {
             font-weight: bold;
             font-size: 36px;
-            color: orange;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            color: greenyellow;
+            font-family: 'Audiowide', Verdana, sans-serif;
         }
 
+        .input-th {
+            padding: 24px;
+            text-align: right;
+            max-width: 250px;
+        }
+
+        .input-td {
+            padding: 24px;
+            text-align: left;
+            width: 300px;
+        }
     </style>
+    <link href='https://fonts.googleapis.com/css?family=Audiowide' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=DM Sans' rel='stylesheet'>
 </head>
 <body>
     <div class="container" id="mainContainer">
@@ -146,27 +173,36 @@
             <form asp-action="Register" method="post">
                 <table align="center">
                     <tr style="padding:24px">
-                        <td style="padding:24px">
-                            <p id="inputTitle">Account Name: <input type="text" name="Email" id="inputField" /></p>
+                        <th class="input-th">
+                            <p id="inputTitle">Account Name</p>
                             <p id="inputSubtitle">Enter your account's username.</p>
+                        </th>
+                        <td class="input-td">
+                            <input type="text" name="Email" id="inputField" />
                         </td>
                     </tr>
                     <tr style="padding:24px">
-                        <td style="padding:24px">
-                            <p id="inputTitle">Password: <input type="password" name="Password" id="inputField" /></p>
+                        <th class="input-th">
+                            <p id="inputTitle">Password</p>
                             <p id="inputSubtitle">Type the password you want to use for your account.</p>
+                        </th>
+                        <td class="input-td">
+                            <input type="password" name="Password" id="inputField" />
                         </td>
                     </tr>
                     <tr style="padding:24px">
-                        <td style="padding:24px">
-                            <p id="inputTitle">Confirm Password: <input type="password" name="Confirmation" id="inputField" /></p>
+                        <th class="input-th">
+                            <p id="inputTitle">Confirm Password</p>
                             <p id="inputSubtitle">Please re-type your password.</p>
+                        </th>
+                        <td class="input-td">
+                            <input type="password" name="Confirmation" id="inputField" />
                         </td>
                     </tr>
                     <tr style="padding:24px">
-                        <td style="padding:24px">
+                        <th colspan="2" class="input-th">
                             <input type="submit" value="Register" id="buttonReg" />
-                        </td>
+                        </th>
                     </tr>
                 </table>
             </form>
