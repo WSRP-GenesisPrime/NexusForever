@@ -29,9 +29,9 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         private readonly UpdateTimer splineGridUpdateTimer = new(SplineGridUpdateTime);
 
         private bool isDirty;
+        private bool hasTicket = false;
         private bool serverControlled = true;
         private uint time = 1u;
-        public bool teleportMode = false;
         private EntityCommand[] handledCommands = new EntityCommand[]
         {
             EntityCommand.SetPosition,
@@ -112,9 +112,13 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
         /// <remarks>
         /// Be aware that this position doesn't always match the grid position (eg: when on a vehicle)
         /// </remarks>
-        public void SetPosition(Vector3 position, bool sendImmediately = true)
+        public void SetPosition(Vector3 position, bool sendImmediately = true, bool hasTicket = false)
         {
             StopSpline();
+
+            if (owner is Player)
+                this.hasTicket = hasTicket;
+
             AddCommand(new SetPositionCommand
             {
                 Position = new Position(position)
@@ -268,16 +272,9 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             if (!isDirty)
                 return;
 
-            bool isPlayer = false;
-            Player player = null;
-            if (owner is Player)
-            {
-                player = owner as Player;
-                isPlayer = true;
-            }
-
-            if (isPlayer && teleportMode)
-                player?.Session.EnqueueMessageEncrypted(new Server0639()); // slows down the character, unsure what it does.
+            bool isPlayer = owner is Player;
+            if (isPlayer && hasTicket)
+                (owner as Player).Session.EnqueueMessageEncrypted(new Server0639());
 
             var serverEntityCommand = new ServerEntityCommand
             {
@@ -293,15 +290,16 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
             owner.EnqueueToVisible(serverEntityCommand, true);
             ClearUnhandledCommands();
 
-            if (isPlayer && teleportMode)
-                player?.Session.EnqueueMessageEncrypted(new ServerMovementControl // slows down the character, unsure what it does.
+            if (isPlayer && hasTicket)
+                (owner as Player).Session.EnqueueMessageEncrypted(new ServerMovementControl
                 {
-                    Ticket = 2,
+                    Ticket    = 2,
                     Immediate = true,
-                    UnitId = player.Guid
+                    UnitId    = owner.Guid
                 });
 
             isDirty = false;
+            hasTicket = false;
             serverControlled = true;
         }
 
@@ -354,11 +352,6 @@ namespace NexusForever.WorldServer.Game.Entity.Movement
 
         public void HandleClientEntityCommands(List<(EntityCommand, IEntityCommandModel)> commands, uint time)
         {
-            if (teleportMode)
-            {
-                teleportMode = false;
-                return;
-            }
             foreach ((EntityCommand id, IEntityCommandModel command) in commands)
             {
                 switch (command)

@@ -140,7 +140,7 @@ namespace NexusForever.WorldServer.Game.Guild
         public NetworkGuildMember Build()
         {
             ICharacter characterInfo = CharacterManager.Instance.GetCharacterInfo(CharacterId);
-            log.Info($"In GuildMember.Build() : CharacterId = {CharacterId}, characterInfo = {characterInfo}, rank = {rank}");
+            log.Trace($"In GuildMember.Build() : CharacterId = {CharacterId}, characterInfo = {characterInfo}, rank = {rank}");
             return new NetworkGuildMember
             {
                 Realm                    = WorldServer.RealmId,

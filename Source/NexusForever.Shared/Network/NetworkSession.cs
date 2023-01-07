@@ -29,6 +29,8 @@ namespace NexusForever.Shared.Network
         /// </remarks>
         public SocketHeartbeat Heartbeat { get; } = new();
 
+        public DateTime AcceptTime { get; private set; }
+
         private Socket socket;
         private readonly byte[] buffer = new byte[4096];
         private int bufferOffset;
@@ -42,6 +44,8 @@ namespace NexusForever.Shared.Network
         {
             if (socket != null)
                 throw new InvalidOperationException();
+
+            AcceptTime = DateTime.Now;
 
             Id = Guid.NewGuid().ToString();
 
@@ -81,6 +85,11 @@ namespace NexusForever.Shared.Network
 
                 OnDisconnect();
             }
+        }
+
+        public virtual void ReportLoginFinish()
+        {
+            log.Trace($"New session; login took {DateTime.Now.Subtract(AcceptTime).TotalMilliseconds} ms.");
         }
 
         protected virtual void OnDisconnect()

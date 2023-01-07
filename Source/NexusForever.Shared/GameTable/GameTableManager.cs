@@ -624,6 +624,8 @@ namespace NexusForever.Shared.GameTable
         public GameTable<TutorialAnchorEntry> TutorialAnchor { get; private set; }
         public GameTable<TutorialLayoutEntry> TutorialLayout { get; private set; }
         public GameTable<TutorialPageEntry> TutorialPage { get; private set; }
+
+        [GameData]
         public GameTable<UnitProperty2Entry> UnitProperty2 { get; private set; }
 
         [GameData]
