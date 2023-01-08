@@ -18,7 +18,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.EntitlementAccount, "A collection of commands to manage account entitlements", "account")]
         public class EntitlementCommandAccountCategory : CommandCategory
         {
-            [Command(Permission.EntitlementAccountAdd, "Create or update an account entitlement.", "add")]
+            [Command(Permission.EntitlementAdd, "Create or update an account entitlement.", "add")]
             public void HandleEntitlementCommandAccountAdd(ICommandContext context,
                 [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
                 EntitlementType entitlementType,
@@ -33,7 +33,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         return;
                     }
                     log.Info($"{context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}) requesting account entitlement ID {entitlementType} (value: {value}).");
-                    context.InvokingPlayer.Session.EntitlementManager.SetAccountEntitlement(entitlementType, value);
+                    context.InvokingPlayer.Session.EntitlementManager.UpdateEntitlement(entitlementType, value);
                 }
                 catch (Exception e)
                 {
@@ -55,7 +55,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.EntitlementCharacter, "A collection of commands to manage character entitlements", "character")]
         public class EntitlementCommandCharacterCategory : CommandCategory
         {
-            [Command(Permission.EntitlementCharacterAdd, "Create or update a character entitlement.", "add")]
+            [Command(Permission.EntitlementAdd, "Create or update a character entitlement.", "add")]
             public void HandleEntitlementCommandCharacterAdd(ICommandContext context,
                 [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
                 EntitlementType entitlementType,
@@ -70,7 +70,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         return;
                     }
                     log.Info($"{context.InvokingPlayer.Name} requesting character entitlement ID {entitlementType} (value: {value}).");
-                    context.InvokingPlayer.Session.EntitlementManager.SetCharacterEntitlement(entitlementType, value);
+                    context.InvokingPlayer.Session.EntitlementManager.UpdateEntitlement(entitlementType, value);
                 }
                 catch (Exception e)
                 {

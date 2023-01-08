@@ -41,6 +41,7 @@ namespace NexusForever.WorldServer.Game.Entity
             CreateFlags |= EntityCreateFlag.SpawnAnimation;
         }
 
+
         protected override IEntityModel BuildEntityModel()
         {
             return new MountEntityModel

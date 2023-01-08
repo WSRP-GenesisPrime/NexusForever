@@ -840,7 +840,7 @@ namespace NexusForever.WorldServer.Game.Entity
             ZoneMapManager.OnRelocate(vector);
         }
 
-        protected override void OnZoneUpdate()
+        /*protected override void OnZoneUpdate()
         {
             if (Zone != null)
             {
@@ -863,7 +863,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             ZoneMapManager.OnZoneUpdate();
-        }
+        }*/
 
         private void SendPacketsAfterAddToMap()
         {
