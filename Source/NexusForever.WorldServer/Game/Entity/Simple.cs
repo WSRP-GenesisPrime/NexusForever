@@ -1,20 +1,24 @@
+using System;
 using System.Linq;
+using System.Numerics;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
-using EntityModel = NexusForever.Database.World.Model.EntityModel;
+using NexusForever.WorldServer.Game.Quest.Static;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Reputation.Static;
+using NexusForever.WorldServer.Script;
+using EntityModel = NexusForever.Database.World.Model.EntityModel;
 using NexusForever.WorldServer.Network.Message.Model;
-using NexusForever.WorldServer.Game.Housing;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
     [DatabaseEntity(EntityType.Simple)]
     public class Simple : UnitEntity
     {
-        public byte QuestChecklistIdx { get; private set; }
+        public Action<Simple> afterAddToMap;
 
         private EntityScript script = null;
 
@@ -23,12 +27,35 @@ namespace NexusForever.WorldServer.Game.Entity
         {
         }
 
+        public Simple(uint creatureId, Action<Simple> actionAfterAddToMap = null)
+            : base(EntityType.Simple)
+        {
+            Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(creatureId);
+            if (entry == null)
+                throw new ArgumentNullException();
+
+            CreatureId = creatureId;
+            afterAddToMap = actionAfterAddToMap;
+
+            SetBaseProperty(Property.BaseHealth, 101.0f);
+
+            SetStat(Stat.Health, 101u);
+            SetStat(Stat.Level, 1u);
+
+            Creature2DisplayGroupEntryEntry displayGroupEntry = GameTableManager.Instance.
+                Creature2DisplayGroupEntry.
+                Entries.
+                FirstOrDefault(d => d.Creature2DisplayGroupId == entry.Creature2DisplayGroupId);
+            if (displayGroupEntry != null)
+                DisplayInfo = displayGroupEntry.Creature2DisplayInfoId;
+        }
+
         public Simple(Creature2Entry entry, long propId, ushort plugId)
             : base(EntityType.Simple)
         {
             CreatureId = entry.Id;
-            DecorPropId = propId;
-            DecorPlugId = plugId;
+            ActivePropId = propId;
+            WorldSocketId = plugId;
             QuestChecklistIdx = 255;
             Faction1 = (Faction)entry.FactionId;
             Faction2 = (Faction)entry.FactionId;
@@ -38,40 +65,26 @@ namespace NexusForever.WorldServer.Game.Entity
                 DisplayInfo = displayGroupEntry.Creature2DisplayInfoId;
 
             CreateFlags |= EntityCreateFlag.SpawnAnimation;
-            SetScript();
-        }
-
-        public override void OnRemoveFromMap()
-        {
-            base.OnRemoveFromMap();
-            Residence residence = CurrentResidence;
-            if (residence != null)
-            {
-                Decor decor = residence.GetDecor(DecorPropId);
-                if (decor != null)
-                {
-                    decor.SetEntity(null);
-                }
-            }
         }
 
         public override void Initialise(EntityModel model)
         {
             base.Initialise(model);
+            if (Health == 0u)
+            {
+                MaxHealth = 101u;
+                ModifyHealth((long)MaxHealth);
+            }
             QuestChecklistIdx = model.QuestChecklistIdx;
+
+            ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnCreate(this);
         }
 
-        private void SetScript()
+        public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
-            Creature2Entry creature = GameTableManager.Instance.Creature2.GetEntry(this.CreatureId);
-            if(creature == null)
-            {
-                return;
-            }
-            if(creature.Spell4IdActivate00 == 1817) // lights and doors, plus a lot of other decor.
-            {
-                script = new SimpleStateScript(this, StandState.State1, StandState.State0);
-            }
+            base.OnAddToMap(map, guid, vector);
+
+            afterAddToMap?.Invoke(this);
         }
 
         protected override IEntityModel BuildEntityModel()
@@ -83,33 +96,16 @@ namespace NexusForever.WorldServer.Game.Entity
             };
         }
 
-        public override ServerEntityCreate BuildCreatePacket()
-        {
-            ServerEntityCreate entityCreate = base.BuildCreatePacket();
-
-            if (DecorPlugId > 0 || DecorPropId > 0)
-            {
-                entityCreate.WorldPlacementData = new ServerEntityCreate.WorldPlacement
-                {
-                    Type = 1,
-                    ActivePropId = DecorPropId,
-                    SocketId = DecorPlugId
-                };
-            }   
-
-            return entityCreate;
-        }
-
-        public override void OnActivate(Player activator)
+        public override void OnInteract(Player activator)
         {
             Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(CreatureId);
             if (entry.DatacubeId != 0u)
                 activator.DatacubeManager.AddDatacube((ushort)entry.DatacubeId, int.MaxValue);
 
-            script?.OnActivate(activator);
+            ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnActivate(this, activator);
         }
 
-        public override void OnActivateCast(Player activator)
+        public override void OnActivateSuccess(Player activator)
         {
             uint progress = (uint)(1 << QuestChecklistIdx);
 
@@ -138,9 +134,11 @@ namespace NexusForever.WorldServer.Game.Entity
                 }
             }
 
-            //TODO: cast "116,Generic Quest Spell - Activating - Activate - Tier 1" by 0x07FD
-
-            script?.OnActivateCast(activator);
+            activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, CreatureId, 1u);
+            activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.SucceedCSI, CreatureId, 1u);
+            activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroupChecklist, CreatureId, QuestChecklistIdx);
+            
+            ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnActivateSuccess(this, activator);
         }
 
         public override void AddVisible(GridEntity entity)

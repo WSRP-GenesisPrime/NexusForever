@@ -57,7 +57,7 @@ namespace NexusForever.Shared
         /// <summary>
         /// Convert <see cref="Quaternion"/> to <see cref="Vector3"/> in degrees.
         /// </summary>
-        public static Vector3 ToEulerDegrees(this Quaternion q)
+        public static Vector3 ToEulerRadians(this Quaternion q)
         {
             float xx = q.X * q.X;
             float xy = q.X * q.Y;
@@ -72,7 +72,16 @@ namespace NexusForever.Shared
             float p = MathF.Asin(-2f * (yz - xw));
             float y = MathF.Atan2(2f * (xz + yw), 1f - 2f * (xx + yy));
             float r = MathF.Atan2(2f * (xy + zw), 1f - 2f * (xx + zz));
-            return new Vector3(y.ToDegrees(), p.ToDegrees(), r.ToDegrees());
+            return new Vector3(y, p, r);
+        }
+
+        /// <summary>
+        /// Convert <see cref="Quaternion"/> to <see cref="Vector3"/> in degrees.
+        /// </summary>
+        public static Vector3 ToEulerDegrees(this Quaternion q)
+        {
+            Vector3 v = q.ToEulerRadians();
+            return new Vector3(v.X.ToDegrees(), v.Y.ToDegrees(), v.Z.ToDegrees());
         }
 
         /// <summary>
@@ -104,6 +113,9 @@ namespace NexusForever.Shared
             return new Vector3(x, v.Y, z);
         }
 
+        /// <summary>
+        /// Returns the distance between this <see cref="Vector3"/> and a target <see cref="Vector3"/>.
+        /// </summary>
         public static float GetDistance(this Vector3 v1, Vector3 v2)
         {
             return MathF.Sqrt(MathF.Pow(v1.X - v2.X, 2) + MathF.Pow(v1.Z - v2.Z, 2));

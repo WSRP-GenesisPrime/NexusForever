@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using NexusForever.WorldServer.Game.Entity;
+﻿using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Network.Message.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace NexusForever.WorldServer.Game.Cinematic
 {
@@ -13,12 +15,13 @@ namespace NexusForever.WorldServer.Game.Cinematic
         public uint Duration { get; set; }
         public ushort InitialFlags { get; set; }
         public ushort InitialCancelMode { get; set; }
-        public Dictionary</* Id */ uint, Actor> Actors { get; } = new();
-        public Dictionary</* Delay */ uint, /* TextId */ uint> Texts { get; } = new();
-        public Dictionary<string, List<IKeyframeAction>> Keyframes { get; } = new();
-        public List<Camera> Cameras { get; } = new();
+        public Dictionary</* Id */ uint, Actor> Actors { get; } = new Dictionary<uint, Actor>();
+        public Dictionary</* Delay */ uint, /* TextId */ uint> Texts { get; } = new Dictionary<uint, uint>();
+        public Dictionary<string, List<IKeyframeAction>> Keyframes { get; } = new Dictionary<string, List<IKeyframeAction>>();
+        public List<Camera> Cameras { get; } = new List<Camera>();
         public Transition StartTransition { get; protected set; }
         public Transition EndTransition { get; protected set; }
+        public Position InitialCameraPosition { get; protected set; } = null;
 
         protected Actor playerActor;
 
@@ -46,8 +49,8 @@ namespace NexusForever.WorldServer.Game.Cinematic
             player.AddPacketToSend(new ServerCinematic0211
             {
                 Unknown0 = 0,
-                UnitId   = player.Id,
-                UnitId1  = actor.Id,
+                UnitId = player.Id,
+                UnitId1 = actor.Id,
                 Unknown3 = unknown3
             });
             playerActor = player;
@@ -85,21 +88,31 @@ namespace NexusForever.WorldServer.Game.Cinematic
         {
             Player.Session.EnqueueMessageEncrypted(new ServerCinematicNotify
             {
-                Flags       = InitialFlags,
-                Cancel      = InitialCancelMode,
-                Duration    = Duration,
+                Flags = InitialFlags,
+                Cancel = InitialCancelMode,
+                Duration = Duration,
                 CinematicId = CinematicId
             });
-            StartTransition?.Send(Player.Session);
+            if (StartTransition != null)
+                StartTransition.Send(Player.Session);
 
             Play();
 
-            EndTransition?.Send(Player.Session);
+            if (EndTransition != null)
+                EndTransition.Send(Player.Session);
             Player.Session.EnqueueMessageEncrypted(new ServerCinematicNotify
             {
                 Duration = Duration
             });
             Player.Session.EnqueueMessageEncrypted(new ServerCinematicComplete());
+        }
+
+        /// <summary>
+        /// Sets the Initial Camera Position. This is used when offsetting camera and not using the player location.
+        /// </summary>
+        protected void SetInitialCameraPosition(Position position)
+        {
+            InitialCameraPosition = position;
         }
 
         /// <summary>
@@ -117,13 +130,11 @@ namespace NexusForever.WorldServer.Game.Cinematic
         protected void SendTexts()
         {
             foreach ((uint delay, uint textId) in Texts)
-            {
                 Player.Session.EnqueueMessageEncrypted(new ServerCinematicText
                 {
-                    Delay  = delay,
+                    Delay = delay,
                     TextId = textId
                 });
-            }
         }
 
         /// <summary>
@@ -131,7 +142,8 @@ namespace NexusForever.WorldServer.Game.Cinematic
         /// </summary>
         protected void SendPlayerActor()
         {
-            playerActor?.SendInitialPackets(Player.Session);
+            if (playerActor != null)
+                playerActor.SendInitialPackets(Player.Session);
 
             Player.Session.EnqueueMessageEncrypted(new ServerCinematicShowAnimate
             {
@@ -142,13 +154,16 @@ namespace NexusForever.WorldServer.Game.Cinematic
                 Hide = true
             });
 
-            if (playerActor == null)
+            if (playerActor == null && InitialCameraPosition == null)
                 return;
+
+            if (InitialCameraPosition == null)
+                InitialCameraPosition = new Position(Player.Position);
 
             Player.Session.EnqueueMessageEncrypted(new ServerCinematic022B());
             Player.Session.EnqueueMessageEncrypted(new ServerCinematic0212
             {
-                Position = new Position(Player.Position)
+                Position = InitialCameraPosition
             });
         }
 

@@ -1,9 +1,10 @@
-﻿using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Network.Message.Model;
 using System;
 using System.Linq;
 using System.Numerics;
@@ -14,9 +15,9 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         public HousingPlotInfoEntry PlotEntry { get; }
 
-        public Action OnAddToMapAction { get; }
+        public Action<uint> OnAddToMapAction { get; }
 
-        public ResidenceEntity(uint creatureId, HousingPlotInfoEntry housingPlotInfoEntry, Action action)
+        public ResidenceEntity(uint creatureId, HousingPlotInfoEntry housingPlotInfoEntry, Action<uint> action)
             : base(EntityType.Residence)
         {
             PlotEntry = housingPlotInfoEntry;
@@ -49,7 +50,7 @@ namespace NexusForever.WorldServer.Game.Entity
             Guid = guid;
 
             if (OnAddToMapAction != null)
-                OnAddToMapAction.Invoke();
+                OnAddToMapAction.Invoke(guid);
             
             base.OnAddToMap(map, guid, vector);
         }

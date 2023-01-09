@@ -17,21 +17,13 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("")]
             ushort characterTitleId)
         {
-            try
+            if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
             {
-                if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
-                {
-                    context.SendMessage($"Invalid character title id {characterTitleId}!");
-                    return;
-                }
+                context.SendMessage($"Invalid character title id {characterTitleId}!");
+                return;
+            }
 
-                context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in TitleCommandCategory.HandleTitleAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
         }
 
         [Command(Permission.TitleRevoke, "evoke a title from character.", "revoke")]
@@ -39,21 +31,13 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("")]
             ushort characterTitleId)
         {
-            try
+            if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
             {
-                if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
-                {
-                    context.SendMessage($"Invalid character title id {characterTitleId}!");
-                    return;
-                }
+                context.SendMessage($"Invalid character title id {characterTitleId}!");
+                return;
+            }
 
-                context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in TitleCommandCategory.HandleTitleRemove!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);
         }
 
         [Command(Permission.TitleAll, "Add all titles to character.", "all")]

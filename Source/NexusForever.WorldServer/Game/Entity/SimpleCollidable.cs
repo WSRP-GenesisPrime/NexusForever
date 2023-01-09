@@ -1,18 +1,45 @@
-﻿using NexusForever.Shared.GameTable.Model;
+using NexusForever.Database.World.Model;
+using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Script;
 using System;
 using System.Numerics;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
+    [DatabaseEntity(EntityType.SimpleCollidable)]
     public class SimpleCollidable : WorldEntity
     {
-        public byte QuestChecklistIdx { get; private set; }
         private Action action;
+
+        public SimpleCollidable()
+            : base(EntityType.SimpleCollidable)
+        {
+        }
+
+        public SimpleCollidable(uint creatureId)
+            : base(EntityType.SimpleCollidable)
+        {
+            CreatureId = creatureId;
+
+            // temp
+            DisplayInfo = 24413;
+            SetBaseProperty(Property.BaseHealth, 101f);
+
+            SetStat(Stat.Health, 101u);
+        }
+
+        public override void Initialise(EntityModel model)
+        {
+            base.Initialise(model);
+            QuestChecklistIdx = model.QuestChecklistIdx;
+
+            ScriptManager.Instance.GetScript<CreatureScript>(CreatureId)?.OnCreate(this);
+        }
 
         public SimpleCollidable(uint creatureId, uint displayInfoId, Action action = null, byte questChecklistIdx = 255)
             : base(EntityType.SimpleCollidable)
@@ -30,7 +57,7 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             return new SimpleCollidableEntityModel
             {
-                CreatureId = CreatureId,
+                CreatureId        = CreatureId,
                 QuestChecklistIdx = QuestChecklistIdx
             };
         }
@@ -41,13 +68,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
             if (action != null)
                 action.Invoke();
-
-            EnqueueToVisible(new Server08B3
-            {
-                MountGuid = Guid,
-                Unknown0 = 0,
-                Unknown1 = true
-            }, true);
         }
     }
 }

@@ -19,6 +19,10 @@
         Account                     = 1,
         AccountCreate               = 2,
         AccountDelete               = 3,
+        AccountInventory            = 102,
+        AccountInventoryItemAdd     = 103,
+        AccountPassword             = 112,
+        AccountAdminPassword        = 113,
 
         // rbac
         RBAC                        = 7,
@@ -78,6 +82,11 @@
         EntityProperties            = 45,
         EntityModify                = 60,
         EntityModifyDisplayInfo     = 61,
+        EntityThreat                = 115,
+        EntityThreatAdjust          = 116,
+        EntityThreatList            = 117,
+        EntityThreatClear           = 118,
+        EntityThreatRemove          = 119,
 
         // generic unlock
         Generic                     = 46,
@@ -131,6 +140,7 @@
         QuestObjective              = 80,
         QuestKill                   = 81,
         QuestList                   = 110,
+        QuestActivate               = 2002,
 
         // spell
         Spell                       = 83,
@@ -173,6 +183,10 @@
         MapPlayerRemove             = 105,
         MapPlayerRemoveCancel       = 106,
 
+        // reward tracks
+        RewardTrack                 = 2000,
+        RewardTrackUpdate           = 2001,
+
         // Genesis Prime: morph command
         Morph                       = 50000,
         MorphStoryteller            = 50001,
@@ -199,10 +213,6 @@
         RealmOnline                 = 50700,
         RealmUptime                 = 50710,
 
-        // GP: Change account password
-        AccountChangePass           = 50800,
-        AccountChangeMyPass         = 50810,
-
         // GP: Costume commands
         Costume                     = 60000,
         CostumeOverride             = 60010,
@@ -218,7 +228,6 @@
         InstantLogout               = 10000,
         Signature                   = 10001,
         BypassInstanceLimits        = 10002,
-        GMFlag                      = 10003,
-        EntitlementGrantOther       = 10004
+        GMFlag                      = 10003
     }
 }

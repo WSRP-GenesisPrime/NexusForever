@@ -68,11 +68,11 @@ namespace NexusForever.WorldServer.Game.Entity
                 return;
             }
 
-            owner.VanityPetGuid = Guid;
+            owner.PetManager.AddPetGuid(PetType.VanityPet, Guid);
 
             owner.EnqueueToVisible(new Server08B3
             {
-                MountGuid = Guid,
+                UnitId = Guid,
                 Unknown0  = 0,
                 Unknown1  = true
             }, true);

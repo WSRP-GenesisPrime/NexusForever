@@ -12,7 +12,6 @@ using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Game.TextFilter.Static;
-using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 using NLog;
@@ -25,7 +24,7 @@ namespace NexusForever.WorldServer.Game.Guild
         [Flags]
         public enum SaveMask
         {
-            None        = 0x00,
+            None = 0x00,
             Affiliation = 0x01
         }
 
@@ -162,7 +161,7 @@ namespace NexusForever.WorldServer.Game.Guild
         /// </summary>
         public void OnLogin()
         {
-            SendGuildInitialise(owner.Session);
+            SendGuildInitialise();
             if (Guild != null)
                 UpdateHolomark();
 
@@ -170,35 +169,28 @@ namespace NexusForever.WorldServer.Game.Guild
                 guild.OnPlayerLogin(owner);
         }
 
-        /// <summary>
-        /// Used to send initial packets to the <see cref="Player"/> containing associated guilds
-        /// </summary>
-        public static void SendGuildInitialise(WorldSession session)
+        private void SendGuildInitialise()
         {
-            List<GuildData> playerGuilds = new List<GuildData>();
-            List<NetworkGuildMember> playerMemberInfo = new List<NetworkGuildMember>();
-            List<GuildPlayerLimits> playerUnknowns = new List<GuildPlayerLimits>();
-            foreach (GuildBase guild in session.Player.GuildManager.guilds.Values)
+            var guildInit = new ServerGuildInit();
+
+            uint index = 0u;
+            foreach (GuildBase guild in guilds.Values)
             {
-                playerGuilds.Add(guild.BuildGuildDataPacket());
-                var selfPacket = guild.GetMember(session.Player.CharacterId).BuildGuildMemberPacket();
-                if (session.Player.GuildManager.GuildAffiliation == guild)
-                    selfPacket.Unknown10 = 1;
-                playerMemberInfo.Add(selfPacket);
-                playerUnknowns.Add(new GuildPlayerLimits());
+                NetworkGuildMember member = guild.GetMember(owner.CharacterId).Build();
+                if (guildAffiliation?.Id == guild.Id)
+                {
+                    guildInit.NameplateIndex = index;
+                    member.Unknown10 = 1; // TODO: research this
+                }
+
+                guildInit.Self.Add(member);
+                guildInit.SelfPrivate.Add(new GuildPlayerLimits());
+                guildInit.Guilds.Add(guild.Build());
+
+                index++;
             }
 
-            int index = 0;
-            if (session.Player.GuildManager.GuildAffiliation != null)
-                index = playerGuilds.FindIndex(a => a.GuildId == session.Player.GuildManager.GuildAffiliation.Id);
-            ServerGuildInit serverGuildInit = new ServerGuildInit
-            {
-                NameplateIndex = (uint)index,
-                Guilds = playerGuilds,
-                Self = playerMemberInfo,
-                SelfPrivate = playerUnknowns
-            };
-            session.EnqueueMessageEncrypted(serverGuildInit);
+            owner.Session.EnqueueMessageEncrypted(guildInit);
         }
 
         /// <summary>
@@ -234,11 +226,11 @@ namespace NexusForever.WorldServer.Game.Guild
             if (!TextFilterManager.Instance.IsTextValid(name) || !TextFilterManager.Instance.IsTextValid(name, UserText.GuildName))
                 return new GuildResultInfo(GuildResult.InvalidGuildName, referenceString: name);
 
-            if (GlobalGuildManager.Instance.GetGuild(type, name) != null)
+            if (GlobalGuildManager.Instance.GetGuild(name) != null)
                 return new GuildResultInfo(GuildResult.GuildNameUnavailable, referenceString: name);
 
             var rankNames = new List<string> { leaderRankName, councilRankName, memberRankName };
-            foreach (string rankName in rankNames) 
+            foreach (string rankName in rankNames)
                 if (!TextFilterManager.Instance.IsTextValid(rankName) || !TextFilterManager.Instance.IsTextValid(rankName, UserText.GuildRankName))
                     return new GuildResultInfo(GuildResult.InvalidGuildName, referenceString: rankName);
 
@@ -323,17 +315,17 @@ namespace NexusForever.WorldServer.Game.Guild
 
             pendingInvite = new GuildInvite
             {
-                GuildId   = id,
+                GuildId = id,
                 InviteeId = invitee.CharacterId
             };
 
             owner.Session.EnqueueMessageEncrypted(new ServerGuildInvite
             {
-                GuildName  = guild.Name,
-                GuildType  = guild.Type,
+                GuildName = guild.Name,
+                GuildType = guild.Type,
                 PlayerName = invitee.Name,
-                Flags      = (uint)guild.Flags
-            });;
+                Flags = (uint)guild.Flags
+            }); ;
 
             log.Trace($"Invited character {owner.CharacterId} to guild {id}.");
         }
@@ -486,7 +478,7 @@ namespace NexusForever.WorldServer.Game.Guild
 
             owner.EnqueueToVisible(new ServerEntityGuildAffiliation
             {
-                UnitId    = owner.Guid,
+                UnitId = owner.Guid,
                 GuildName = guild.Name,
                 GuildType = guild.Type
             }, true);
@@ -510,7 +502,7 @@ namespace NexusForever.WorldServer.Game.Guild
 
             owner.EnqueueToVisible(new ServerEntityGuildAffiliation
             {
-                UnitId    = owner.Guid,
+                UnitId = owner.Guid,
                 GuildName = "",
                 GuildType = GuildType.None
             }, true);
@@ -527,7 +519,7 @@ namespace NexusForever.WorldServer.Game.Guild
                 throw new InvalidOperationException($"Failed to update Holomark positional data for character {owner.CharacterId}!");
 
             CharacterFlag mask = owner.Flags;
-            var itemVisuals    = new List<ItemVisual>();
+            var itemVisuals = new List<ItemVisual>();
 
             if (backHidden)
             {
@@ -580,7 +572,7 @@ namespace NexusForever.WorldServer.Game.Guild
         public void UpdateHolomark()
         {
             if (Guild == null)
-               throw new InvalidOperationException($"Failed to update Holomark visual data for character {owner.CharacterId}!");
+                throw new InvalidOperationException($"Failed to update Holomark visual data for character {owner.CharacterId}!");
 
             var itemVisuals = new List<ItemVisual>
             {
@@ -628,7 +620,7 @@ namespace NexusForever.WorldServer.Game.Guild
             owner.SetAppearance(itemVisuals);
             owner.EnqueueToVisible(new ServerItemVisualUpdate
             {
-                Guid        = owner.Guid,
+                Guid = owner.Guid,
                 ItemVisuals = itemVisuals
             }, true);
         }

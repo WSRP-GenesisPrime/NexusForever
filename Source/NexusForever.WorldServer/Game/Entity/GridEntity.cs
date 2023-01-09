@@ -6,7 +6,6 @@ using System.Numerics;
 using NexusForever.Shared;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Map.Search;
 
@@ -15,20 +14,8 @@ namespace NexusForever.WorldServer.Game.Entity
     public abstract class GridEntity : IUpdate
     {
         public uint Guid { get; protected set; }
-        public bool GuidLocked { get; protected set; } = false;
-        public BaseMap Map { get; private set; }
+        public BaseMap Map { get; protected set; }
         public WorldZoneEntry Zone { get; private set; }
-        public Residence CurrentResidence
-        {
-            get
-            {
-                if (Map is ResidenceMapInstance rmap)
-                {
-                    return rmap.GetResidenceByZone(Zone);
-                }
-                return null;
-            }
-        }
         public Vector3 Position { get; protected set; }
 
         public MapInfo PreviousMap { get; private set; }
@@ -63,7 +50,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Invoked when <see cref="GridEntity"/> is enqueued to be added to <see cref="BaseMap"/>.
         /// </summary>
-        public virtual void OnEnqueueAddToMap()
+        public virtual void OnEnqueueAddToMap(MapPosition mapPosition)
         {
             // deliberately empty
         }
@@ -73,8 +60,8 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
-            Guid     = guid;
-            Map      = map;
+            Guid = guid;
+            Map = map;
             Position = vector;
 
             UpdateVision();
@@ -104,12 +91,12 @@ namespace NexusForever.WorldServer.Game.Entity
 
             visibleGrids.Clear();
 
-            Guid        = 0;
+            Guid = 0;
             PreviousMap = new MapInfo
             {
                 Entry = Map.Entry
             };
-            Map         = null;
+            Map = null;
         }
 
         /// <summary>
@@ -124,15 +111,16 @@ namespace NexusForever.WorldServer.Game.Entity
             uint? worldAreaId = Map.File.GetWorldAreaId(vector);
             if (worldAreaId.HasValue && Zone?.Id != worldAreaId)
             {
+                var oldZone = Zone;
                 Zone = GameTableManager.Instance.WorldZone.GetEntry(worldAreaId.Value);
-                OnZoneUpdate();
+                OnZoneUpdate(oldZone);
             }
         }
 
         /// <summary>
         /// Invoked when <see cref="GridEntity"/> changes zone in the current <see cref="BaseMap"/>.
         /// </summary>
-        protected virtual void OnZoneUpdate()
+        protected virtual void OnZoneUpdate(WorldZoneEntry oldZone)
         {
             // deliberately empty
         }
@@ -150,7 +138,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void AddVisible(GridEntity entity)
         {
-            if (!CanSeeEntity(entity))
+            if (!CanSeeEntity(entity) || !entity.CanSeeEntity(this))
                 return;
 
             visibleEntities.Add(entity.Guid, entity);
@@ -167,8 +155,12 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Return visible <see cref="WorldEntity"/> by supplied guid.
         /// </summary>
-        public T GetVisible<T>(uint guid) where T : WorldEntity
+        public virtual T GetVisible<T>(uint guid) where T : WorldEntity
         {
+            if (Map is ResidenceMapInstance residenceMap)
+                if (residenceMap.TryGetDecorEntity(guid, out WorldEntity decorEntity))
+                    return (T)decorEntity;
+
             if (!visibleEntities.TryGetValue(guid, out GridEntity entity))
                 return null;
 
@@ -192,9 +184,9 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Update all <see cref="GridEntity"/>'s in vision range.
         /// </summary>
-        private void UpdateVision()
+        protected virtual void UpdateVision()
         {
-            Map.Search(Position, Map.VisionRange, new SearchCheckRange(Position, Map.VisionRange), out List<GridEntity> intersectedEntities, this);
+            Map.Search(Position, Map.VisionRange, new SearchCheckRange(Position, Map.VisionRange), out List<GridEntity> intersectedEntities);
 
             // new entities now in vision range
             foreach (GridEntity entity in intersectedEntities.Except(visibleEntities.Values))
@@ -258,7 +250,6 @@ namespace NexusForever.WorldServer.Game.Entity
                 throw new InvalidOperationException($"Cannot directly set Guid of Entity if they are placed by a Map.");
 
             Guid = guid;
-            GuidLocked = true;
         }
     }
 }

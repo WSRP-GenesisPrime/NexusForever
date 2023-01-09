@@ -29,5 +29,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 petcustomisation.FlairSlotIndex,
                 petcustomisation.FlairId);
         }
+
+        [MessageHandler(GameMessageOpcode.ClientPetDismiss)]
+        public static void HandleClientPetDismiss(WorldSession session, ClientPetDismiss petDismiss)
+        {
+            session.Player.PetManager.DismissPets();
+        }
     }
 }

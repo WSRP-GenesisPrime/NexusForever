@@ -1,17 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Shared;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Quest.Static;
+using NLog;
 
 namespace NexusForever.WorldServer.Game.Quest
 {
     public class QuestObjective : IUpdate
     {
+        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+        
         public QuestInfo QuestInfo { get; }
         public QuestObjectiveInfo ObjectiveInfo { get; }
+
+        public QuestObjectiveType Type => (QuestObjectiveType)ObjectiveInfo.Type;
 
         public byte Index { get; }
 
@@ -39,6 +47,8 @@ namespace NexusForever.WorldServer.Game.Quest
 
         private uint? timer;
 
+        private List<uint> targetIds = new List<uint>();
+
         private QuestObjectiveSaveMask saveMask;
 
         /// <summary>
@@ -51,6 +61,9 @@ namespace NexusForever.WorldServer.Game.Quest
             Index         = model.Index;
             progress      = model.Progress;
             timer         = model.Timer;
+
+            if (IsChecklist() || UsesTargetGroups())
+                BuildTargets();
         }
 
         /// <summary>
@@ -67,7 +80,28 @@ namespace NexusForever.WorldServer.Game.Quest
                 // TODO
             }
 
+            if (IsChecklist() || UsesTargetGroups())
+                BuildTargets();
+
             saveMask = QuestObjectiveSaveMask.Create;
+        }
+
+        /// <summary>
+        /// Builds the target ID list for this <see cref="QuestObjective"/>.
+        /// </summary>
+        private void BuildTargets()
+        {
+            uint targetGroupId = ObjectiveInfo.Entry.Data > 0 ? ObjectiveInfo.Entry.Data : ObjectiveInfo.Entry.TargetGroupIdRewardPane;
+            if (targetGroupId == 0u)
+                throw new InvalidOperationException();
+
+            targetIds = AssetManager.Instance.GetQuestObjectiveTargetIds(ObjectiveInfo.Id).ToList();
+            if (targetIds.Count == 0u)
+                return;
+
+            if (targetIds.Count < ObjectiveInfo.Entry.Count)
+                for (int i = targetIds.Count - 1; i < ObjectiveInfo.Entry.Count; i++)
+                    targetIds.Add(targetIds[0]);
         }
 
         public void Save(CharacterContext context, ulong characterId)
@@ -128,16 +162,55 @@ namespace NexusForever.WorldServer.Game.Quest
         }
 
         /// <summary>
-        /// Return if the objective has been completed.
+        /// Return if this <see cref="QuestObjective"/> is a checklist type.
+        /// </summary>
+        public bool IsChecklist()
+        {
+            // TODO: Determine other Types that are also Checklists
+            return Type == QuestObjectiveType.ActivateTargetGroupChecklist
+                || Type == QuestObjectiveType.Unknown10;
+        }
+
+        /// <summary>
+        /// Return if this <see cref="QuestObjective"/> uses target group data to complete.
+        /// </summary>
+        public bool UsesTargetGroups()
+        {
+            // TODO: Determine other Types that are also using Target Groups
+            return (Type == QuestObjectiveType.ActivateTargetGroup ||
+               Type == QuestObjectiveType.ActivateTargetGroupChecklist ||
+               Type == QuestObjectiveType.KillTargetGroup ||
+               Type == QuestObjectiveType.KillTargetGroups ||
+               Type == QuestObjectiveType.TalkToTargetGroup ||
+               Type == QuestObjectiveType.ActivateEntity && ObjectiveInfo.Entry.TargetGroupIdRewardPane != 0u ||
+               Type == QuestObjectiveType.Unknown10);
+        }
+
+        /// <summary>
+        /// Return if the <see cref="QuestObjective"/> has been completed.
         /// </summary>
         public bool IsComplete()
         {
             return progress >= GetMaxValue();
         }
 
+        /// <summary>
+        /// Return if the <see cref="QuestObjective"/> requires the given ID to complete.
+        /// </summary>
+        public bool IsTarget(uint id)
+        {
+            return (ObjectiveInfo.Entry.Data == id || targetIds.Contains(id));
+        }
+
         private uint GetMaxValue()
         {
-            return IsDynamic() ? 1000u : ObjectiveInfo.Entry.Count;
+            if (IsChecklist())
+                return (uint)(1 << (int)ObjectiveInfo.Entry.Count) - 1;
+
+            if (IsDynamic())
+                return 1000u;
+
+            return ObjectiveInfo.Entry.Count;
         }
 
         /// <summary>
@@ -145,7 +218,9 @@ namespace NexusForever.WorldServer.Game.Quest
         /// </summary>
         public void ObjectiveUpdate(uint update)
         {
-            if (IsDynamic())
+            if (IsChecklist())
+                update = (uint)(1 << (int)update);
+            else if (IsDynamic())
                 update = (uint)(((float)update / ObjectiveInfo.Entry.Count) * 1000f);
 
             Progress = Math.Min(progress + update, GetMaxValue());

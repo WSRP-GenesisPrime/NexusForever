@@ -441,7 +441,6 @@ namespace NexusForever.Shared.Network.Message
         ServerStoreError                = 0x098A,
         ServerStoreOffers               = 0x098B,
         ServerStorePurchaseResult       = 0x098C,
-        ServerStorePurchaseHistory      = 0x098E,
-        Server088C = 0x088C
+        ServerStorePurchaseHistory      = 0x098E
     }
 }

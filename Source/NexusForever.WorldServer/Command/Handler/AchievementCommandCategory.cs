@@ -26,17 +26,8 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Update count for matched criteria.")]
             uint count)
         {
-            try
-            {
-                Player player = context.InvokingPlayer;
-                log.Info($"{player.Name} requesting achievement update type {type}.");
-                player.AchievementManager.CheckAchievements(player, type, objectId, objectIdAlt, count);
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in AchievementCommandCategory.HandleAchievementUpdate!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            Player player = context.InvokingPlayer;
+            player.AchievementManager.CheckAchievements(player, type, objectId, objectIdAlt, count);
         }
 
         [Command(Permission.AchievementGrant, "Grant achievement to player.", "grant")]
@@ -44,22 +35,14 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Achievement id to grant.")]
             ushort achievementId)
         {
-            try
+            AchievementInfo info = GlobalAchievementManager.Instance.GetAchievement(achievementId);
+            if (info == null)
             {
-                AchievementInfo info = GlobalAchievementManager.Instance.GetAchievement(achievementId);
-                if (info == null)
-                {
-                    context.SendMessage($"Invalid achievement id {achievementId}!");
-                    return;
-                }
-                log.Info($"{context.InvokingPlayer.Name} requesting achievement grant ID {achievementId}.");
-                context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
+                context.SendMessage($"Invalid achievement id {achievementId}!");
+                return;
             }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in AchievementCommandCategory.HandleAchievementGrant!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            log.Info($"{context.InvokingPlayer.Name} requesting achievement grant ID {achievementId}.");
+            context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
         }
     }
 }

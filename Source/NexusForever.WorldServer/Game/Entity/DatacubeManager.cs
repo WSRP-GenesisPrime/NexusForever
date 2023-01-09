@@ -82,16 +82,19 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public void UnlockAllLore()
         {
-            datacubes.Clear();
             foreach (var entry in GameTableManager.Instance.DatacubeVolume.Entries)
             {
-                var datacube = new Datacube((ushort) entry.Id, DatacubeType.Journal, uint.MaxValue);
-                datacubes.Add(DatacubeHash((ushort)entry.Id, DatacubeType.Journal), datacube);
+                var datacube = new Datacube((ushort)entry.Id, DatacubeType.Journal, uint.MaxValue);
+                uint hash = DatacubeHash((ushort)entry.Id, DatacubeType.Journal);
+                if (!datacubes.ContainsKey(hash))
+                    datacubes.Add(hash, datacube);
             }
             foreach (var entry in GameTableManager.Instance.Datacube.Entries)
             {
                 var datacube = new Datacube((ushort)entry.Id, DatacubeType.Datacube, uint.MaxValue);
-                datacubes.Add(DatacubeHash((ushort)entry.Id, DatacubeType.Datacube), datacube);
+                uint hash = DatacubeHash((ushort)entry.Id, DatacubeType.Datacube);
+                if (!datacubes.ContainsKey(hash))
+                    datacubes.Add(hash, datacube);
             }
 
             SendInitialPackets();

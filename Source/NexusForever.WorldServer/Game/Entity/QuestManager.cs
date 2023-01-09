@@ -435,6 +435,7 @@ namespace NexusForever.WorldServer.Game.Entity
             foreach (QuestObjective objective in quest)
                 objective.Progress = 0u;
 
+
             if (quest.Info.IsQuestMentioned)
             {
                 quest.State = QuestState.Mentioned;
@@ -583,6 +584,12 @@ namespace NexusForever.WorldServer.Game.Entity
             uint money = info.GetRewardMoney();
             if (money != 0u)
                 player.CurrencyManager.CurrencyAddAmount(CurrencyType.Credits, money);
+
+            foreach ((uint faction2Id, float rep) in info.GetRewardReputation())
+            {
+                if (faction2Id != 0u)
+                    player.ReputationManager.UpdateReputation((Faction)faction2Id, rep);
+            }
         }
 
         private void RewardQuest(Quest2RewardEntry entry)
@@ -697,6 +704,19 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             foreach (Quest.Quest quest in activeQuests.Values)
                 quest.ObjectiveUpdate(id, progress);
+        }
+
+        /// <summary>
+        /// Returns when the given objective id is an active objective for the <see cref="Player"/>.
+        /// </summary>
+        public bool IsActiveObjectiveId(uint objectiveId)
+        {
+            foreach (Quest.Quest quest in activeQuests.Values)
+                if (quest.FirstOrDefault(i => i.ObjectiveInfo.Entry.Id == objectiveId
+                        && !i.IsComplete()) != null)
+                    return true;
+
+            return false;
         }
 
         /// <summary>

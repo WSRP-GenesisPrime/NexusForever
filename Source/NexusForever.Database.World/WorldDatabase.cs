@@ -39,12 +39,19 @@ namespace NexusForever.Database.World
         {
             using var context = new WorldContext(config);
             return context.Entity.Where(e => e.World == world)
+                .Include(e => e.EntitySpline)
                 .Include(e => e.EntityVendor)
                 .Include(e => e.EntityVendorCategory)
                 .Include(e => e.EntityVendorItem)
                 .Include(e => e.EntityStat)
                 .AsNoTracking()
                 .ToImmutableList();
+        }
+
+        public EntityModel GetEntity(uint creatureId)
+        {
+            using var context = new WorldContext(config);
+            return context.Entity.FirstOrDefault(e => e.Creature == creatureId);
         }
 
         public ImmutableList<EntityModel> GetEntitiesWithoutArea()
@@ -96,6 +103,37 @@ namespace NexusForever.Database.World
                     .ThenInclude(e => e.StoreOfferItemData)
                 .Include(e => e.StoreOfferItem)
                     .ThenInclude(e => e.StoreOfferItemPrice)
+                .AsNoTracking()
+                .ToImmutableList();
+        }
+
+        public ImmutableList<ItemLootModel> GetAllItemLootTables()
+        {
+            using var context = new WorldContext(config);
+            return context.ItemLoot
+                .Include(e => e.LootGroup)
+                    .ThenInclude(e => e.Item)
+                .AsNoTracking()
+                .ToImmutableList();
+        }
+
+        public ImmutableList<EntityLootModel> GetAllEntityLootTables()
+        {
+            using var context = new WorldContext(config);
+            return context.EntityLoot
+                .Include(e => e.LootGroup)
+                    .ThenInclude(e => e.Item)
+                .AsNoTracking()
+                .ToImmutableList();
+        }
+
+        public ImmutableList<LootGroupModel> GetLootGroupChildren(ulong parentId)
+        {
+            using var context = new WorldContext(config);
+            return context.LootGroup.Where(i => i.ParentId == parentId)
+                .Include(e => e.ChildGroup)
+                    .ThenInclude(e => e.Item)
+                .Include(e => e.Item)
                 .AsNoTracking()
                 .ToImmutableList();
         }

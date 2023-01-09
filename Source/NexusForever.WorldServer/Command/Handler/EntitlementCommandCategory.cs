@@ -18,30 +18,6 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.EntitlementAccount, "A collection of commands to manage account entitlements", "account")]
         public class EntitlementCommandAccountCategory : CommandCategory
         {
-            [Command(Permission.EntitlementAdd, "Create or update an account entitlement.", "add")]
-            public void HandleEntitlementCommandAccountAdd(ICommandContext context,
-                [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
-                EntitlementType entitlementType,
-                [Parameter("Value to modify the entitlement.")]
-                int value)
-            {
-                try
-                {
-                    if (GameTableManager.Instance.Entitlement.GetEntry((ulong)entitlementType) == null)
-                    {
-                        context.SendMessage($"{entitlementType} isn't a valid entitlement id!");
-                        return;
-                    }
-                    log.Info($"{context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}) requesting account entitlement ID {entitlementType} (value: {value}).");
-                    context.InvokingPlayer.Session.EntitlementManager.UpdateEntitlement(entitlementType, value);
-                }
-                catch (Exception e)
-                {
-                    log.Error($"Exception caught in EntitlementCommandAccountCategory.HandleEntitlementCommandAccountAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                    context.SendError("Oops! An error occurred. Please check your command input and try again.");
-                }
-            }
-
             [Command(Permission.EntitlementAccountList, "List all entitlements for character.", "list")]
             public void HandleEntitlementCommandAccountList(ICommandContext context)
             {
@@ -55,30 +31,6 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.EntitlementCharacter, "A collection of commands to manage character entitlements", "character")]
         public class EntitlementCommandCharacterCategory : CommandCategory
         {
-            [Command(Permission.EntitlementAdd, "Create or update a character entitlement.", "add")]
-            public void HandleEntitlementCommandCharacterAdd(ICommandContext context,
-                [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
-                EntitlementType entitlementType,
-                [Parameter("Value to modify the entitlement.")]
-                int value)
-            {
-                try
-                {
-                    if (GameTableManager.Instance.Entitlement.GetEntry((ulong)entitlementType) == null)
-                    {
-                        context.SendMessage($"{entitlementType} isn't a valid entitlement id!");
-                        return;
-                    }
-                    log.Info($"{context.InvokingPlayer.Name} requesting character entitlement ID {entitlementType} (value: {value}).");
-                    context.InvokingPlayer.Session.EntitlementManager.UpdateEntitlement(entitlementType, value);
-                }
-                catch (Exception e)
-                {
-                    log.Error($"Exception caught in EntitlementCommandCharacterCategory.HandleEntitlementCommandCharacterAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                    context.SendError("Oops! An error occurred. Please check your command input and try again.");
-                }
-            }
-
             [Command(Permission.EntitlementCharacterList, "List all entitlements for account.", "list")]
             public void HandleEntitlementCommandCharacterList(ICommandContext context)
             {
@@ -89,8 +41,8 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.EntitlementAdd, "Create or update an entitlement.", "add")]
-        public void HandleEntitlementCommandAdd(ICommandContext context,
+        [Command(Permission.EntitlementAdd, "Create or update an account entitlement.", "add")]
+        public void HandleEntitlementCommandAccountAdd(ICommandContext context,
                 [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
                 EntitlementType entitlementType,
                 [Parameter("Value to modify the entitlement.")]
@@ -103,10 +55,10 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             Player targetPlayer = context.GetTargetOrInvoker<Player>();
-            if (targetPlayer != context.Invoker && !(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.EntitlementGrantOther))
+            if (targetPlayer != context.Invoker && !(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
                 targetPlayer = context.Invoker as Player;
 
-            targetPlayer.Session.EntitlementManager.UpdateEntitlement(entitlementType, value);
+            targetPlayer.Session.EntitlementManager.AddEntitlement(entitlementType, value);
         }
     }
 }

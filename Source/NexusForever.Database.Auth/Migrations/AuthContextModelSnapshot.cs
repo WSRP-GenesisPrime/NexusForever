@@ -123,6 +123,64 @@ namespace NexusForever.Database.Auth.Migrations
                     b.ToTable("account_generic_unlock", (string)null);
                 });
 
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountItemCooldownModel", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
+
+                    b.Property<uint>("CooldownGroupId")
+                        .HasColumnType("int(10) unsigned")
+                        .HasColumnName("cooldownGroupId");
+
+                    b.Property<uint>("Duration")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("duration");
+
+                    b.Property<DateTime?>("Timestamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasColumnName("timestamp")
+                        .HasDefaultValueSql("current_timestamp()");
+
+                    b.HasKey("Id", "CooldownGroupId")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("account_item_cooldown", (string)null);
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountItemModel", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint(20) unsigned")
+                        .HasDefaultValue(0ul)
+                        .HasColumnName("entry");
+
+                    b.Property<uint>("AccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("accountId");
+
+                    b.Property<uint>("ItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("itemId");
+
+                    b.HasKey("Id", "AccountId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("account_item", (string)null);
+                });
+
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountKeybindingModel", b =>
                 {
                     b.Property<uint>("Id")
@@ -298,6 +356,70 @@ namespace NexusForever.Database.Auth.Migrations
                     b.ToTable("account_permission", (string)null);
                 });
 
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRewardTrackMilestoneModel", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
+
+                    b.Property<uint>("RewardTrackId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("rewardTrackId");
+
+                    b.Property<uint>("MilestoneId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("milestoneId");
+
+                    b.Property<int>("Choice")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(-1)
+                        .HasColumnName("choice");
+
+                    b.Property<uint>("PointsRequired")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("pointsRequired");
+
+                    b.HasKey("Id", "RewardTrackId", "MilestoneId")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("account_reward_track_milestone", (string)null);
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRewardTrackModel", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
+
+                    b.Property<uint>("RewardTrackId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("rewardTrackId");
+
+                    b.Property<uint>("Points")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("points");
+
+                    b.HasKey("Id", "RewardTrackId")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("account_reward_track", (string)null);
+                });
+
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRoleModel", b =>
                 {
                     b.Property<uint>("Id")
@@ -317,6 +439,49 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("account_role", (string)null);
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountStoreTransactionModel", b =>
+                {
+                    b.Property<uint>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(10) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("id");
+
+                    b.Property<uint>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(20) unsigned")
+                        .HasDefaultValue(0u)
+                        .HasColumnName("transactionId");
+
+                    b.Property<float>("Cost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("float")
+                        .HasDefaultValue(0f)
+                        .HasColumnName("cost");
+
+                    b.Property<short>("CurrencyType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint(5)")
+                        .HasDefaultValue((short)6)
+                        .HasColumnName("currencyType");
+
+                    b.Property<string>("Name")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(256)")
+                        .HasDefaultValue("")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("TransactionDateTime")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasColumnName("transactionDateTime")
+                        .HasDefaultValueSql("current_timestamp()");
+
+                    b.HasKey("Id", "TransactionId");
+
+                    b.ToTable("account_store_transaction", (string)null);
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.PermissionModel", b =>
@@ -885,6 +1050,56 @@ namespace NexusForever.Database.Auth.Migrations
                         },
                         new
                         {
+                            Id = 112u,
+                            Name = "Command: AccountPassword"
+                        },
+                        new
+                        {
+                            Id = 113u,
+                            Name = "Command: AccountAdminPassword"
+                        },
+                        new
+                        {
+                            Id = 115u,
+                            Name = "Category: EntityThreat"
+                        },
+                        new
+                        {
+                            Id = 116u,
+                            Name = "Command: EntityThreatAdjust"
+                        },
+                        new
+                        {
+                            Id = 117u,
+                            Name = "Command: EntityThreatList"
+                        },
+                        new
+                        {
+                            Id = 118u,
+                            Name = "Command: EntityThreatClear"
+                        },
+                        new
+                        {
+                            Id = 119u,
+                            Name = "Command: EntityThreatRemove"
+                        },
+                        new
+                        {
+                            Id = 2000u,
+                            Name = "Category: RewardTrack"
+                        },
+                        new
+                        {
+                            Id = 2001u,
+                            Name = "Command: RewardTrackUpdate"
+                        },
+                        new
+                        {
+                            Id = 2002u,
+                            Name = "Command: QuestActivate"
+                        },
+                        new
+                        {
                             Id = 50000u,
                             Name = "Category: Morph"
                         },
@@ -932,16 +1147,6 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 50710u,
                             Name = "Command: RealmUptime"
-                        },
-                        new
-                        {
-                            Id = 50800u,
-                            Name = "Command: AccountChangePass"
-                        },
-                        new
-                        {
-                            Id = 50810u,
-                            Name = "Command: AccountChangeMyPass"
                         },
                         new
                         {
@@ -1002,11 +1207,6 @@ namespace NexusForever.Database.Auth.Migrations
                         {
                             Id = 10003u,
                             Name = "Other: GMFlag"
-                        },
-                        new
-                        {
-                            Id = 10004u,
-                            Name = "Other: EntitlementGrantOther"
                         });
                 });
 
@@ -1104,6 +1304,233 @@ namespace NexusForever.Database.Auth.Migrations
                     b.HasIndex("PermissionId");
 
                     b.ToTable("role_permission", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 4u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 1u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 112u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 20u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 21u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 22u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 5u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 23u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 24u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 25u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 26u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 27u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 28u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 29u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 33u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 34u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 35u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 36u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 37u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 38u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 39u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 40u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 41u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 42u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 43u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 44u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 46u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 47u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 48u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 49u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 50u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 51u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 52u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 53u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 54u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 55u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 56u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 57u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 58u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 59u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 6u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 92u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 76u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 110u
+                        },
+                        new
+                        {
+                            Id = 1u,
+                            PermissionId = 78u
+                        });
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.ServerMessageModel", b =>
@@ -1163,7 +1590,7 @@ namespace NexusForever.Database.Auth.Migrations
                         .HasColumnName("host");
 
                     b.Property<string>("InternalIP")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1248,6 +1675,30 @@ namespace NexusForever.Database.Auth.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountItemCooldownModel", b =>
+                {
+                    b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
+                        .WithMany("AccountItemCooldown")
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__account_item_cooldown_id__account_id");
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountItemModel", b =>
+                {
+                    b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
+                        .WithMany("AccountItem")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__account_item_accountId__account_id");
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountKeybindingModel", b =>
                 {
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
@@ -1281,6 +1732,30 @@ namespace NexusForever.Database.Auth.Migrations
                     b.Navigation("Permission");
                 });
 
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRewardTrackMilestoneModel", b =>
+                {
+                    b.HasOne("NexusForever.Database.Auth.Model.AccountRewardTrackModel", "RewardTrack")
+                        .WithMany("Milestone")
+                        .HasForeignKey("Id", "RewardTrackId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__account_reward_track_milestone_id-rewardTrackId__account_reward_track_id-rewardTrackId");
+
+                    b.Navigation("RewardTrack");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRewardTrackModel", b =>
+                {
+                    b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
+                        .WithMany("AccountRewardTrack")
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__account_reward_track_id__account_id");
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRoleModel", b =>
                 {
                     b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
@@ -1300,6 +1775,18 @@ namespace NexusForever.Database.Auth.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountStoreTransactionModel", b =>
+                {
+                    b.HasOne("NexusForever.Database.Auth.Model.AccountModel", "Account")
+                        .WithMany("AccountStoreTransaction")
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__account_store_transaction_id__account_id");
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.RolePermissionModel", b =>
@@ -1333,11 +1820,24 @@ namespace NexusForever.Database.Auth.Migrations
 
                     b.Navigation("AccountGenericUnlock");
 
+                    b.Navigation("AccountItem");
+
+                    b.Navigation("AccountItemCooldown");
+
                     b.Navigation("AccountKeybinding");
 
                     b.Navigation("AccountPermission");
 
+                    b.Navigation("AccountRewardTrack");
+
                     b.Navigation("AccountRole");
+
+                    b.Navigation("AccountStoreTransaction");
+                });
+
+            modelBuilder.Entity("NexusForever.Database.Auth.Model.AccountRewardTrackModel", b =>
+                {
+                    b.Navigation("Milestone");
                 });
 
             modelBuilder.Entity("NexusForever.Database.Auth.Model.PermissionModel", b =>

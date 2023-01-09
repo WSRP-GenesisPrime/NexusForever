@@ -27,7 +27,7 @@ namespace NexusForever.WorldServer.Game.Social
 {
     public sealed class GlobalChatManager : Singleton<GlobalChatManager>, IUpdate
     {
-        private const float LocalChatDistance = 155f;
+        public const float LocalChatDistance = 155f;
 
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
 

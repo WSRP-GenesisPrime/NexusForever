@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NexusForever.Shared.GameTable;
@@ -7,7 +8,7 @@ using NexusForever.WorldServer.Game.Spell.Static;
 
 namespace NexusForever.WorldServer.Game.Spell
 {
-    public class SpellBaseInfo
+    public class SpellBaseInfo : IEnumerable<SpellInfo>
     {
         public Spell4BaseEntry Entry { get; }
         public Spell4HitResultsEntry HitResult { get; }
@@ -71,6 +72,35 @@ namespace NexusForever.WorldServer.Game.Spell
             if (tier < 1)
                 tier = 1;
             return spellInfoStore[tier - 1];
+        }
+
+        /// <summary>
+        /// Initialise this <see cref="SpellBaseInfo"/>.
+        /// </summary>
+        public void Intitialise()
+        {
+            if (spellInfoStore == null)
+                return;
+
+            foreach (SpellInfo spell in spellInfoStore)
+            {
+                if (spell == null)
+                    continue;
+
+                spell.Initialise();
+            }
+        }
+
+        public IEnumerator<SpellInfo> GetEnumerator()
+        {
+            return spellInfoStore
+                .Select(s => s)
+                .GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -49,7 +49,7 @@ namespace NexusForever.WorldServer.Game.Contact
             // Note: This makes the first ID equal temporaryMod + 1.This is because the client needs a value with a minimum of 281474976710656 for the Contact ID otherwise it is flagged
             // as a temporary contact.
             // TODO: Fix this to also include temporary contacts?
-            ulong maxDbId =  DatabaseManager.Instance.CharacterDatabase.GetNextContactId() ?? 0;
+            ulong maxDbId =  DatabaseManager.Instance.CharacterDatabase.GetNextContactId();
             nextContactId = maxDbId > temporaryMod ? maxDbId + 1ul : maxDbId + temporaryMod + 1ul;
         }
 

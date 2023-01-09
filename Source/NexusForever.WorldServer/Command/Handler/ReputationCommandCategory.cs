@@ -21,16 +21,8 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount to modify the reputation.")]
             float value)
         {
-            try
-            {
-                Player target = context.InvokingPlayer;
-                target.ReputationManager.UpdateReputation(factionId, value);
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in ReputationCommandCategory.HandleReputationUpdate!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            Player target = context.InvokingPlayer;
+            target.ReputationManager.UpdateReputation(factionId, value);
         }
     }
 }

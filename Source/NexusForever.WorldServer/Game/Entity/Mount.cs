@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NexusForever.Shared.GameTable;
@@ -70,9 +71,6 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
             base.OnAddToMap(map, guid, vector);
-
-            CreateFlags &= ~EntityCreateFlag.SpawnAnimation;
-            CreateFlags |= EntityCreateFlag.NoSpawnAnimation;
         }
 
         protected override void OnPassengerAdd(Player player, VehicleSeatType seatType, byte seatPosition)
@@ -117,6 +115,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateVisuals(player);
+            player.HandleMovementSpeedApply();
         }
 
         protected override void OnPassengerRemove(Player player, VehicleSeatType seatType, byte seatPosition)
@@ -147,6 +146,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             UpdateVisuals(player);
+            player.HandleMovementSpeedApply();
         }
 
         private void UpdateVisuals(Player player)

@@ -11,12 +11,16 @@ namespace NexusForever.Database.Auth
         public DbSet<AccountCurrencyModel> AccountCurrency { get; set; }
         public DbSet<AccountEntitlementModel> AccountEntitlement { get; set; }
         public DbSet<AccountGenericUnlockModel> AccountGenericUnlock { get; set; }
+        public DbSet<AccountItemModel> AccountItem { get; set; }
+        public DbSet<AccountItemCooldownModel> AccountItemCooldown { get; set; }
         public DbSet<AccountKeybindingModel> AccountKeybinding { get; set; }
         public DbSet<AccountPermissionModel> AccountPermission { get; set; }
         public DbSet<AccountRoleModel> AccountRole { get; set; }
+        public DbSet<AccountStoreTransactionModel> AccountStoreTransaction { get; set; }
         public DbSet<PermissionModel> Permission { get; set; }
         public DbSet<RoleModel> Role { get; set; }
         public DbSet<RolePermissionModel> RolePermission { get; set; }
+        public DbSet<AccountRewardTrackModel> AccountRewardTrack { get; set; }
         public DbSet<ServerModel> Server { get; set; }
         public DbSet<ServerMessageModel> ServerMessage { get; set; }
 
@@ -201,6 +205,67 @@ namespace NexusForever.Database.Auth
                     .WithMany(p => p.AccountGenericUnlock)
                     .HasForeignKey(d => d.Id)
                     .HasConstraintName("FK__account_generic_unlock_id__account_id");
+            });
+
+            modelBuilder.Entity<AccountItemModel>(entity =>
+            {
+                entity.HasKey(e => new { e.Id, e.AccountId })
+                    .HasName("PRIMARY");
+
+                entity.ToTable("account_item");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("entry")
+                    .HasColumnType("bigint(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.AccountId)
+                    .HasColumnName("accountId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.ItemId)
+                    .HasColumnName("itemId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.HasOne(d => d.Account)
+                    .WithMany(p => p.AccountItem)
+                    .HasForeignKey(d => d.AccountId)
+                    .HasConstraintName("FK__account_item_accountId__account_id");
+            });
+
+            modelBuilder.Entity<AccountItemCooldownModel>(entity =>
+            {
+                entity.HasKey(e => new { e.Id, e.CooldownGroupId })
+                    .HasName("PRIMARY");
+
+                entity.ToTable("account_item_cooldown");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.CooldownGroupId)
+                    .HasColumnName("cooldownGroupId")
+                    .HasColumnType("int(10) unsigned")
+                    .ValueGeneratedNever();
+
+                entity.Property(e => e.Timestamp)
+                    .HasColumnName("timestamp")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.Property(e => e.Duration)
+                    .HasColumnName("duration")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.HasOne(d => d.Account)
+                    .WithMany(p => p.AccountItemCooldown)
+                    .HasForeignKey(d => d.Id)
+                    .HasConstraintName("FK__account_item_cooldown_id__account_id");
             });
 
             modelBuilder.Entity<AccountKeybindingModel>(entity =>
@@ -895,10 +960,60 @@ namespace NexusForever.Database.Auth
                         Id   = 110,
                         Name = "Command: QuestList"
                     },
-                    new PermissionModel()
+                    new PermissionModel
                     {
                         Id   = 111,
                         Name = "Command: RealmMaxPlayers"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 112,
+                        Name = "Command: AccountPassword"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 113,
+                        Name = "Command: AccountAdminPassword"
+                    },
+                    new PermissionModel 
+                    {
+                        Id   = 115,
+                        Name = "Category: EntityThreat"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 116,
+                        Name = "Command: EntityThreatAdjust"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 117,
+                        Name = "Command: EntityThreatList"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 118,
+                        Name = "Command: EntityThreatClear"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 119,
+                        Name = "Command: EntityThreatRemove"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 2000,
+                        Name = "Category: RewardTrack"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 2001,
+                        Name = "Command: RewardTrackUpdate"
+                    },
+                    new PermissionModel
+                    {
+                        Id   = 2002,
+                        Name = "Command: QuestActivate"
                     },
                     new PermissionModel
                     {
@@ -949,16 +1064,6 @@ namespace NexusForever.Database.Auth
                     {
                         Id = 50710,
                         Name = "Command: RealmUptime"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50800,
-                        Name = "Command: AccountChangePass"
-                    },
-                    new PermissionModel
-                    {
-                        Id = 50810,
-                        Name = "Command: AccountChangeMyPass"
                     },
                     new PermissionModel
                     {
@@ -1019,13 +1124,74 @@ namespace NexusForever.Database.Auth
                     {
                         Id   = 10003,
                         Name = "Other: GMFlag"
-                    },
-                    new PermissionModel
-                    {
-                        Id   = 10004,
-                        Name = "Other: EntitlementGrantOther"
                     });
             });
+
+            modelBuilder.Entity<AccountRewardTrackModel>(entity =>
+            {
+                entity.ToTable("account_reward_track");
+
+                entity.HasKey(e => new { e.Id, e.RewardTrackId })
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.RewardTrackId)
+                    .HasColumnName("rewardTrackId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Points)
+                    .HasColumnName("points")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.HasOne(d => d.Account)
+                    .WithMany(p => p.AccountRewardTrack)
+                    .HasForeignKey(d => d.Id)
+                    .HasConstraintName("FK__account_reward_track_id__account_id");
+            });
+
+            modelBuilder.Entity<AccountRewardTrackMilestoneModel>(entity =>
+            {
+                entity.ToTable("account_reward_track_milestone");
+
+                entity.HasKey(e => new { e.Id, e.RewardTrackId, e.MilestoneId })
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                    entity.Property(e => e.RewardTrackId)
+                    .HasColumnName("rewardTrackId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.MilestoneId)
+                    .HasColumnName("milestoneId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.PointsRequired)
+                    .HasColumnName("pointsRequired")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Choice)
+                    .HasColumnName("choice")
+                    .HasDefaultValue(-1);
+
+                entity.HasOne(d => d.RewardTrack)
+                    .WithMany(p => p.Milestone)
+                    .HasForeignKey(d => new { d.Id, d.RewardTrackId })
+                    .HasConstraintName("FK__account_reward_track_milestone_id-rewardTrackId__account_reward_track_id-rewardTrackId");
+            });
+
 
             modelBuilder.Entity<RoleModel>(entity =>
             {
@@ -1122,6 +1288,275 @@ namespace NexusForever.Database.Auth
                     .WithMany(f => f.RolePermission)
                     .HasForeignKey(e => e.PermissionId)
                     .HasConstraintName("FK__role_permission_permission_id__permission_id");
+
+                entity.HasData(
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 4
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 1
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 112
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 20
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 21
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 22
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 5
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 23
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 24
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 25
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 26
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 27
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 28
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 29
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 33
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 34
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 35
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 36
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 37
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 38
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 39
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 40
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 41
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 42
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 43
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 44
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 46
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 47
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 48
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 49
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 50
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 51
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 52
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 53
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 54
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 55
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 56
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 57
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 58
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 59
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 6
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 92
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 76
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 110
+                    },
+                    new RolePermissionModel
+                    {
+                        Id = 1,
+                        PermissionId = 78
+                    });
+            });
+
+            modelBuilder.Entity<AccountStoreTransactionModel>(entity =>
+            {
+                entity.ToTable("account_store_transaction");
+
+                entity.HasKey(i => new { i.Id, i.TransactionId });
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.TransactionId)
+                    .HasColumnName("transactionId")
+                    .HasColumnType("int(20) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Name)
+                    .HasColumnName("name")
+                    .HasColumnType("varchar(256)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.CurrencyType)
+                    .HasColumnName("currencyType")
+                    .HasColumnType("smallint(5)")
+                    .HasDefaultValue(6);
+
+                entity.Property(e => e.Cost)
+                    .HasColumnName("cost")
+                    .HasColumnType("float")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.TransactionDateTime)
+                    .HasColumnName("transactionDateTime")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.HasOne(d => d.Account)
+                    .WithMany(p => p.AccountStoreTransaction)
+                    .HasForeignKey(d => d.Id)
+                    .HasConstraintName("FK__account_store_transaction_id__account_id");
             });
 
             modelBuilder.Entity<ServerModel>(entity =>

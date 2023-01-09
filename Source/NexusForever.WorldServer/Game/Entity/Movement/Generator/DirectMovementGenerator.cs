@@ -23,10 +23,23 @@ namespace NexusForever.WorldServer.Game.Entity.Movement.Generator
             {
                 Vector3 next = points[points.Count - 1].GetPoint2D(angle, StepSize);
                 next.Y = Map?.GetTerrainHeight(next.X, next.Z) ?? 0f;
+
+                // TODO: Remove lines below when we move to nav maps or improvements are made to MapGenerator's "cave map tracking"
+                if (next.Y - Final.Y >= 10 || next.Y - Final.Y <= -10)
+                    next.Y = Final.Y;
+
                 points.Add(next);
             }
 
-            points.Add(Final);
+            Vector3 final = Final;
+            final.Y = Map?.GetTerrainHeight(Final.X, Final.Z) ?? 0f;
+
+            // TODO: Remove lines below when we move to nav maps or improvements are made to MapGenerator's "cave map tracking"
+            if (final.Y - Final.Y >= 10 || final.Y - Final.Y <= -10)
+                final.Y = Final.Y;
+
+            points.Add(final);
+
             return points;
         }
     }

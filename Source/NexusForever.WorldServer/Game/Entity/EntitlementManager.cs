@@ -41,6 +41,10 @@ namespace NexusForever.WorldServer.Game.Entity
                 accountEntitlements.Add(entitlement.Type, entitlement);
             }
 
+            // TODO: This is temporary. Move default entitlements to database or configuration.
+            if (GetAccountEntitlement(EntitlementType.CanPurchasePromotionToken) == null)
+                AddEntitlement(EntitlementType.CanPurchasePromotionToken, 1);
+
             UpdateRewardPropertiesPremiumModifiers(false);
         }
 
@@ -178,8 +182,81 @@ namespace NexusForever.WorldServer.Game.Entity
             });
         }
 
+        public static uint GetEntitlementMax(EntitlementType type, uint val)
+        {
+            switch (type)
+            {
+                case EntitlementType.BaseCharacterSlots:
+                    return 98;
+                case EntitlementType.ExtraDecorSlots:
+                    return 20000;
+                case EntitlementType.AdditionalCostumeUnlocks:
+                    return 10000;
+                default:
+                    return val;
+            }
+        }
+
+        public static uint GetEntitlementMax(uint id, uint val)
+        {
+            return GetEntitlementMax((EntitlementType)id, val);
+        }
+
+        public static uint GetEntitlementMax(EntitlementEntry entry)
+        {
+            return GetEntitlementMax((EntitlementType)entry.Id, entry.MaxCount);
+        }
+
         /// <summary>
-        /// Returns if entitlement can be created or updated with supplied value.
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public void AddEntitlement(EntitlementType type, int value)
+        {
+            GenericError CheckEntitlement(EntitlementEntry entry)
+            {
+                EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
+                if (value > GetEntitlementMax(entry))
+                    return GenericError.AccountItemMaxEntitlementCount;
+
+                if (entitlementFlags.HasFlag(EntitlementFlags.Character))
+                {
+                    if (GetCharacterEntitlement(type)?.Amount + value > GetEntitlementMax(entry))
+                        return GenericError.AccountItemMaxEntitlementCount;
+                }
+                else
+                {
+                    if (GetAccountEntitlement(type)?.Amount + value > GetEntitlementMax(entry))
+                        return GenericError.AccountItemMaxEntitlementCount;
+                }
+
+                return GenericError.Ok;
+            }
+
+            EntitlementEntry entry = GameTableManager.Instance.Entitlement.GetEntry((ulong)type);
+            if (entry == null)
+                throw new ArgumentException($"Invalid entitlement type {type}!");
+
+            EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
+
+            GenericError entitlementCheck = CheckEntitlement(entry);
+            if (entitlementCheck != GenericError.Ok)
+            {
+                session.Player?.SendGenericError(entitlementCheck);
+                return;
+            }
+
+            if (entitlementFlags.HasFlag(EntitlementFlags.Character))
+                SetCharacterEntitlement(type, entry, value);
+            else
+                SetAccountEntitlement(type, entry, value);
+        }
+
+        /// <summary>
+        /// Create or update account <see cref="EntitlementType"/> with supplied value.
         /// </summary>
         /// <remarks>
         /// <see cref="GenericError.Ok"/> will be returned on success, any other value implies failure.
@@ -191,9 +268,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 return GenericError.AccountItemMaxEntitlementCount;
 
             EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
-            if (entitlementFlags.HasFlag(EntitlementFlags.Disabled))
+            /*if (entitlementFlags.HasFlag(EntitlementFlags.Disabled))
                 return GenericError.DbFailure;
-
+            */
             EntitlementType entitlementType = (EntitlementType)entry.Id;
             if (entitlementFlags.HasFlag(EntitlementFlags.Character))
             {
@@ -211,37 +288,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
         /// <summary>
         /// Create or update account or character <see cref="EntitlementType"/> with supplied value.
-        /// </summary>
-        /// <remarks>
-        /// A positive value must be supplied for new entitlements otherwise an <see cref="ArgumentException"/> will be thrown.
-        /// For existing entitlements a positive value will increment and a negative value will decrement the entitlement value.
-        /// </remarks>
-        public void UpdateEntitlement(EntitlementType type, int value)
-        {
-            EntitlementEntry entry = GameTableManager.Instance.Entitlement.GetEntry((ulong)type);
-            if (entry == null)
-                throw new ArgumentException($"Invalid entitlement type {type}!");
-            if (entry.Id == 12)
-            {
-                entry.MaxCount = 198;
-            }
-
-            GenericError entitlementCheck = CanUpdateEntitlement(entry, value);
-            if (entitlementCheck != GenericError.Ok)
-            {
-                session.Player?.SendGenericError(entitlementCheck);
-                return;
-            }
-
-            EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
-            if (entitlementFlags.HasFlag(EntitlementFlags.Character))
-                SetCharacterEntitlement(type, entry, value);
-            else
-                SetAccountEntitlement(type, entry, value);
-        }
-
-        /// <summary>
-        /// Create or update account <see cref="EntitlementType"/> with supplied value.
         /// </summary>
         /// <remarks>
         /// A positive value must be supplied for new entitlements otherwise an <see cref="ArgumentException"/> will be thrown.
@@ -290,15 +336,15 @@ namespace NexusForever.WorldServer.Game.Entity
                 if (value < 1)
                     throw new ArgumentException($"Failed to create entitlement {entry.Id}, {value} isn't positive!");
 
-                if (value > entry.MaxCount)
-                    throw new ArgumentException($"Failed to create entitlement {entry.Id}, {value} is larger than max value {entry.MaxCount}!");
+                if (value > GetEntitlementMax(entry))
+                    throw new ArgumentException($"Failed to create entitlement {entry.Id}, {value} is larger than max value {GetEntitlementMax(entry)}!");
 
                 entitlement = creator.Invoke();
                 collection.Add(entitlement.Type, entitlement);
             }
             else
             {
-                if (value > 0 && entitlement.Amount + (uint)value > entry.MaxCount)
+                if (value > 0 && entitlement.Amount + (uint)value > EntitlementManager.GetEntitlementMax(entry))
                     throw new ArgumentException($"Failed to update entitlement {entry.Id}, incrementing by {value} exceeds max value!");
 
                 if (value < 0 && (int)entitlement.Amount + value < 0)

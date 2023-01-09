@@ -1,9 +1,13 @@
+using System;
 using System.Linq;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Command;
+using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Loot;
+using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
@@ -34,14 +38,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (session.Player.IsEmoting)
                 session.Player.IsEmoting = false;
 
-            try
-            {
-                mover.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);
-            }
-            catch (NullReferenceException nre)
-            {
-                log.Error($"Exception caught while invoking EntityHandler.HandleEntityCommand - Invoking player is null! :\n{nre}");
-            }
+            mover?.MovementManager.HandleClientEntityCommands(entityCommand.Commands, entityCommand.Time);
         }
 
         [MessageHandler(GameMessageOpcode.ClientActivateUnit)]
@@ -55,34 +52,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
                 // TODO: sanity check for range etc.
 
-                entity.OnActivate(session.Player);
+                entity.OnInteract(session.Player);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                session.Player.SendSystemMessage("Activated entity does not exist!");
-            }
-        }
-
-        [MessageHandler(GameMessageOpcode.ClientActivateUnitCast)]
-        public static void HandleActivateUnitCast(WorldSession session, ClientActivateUnitCast unit)
-        {
-            try
-            {
-                WorldEntity entity = session.Player.GetVisible<WorldEntity>(unit.ActivateUnitId);
-                if (entity == null)
-                    throw new InvalidPacketValueException();
-
-                // TODO: sanity check for range etc.
-
-                session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, entity.CreatureId, 1u);
-                foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(entity.CreatureId) ?? Enumerable.Empty<uint>())
-                    session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroup, targetGroupId, 1u); // Updates the objective, but seems to disable all the other targets. TODO: Investigate
-            
-                entity.OnActivateCast(session.Player);
-            }
-            catch (Exception e)
-            {
-                session.Player.SendSystemMessage("Activated entity does not exist!");
+                session.Player.SendSystemMessage("Error while interacting with unit!");
             }
         }
 
@@ -92,7 +66,6 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             WorldEntity entity = session.Player.GetVisible<WorldEntity>(entityInteraction.Guid);
             if (entity != null)
             {
-                session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, entity.CreatureId, 1u);
                 session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.TalkTo, entity.CreatureId, 1u);
                 foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(entity.CreatureId) ?? Enumerable.Empty<uint>())
                     session.Player.QuestManager.ObjectiveUpdate(QuestObjectiveType.TalkToTargetGroup, targetGroupId, 1u);
@@ -159,6 +132,101 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 throw new InvalidPacketValueException();
 
             session.Player.Sit(chair);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientActivateUnitCast)]
+        public static void HandleActivateUnitCast(WorldSession session, ClientActivateUnitCast request)
+        {
+            WorldEntity entity = session.Player.GetVisible<WorldEntity>(request.ActivateUnitId);
+            if (entity == null)
+                throw new InvalidPacketValueException();
+
+            entity.OnActivateCast(session.Player, request.ClientUniqueId);
+        }
+
+        /// <remarks>
+        /// Possibly only used by Bindpoint entities
+        /// </remarks>
+        [MessageHandler(GameMessageOpcode.ClientActivateUnitInteraction)]
+        public static void HandleActivateUnitDeferred(WorldSession session, ClientActivateUnitInteraction request)
+        {
+
+            WorldEntity entity = session.Player.GetVisible<WorldEntity>(request.ActivateUnitId);
+            if (entity == null)
+                throw new InvalidPacketValueException();
+
+            entity.OnActivateCast(session.Player, request.ClientUniqueId);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientInteractionResult)]
+        public static void HandleSpellDeferredResult(WorldSession session, ClientSpellInteractionResult result)
+        {
+            if (!(session.Player.HasSpell(x => x.CastingId == result.CastingId, out Spell spell)))
+                throw new ArgumentNullException($"Spell cast {result.CastingId} not found.");
+
+            if (spell is not SpellClientSideInteraction spellCSI)
+                throw new ArgumentNullException($"Spell missing a ClientSideInteraction.");
+
+            switch (result.Result)
+            {
+                case 0:
+                    spellCSI.FailClientInteraction();
+                    break;
+                case 1:
+                    spellCSI.SucceedClientInteraction();
+                    break;
+                case 2:
+                    spellCSI.CancelCast(Game.Spell.Static.CastResult.ClientSideInteractionFail);
+                    break;
+            }
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientMovementSpeedUpdate)]
+        public static void HandleMovementSpeedChange(WorldSession session, ClientMovementSpeedUpdate speedUpdate)
+        {
+            session.Player.HandleMovementSpeedApply(speedUpdate.Speed);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientMovementSpeedSprint)]
+        public static void HandleMovementSpeedSprint(WorldSession session, ClientMovementSpeedSprint speedSprint)
+        {
+            session.Player.HandleMovementSprintRequest(speedSprint.Sprint);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientDash)]
+        public static void HandleClientDash(WorldSession session, ClientDash clientDash)
+        {
+            session.Player.HandleDash(clientDash.Direction);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientResurrectRequest)]
+        public static void HandleClientResurrectRequest(WorldSession session, ClientResurrectRequest clientResurrectRequest)
+        {
+            WorldEntity entity = session.Player.Map.GetEntity<WorldEntity>(clientResurrectRequest.UnitId);
+            if (entity != null)
+            {
+                if (entity is Player player && session.Player.Guid == entity.Guid)
+                {
+                    player.DoResurrect(clientResurrectRequest.RezType);
+                    return;
+                }
+                else
+                    throw new InvalidOperationException($"Player requested resurrection of an entity that they do not own!");
+            }
+
+            throw new NotImplementedException($"Targeted Entity not found. Can players choose what type of resurrection other players get?");
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientLootVacuum)]
+        public static void HandleClientLootVacuum(WorldSession session, ClientLootVacuum clientLootVacuum)
+        {
+            GlobalLootManager.Instance.GiveAllLootInRange(session);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientLootItem)]
+        public static void HandleClientLootItem(WorldSession session, ClientLootItem clientLootItem)
+        {
+            GlobalLootManager.Instance.GiveLoot(session, (int)clientLootItem.LootId);
         }
     }
 }

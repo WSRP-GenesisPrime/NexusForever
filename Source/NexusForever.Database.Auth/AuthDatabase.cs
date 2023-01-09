@@ -68,27 +68,22 @@ namespace NexusForever.Database.Auth
         public async Task<AccountModel> GetAccountBySessionKeyAsync(string email, string sessionKey)
         {
             using var context = new AuthContext(config);
-            var account = await context.Account.SingleOrDefaultAsync(a => a.Email == email && a.SessionKey == sessionKey);
-            account.AccountCostumeUnlock            = context.AccountCostumeUnlock.Where(a => a.Id == account.Id).ToList();
-            account.AccountCurrency                 = context.AccountCurrency.Where(a => a.Id == account.Id).ToList();
-            account.AccountGenericUnlock            = context.AccountGenericUnlock.Where(a => a.Id == account.Id).ToList();
-            account.AccountKeybinding               = context.AccountKeybinding.Where(a => a.Id == account.Id).ToList();
-            account.AccountEntitlement              = context.AccountEntitlement.Where(a => a.Id == account.Id).ToList();
-            account.AccountPermission               = context.AccountPermission.Where(a => a.Id == account.Id).ToList();
-            account.AccountRole                     = context.AccountRole.Where(a => a.Id == account.Id).ToList();
-
-            return account;
-
-            /*return await context.Account
+            return await context.Account
                 .AsSplitQuery()
                 .Include(a => a.AccountCostumeUnlock)
                 .Include(a => a.AccountCurrency)
+                .Include(a => a.AccountEntitlement)
                 .Include(a => a.AccountGenericUnlock)
+                .Include(a => a.AccountItem)
+                .Include(a => a.AccountItemCooldown)
                 .Include(a => a.AccountKeybinding)
                 .Include(a => a.AccountEntitlement)
                 .Include(a => a.AccountPermission)
                 .Include(a => a.AccountRole)
-                .SingleOrDefaultAsync(a => a.Email == email && a.SessionKey == sessionKey);*/
+                .Include(a => a.AccountRewardTrack)
+                    .ThenInclude(b => b.Milestone)
+                .Include(a => a.AccountStoreTransaction)
+                .SingleOrDefaultAsync(a => a.Email == email && a.SessionKey == sessionKey);
         }
 
         /// <summary>
@@ -113,8 +108,8 @@ namespace NexusForever.Database.Auth
             var model = new AccountModel
             {
                 Email = email,
-                S     = s,
-                V     = v
+                S = s,
+                V = v,
             };
             model.AccountRole.Add(new AccountRoleModel
             {
@@ -170,6 +165,27 @@ namespace NexusForever.Database.Auth
         }
 
         /// <summary>
+        /// Set the password combination of salt and verifier for a given account.
+        /// </summary>
+        public void SetPasswordForAccount(string email, string s, string v)
+        {
+            email = email.ToLower();
+            if (!AccountExists(email))
+                throw new InvalidOperationException($"Account with that username already exists.");
+
+            using var context = new AuthContext(config);
+            AccountModel account = context.Account.FirstOrDefault(a => a.Email == email);
+            account.S = s;
+            account.V = v;
+
+            EntityEntry<AccountModel> entity = context.Attach(account);
+            entity.Property(p => p.S).IsModified = true;
+            entity.Property(p => p.V).IsModified = true;
+            
+            context.SaveChanges();
+        }
+
+        /// <summary>
         /// Update <see cref="AccountModel"/> with supplied session key asynchronously.
         /// </summary>
         public async Task UpdateAccountSessionKey(AccountModel account, string sessionKey)
@@ -213,6 +229,42 @@ namespace NexusForever.Database.Auth
                 .Include(r => r.RolePermission)
                 .AsNoTracking()
                 .ToImmutableList();
+        }
+        
+        public ulong GetNextAccountItemId()
+        {
+            using var context = new AuthContext(config);
+
+            return context.AccountItem
+                .Select(r => r.Id)
+                .DefaultIfEmpty()
+                .Max();
+        }
+
+        private async Task<ulong> GetNextTransactionId()
+        {
+            await using var context = new AuthContext(config);
+
+            ulong id = context.AccountStoreTransaction
+                .Select(r => r.TransactionId)
+                .DefaultIfEmpty()
+                .Max();
+
+            return id < 10000000ul ? 10000000ul + 1ul : id + 1ul;
+        }
+
+        public async Task<AccountStoreTransactionModel> CreateStoreTransaction(AccountModel account, AccountStoreTransactionModel transaction)
+        {
+            ulong id = await GetNextTransactionId();
+
+            transaction.TransactionId = id;
+
+            await using var context = new AuthContext(config);
+            EntityEntry<AccountModel> entity = context.Attach(account);
+            context.Add(transaction);
+            await context.SaveChangesAsync();
+
+            return transaction;
         }
     }
 }

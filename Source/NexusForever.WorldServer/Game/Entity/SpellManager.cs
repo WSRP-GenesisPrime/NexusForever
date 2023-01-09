@@ -8,6 +8,7 @@ using NexusForever.Shared;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -33,18 +34,41 @@ namespace NexusForever.WorldServer.Game.Entity
                 activeActionSet = value;
             }
         }
-
         private byte activeActionSet;
 
+        public byte InnateIndex
+        {
+            get => innateIndex;
+            private set
+            {
+                saveMask |= SpellManagerSaveMask.Innate;
+                innateIndex = value;
+            }
+        }
+        private byte innateIndex;
+
         private readonly Player player;
+        private CharacterSpell continuousSpell;
 
         private readonly Dictionary<uint /*spell4BaseId*/, CharacterSpell> spells = new();
         private readonly Dictionary<uint /*spell4Id*/, double /*cooldown*/> spellCooldowns = new();
-        private double globalSpellCooldown;
+        private readonly Dictionary<uint /*cooldownId*/, double /*cooldown*/> cooldownIds = new();
+        private readonly Dictionary<uint /*globalCooldownEnum*/, double /*cooldown*/> globalSpellCooldowns = new();
+        private uint maxGlobalSpellCooldownEnum = 3; // TODO: Read value from GameTables?
 
         private readonly ActionSet[] actionSets = new ActionSet[ActionSet.MaxActionSets];
 
         private SpellManagerSaveMask saveMask;
+
+        private readonly Dictionary<Class, List<uint> /* spell4Id*/> classPassives = new Dictionary<Class, List<uint>>
+        {
+            { Class.Warrior, new List<uint> { 46707 } },
+            { Class.Engineer, new List<uint> { 58450 } },
+            { Class.Esper, new List<uint> { 75261 } },
+            { Class.Medic, new List<uint> { 52081 } },
+            { Class.Stalker, new List<uint> { 70634 } },
+            { Class.Spellslinger, new List<uint> { 69704 } }
+        };
 
         /// <summary>
         /// Create a new <see cref="SpellManager"/> from existing <see cref="CharacterModel"/> database model.
@@ -59,6 +83,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 Item item = player.Inventory.SpellCreate(spellBaseInfo.Entry, ItemUpdateReason.NoReason);
                 spells.Add(spellModel.Spell4BaseId, new CharacterSpell(owner, spellModel, spellBaseInfo, item));
             }
+
+            for (uint i = 0; i <= maxGlobalSpellCooldownEnum; i++)
+                globalSpellCooldowns.Add(i, 0d);
 
             GrantSpells();
 
@@ -76,6 +103,7 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             activeActionSet = model.ActiveSpec;
+            innateIndex = model.InnateIndex;
         }
 
         public void GrantSpells()
@@ -95,6 +123,27 @@ namespace NexusForever.WorldServer.Game.Entity
 
                 if (GetSpell(spell4Entry.Spell4BaseIdBaseSpell) == null)
                     AddSpell(spell4Entry.Spell4BaseIdBaseSpell);
+
+                // Add Pet Abilities if this Spell has a Pet summoned from it
+                if(spell4Entry.Spell4IdPetSwitch > 0)
+                {
+                    Spell4Entry spell4PetEntry = GameTableManager.Instance.Spell4.GetEntry(spell4Entry.Spell4IdPetSwitch);
+                    if (spell4PetEntry == null)
+                        continue;
+
+                    if (GetSpell(spell4PetEntry.Spell4BaseIdBaseSpell) == null)
+                        AddSpell(spell4PetEntry.Spell4BaseIdBaseSpell);
+                }
+                
+                if (spell4Entry.Spell4IdMechanicAlternateSpell > 0)
+                {
+                    Spell4Entry spell4AltEntry = GameTableManager.Instance.Spell4.GetEntry(spell4Entry.Spell4IdMechanicAlternateSpell);
+                    if (spell4AltEntry == null)
+                        continue;
+
+                    if (GetSpell(spell4AltEntry.Spell4BaseIdBaseSpell) == null)
+                        AddSpell(spell4AltEntry.Spell4BaseIdBaseSpell);
+                }
             }
 
             ClassEntry classEntry = GameTableManager.Instance.Class.GetEntry((byte)player.Class);
@@ -114,16 +163,13 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void Update(double lastTick)
         {
-            // update global cooldown
-            if (globalSpellCooldown > 0d)
+            // update global cooldowns
+            foreach ((uint globalEnum, double cooldown) in globalSpellCooldowns.ToArray())
             {
-                if (globalSpellCooldown - lastTick <= 0d)
-                {
-                    globalSpellCooldown = 0d;
-                    log.Trace("Global spell cooldown has reset.");
-                }
-                else
-                    globalSpellCooldown -= lastTick;
+                if (cooldown <= 0d)
+                    continue;
+
+                globalSpellCooldowns[globalEnum] = cooldown - lastTick;
             }
 
             // update spell cooldowns
@@ -138,8 +184,23 @@ namespace NexusForever.WorldServer.Game.Entity
                     spellCooldowns[spellId] = cooldown - lastTick;
             }
 
+            // update cooldown id groups
+            foreach ((uint cooldownId, double cooldown) in cooldownIds.ToArray())
+            {
+                if (cooldown - lastTick <= 0d)
+                {
+                    cooldownIds.Remove(cooldownId);
+                    log.Trace($"Cooldown ID {cooldownId} has reset.");
+                }
+                else
+                    cooldownIds[cooldownId] = cooldown - lastTick;
+            }
+
             foreach (CharacterSpell unlockedSpell in spells.Values)
                 unlockedSpell.Update(lastTick);
+
+            if (continuousSpell != null && globalSpellCooldowns[continuousSpell.GlobalCooldownEnum] <= 0d && !player.IsCasting())
+                continuousSpell?.SpellManagerCast();
         }
 
         public void Save(CharacterContext context)
@@ -154,6 +215,12 @@ namespace NexusForever.WorldServer.Game.Entity
                 {
                     character.ActiveSpec = ActiveActionSet;
                     entity.Property(p => p.ActiveSpec).IsModified = true;
+                }
+
+                if ((saveMask & SpellManagerSaveMask.Innate) != 0)
+                {
+                    character.InnateIndex = InnateIndex;
+                    entity.Property(p => p.InnateIndex).IsModified = true;
                 }
 
                 saveMask = SpellManagerSaveMask.None;
@@ -268,6 +335,28 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
+        /// Return remaining cooldown for supplied cooldown ID.
+        /// </summary>
+        public double GetSpellCooldownByCooldownId(uint spell4CooldownId)
+        {
+            return cooldownIds.TryGetValue(spell4CooldownId, out double cooldown) ? cooldown : 0u;
+        }
+
+        /// <summary>
+        /// Update all spell cooldowns that share a given cooldown ID
+        /// </summary>
+        public void SetSpellCooldownByCooldownId(uint spell4CooldownId, double newCooldown)
+        {
+            if (newCooldown < 0d)
+                throw new ArgumentOutOfRangeException();
+
+            if (cooldownIds.TryGetValue(spell4CooldownId, out double cooldown))
+                cooldownIds[spell4CooldownId] = newCooldown;
+            else
+                cooldownIds.TryAdd(spell4CooldownId, newCooldown);
+        }
+
+        /// <summary>
         /// Return spell cooldown for supplied spell id in seconds.
         /// </summary>
         public double GetSpellCooldown(uint spellId)
@@ -278,7 +367,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// <summary>
         /// Set spell cooldown in seconds for supplied spell id.
         /// </summary>
-        public void SetSpellCooldown(uint spell4Id, double cooldown)
+        private void _SetSpellCooldown(uint spell4Id, double cooldown, bool emit)
         {
             if (cooldown < 0d)
                 throw new ArgumentOutOfRangeException();
@@ -290,7 +379,7 @@ namespace NexusForever.WorldServer.Game.Entity
 
             log.Trace($"Spell {spell4Id} cooldown set to {cooldown} seconds.");
 
-            if (!player.IsLoading)
+            if (!player.IsLoading && emit)
             {
                 player.Session.EnqueueMessageEncrypted(new ServerCooldown
                 {
@@ -305,21 +394,101 @@ namespace NexusForever.WorldServer.Game.Entity
             }
         }
 
+        /// <summary>
+        /// Set spell cooldown in seconds for supplied <see cref="SpellInfo"/>.
+        /// </summary>
+        public void SetSpellCooldown(SpellInfo spellInfo, double cooldown, bool emit = false)
+        {
+            if (cooldown < 0d)
+                throw new ArgumentOutOfRangeException();
+
+            _SetSpellCooldown(spellInfo.Entry.Id, cooldown, emit);
+
+            foreach (SpellCoolDownEntry coolDownEntry in spellInfo.Cooldowns)
+                SetSpellCooldownByCooldownId(coolDownEntry.Id, cooldown);
+        }
+
+        /// <summary>
+        /// Set spell cooldown in seconds for supplied spell id.
+        /// </summary>
+        public void SetSpellCooldown(uint spell4Id, double cooldown, bool emit = false)
+        {
+            if (cooldown < 0d)
+                throw new ArgumentOutOfRangeException();
+
+            Spell4Entry entry = GameTableManager.Instance.Spell4.GetEntry(spell4Id);
+            if (entry == null)
+                throw new InvalidOperationException($"Spell4 with ID ({spell4Id}) does not exist.");
+
+            SpellBaseInfo baseInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(entry.Spell4BaseIdBaseSpell);
+            if (baseInfo == null)
+                throw new InvalidOperationException($"BaseInfo with ID ({entry.Spell4BaseIdBaseSpell}) does not exist.");
+
+            SetSpellCooldown(baseInfo.GetSpellInfo((byte)entry.TierIndex), cooldown, emit);
+        }
+
+        /// <summary>
+        /// Update all spell cooldowns that share a given group ID
+        /// </summary>
+        public void SetSpellCooldownByGroupId(uint groupId, double cooldown)
+        {
+            if (cooldown < 0d)
+                throw new ArgumentOutOfRangeException();
+
+            foreach (uint spell4 in spellCooldowns.Keys.ToList())
+            {
+                Spell4Entry spell4Entry = GameTableManager.Instance.Spell4.GetEntry(spell4);
+                if (spell4Entry == null)
+                    throw new InvalidOperationException($"Spell4 with ID ({spell4}) does not exist.");
+
+                if (spell4Entry.Spell4GroupListId == 0u)
+                    continue;
+
+                Spell4GroupListEntry spell4GroupListEntry = GameTableManager.Instance.Spell4GroupList.GetEntry(spell4Entry.Spell4GroupListId);
+                if (spell4GroupListEntry == null)
+                    throw new InvalidOperationException($"Spell4 Group List with ID ({spell4Entry.Spell4GroupListId}) does not exist.");
+
+                if (spell4GroupListEntry.SpellGroupIds.Contains(groupId))
+                    SetSpellCooldown(spell4, cooldown);
+            }
+        }
+
+        /// <summary>
+        /// Update all spell cooldowns that share a base spell ID
+        /// </summary>
+        public void SetSpellCooldownByBaseSpell(uint spell4BaseId, uint type, double cooldown)
+        {
+            SpellBaseInfo baseSpellInfo = GlobalSpellManager.Instance.GetSpellBaseInfo(spell4BaseId);
+            if (baseSpellInfo == null)
+                throw new ArgumentNullException();
+
+            foreach (SpellInfo spellInfo in baseSpellInfo)
+            {
+                if (spellCooldowns.TryGetValue(spellInfo.Entry.Id, out double currentCd))
+                {
+                    if (type == 3)
+                        SetSpellCooldown(spellInfo.Entry.Id, cooldown / 1000d);
+                    else
+                        SetSpellCooldown(spellInfo.Entry.Id, currentCd * cooldown);
+                }
+            }
+        }
+
         public void ResetAllSpellCooldowns()
         {
             foreach (uint spell4Id in spellCooldowns.Keys.ToList())
-                SetSpellCooldown(spell4Id, 0d);
+                SetSpellCooldown(spell4Id, 0d, true);
         }
 
-        public double GetGlobalSpellCooldown()
+        public double GetGlobalSpellCooldown(uint globalEnum)
         {
-            return globalSpellCooldown;
+            return globalSpellCooldowns[globalEnum];
         }
 
-        public void SetGlobalSpellCooldown(double cooldown)
+        public void SetGlobalSpellCooldown(uint globalEnum, double cooldown)
         {
-            globalSpellCooldown = cooldown;
-            log.Trace($"Global spell cooldown set to {cooldown} seconds.");
+            globalSpellCooldowns[globalEnum] = cooldown;
+            log.Trace($"Global spell cooldown {globalEnum} set to {cooldown} seconds.");
         }
 
         /// <summary>
@@ -350,6 +519,96 @@ namespace NexusForever.WorldServer.Game.Entity
             return SpecError.Ok;
         }
 
+        /// <summary>
+        /// Update active Innate Ability with supplied index.
+        /// </summary>
+        public void SetInnate(byte index)
+        {
+            ClassEntry entry = GameTableManager.Instance.Class.GetEntry((ulong)player.Class);
+            if (entry == null)
+                throw new InvalidOperationException($"Player Class does not have an entry: {player.Class}");
+
+            if (entry.Spell4IdInnateAbilityActive[index] == 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            uint innateActiveBaseId = GameTableManager.Instance.Spell4.GetEntry(entry.Spell4IdInnateAbilityActive[index]).Spell4BaseIdBaseSpell;
+            if (innateActiveBaseId == 0)
+                throw new InvalidOperationException("Selected Innate ability does not have an associated Spell4 Entry.");
+
+            CharacterSpell innateActive = GetSpell(innateActiveBaseId);
+            if (innateActive == null)
+                throw new InvalidOperationException($"Player does not have spell with a Base ID of {innateActiveBaseId}");
+
+            if (entry.PrerequisiteIdInnateAbility[index] > 0)
+                if (!PrerequisiteManager.Instance.Meets(player, entry.PrerequisiteIdInnateAbility[index]))
+                    return;
+
+            CastInnatePassive(index);
+
+            InnateIndex = index;
+        }
+
+        private void CastInnatePassive(int newInnate = -1)
+        {
+            uint innateIndexToCast = newInnate > -1 ? (uint)newInnate : InnateIndex;
+
+            ClassEntry entry = GameTableManager.Instance.Class.GetEntry((ulong)player.Class);
+            if (entry == null)
+                throw new InvalidOperationException($"Player Class does not have an entry: {player.Class}");
+
+            if (newInnate > -1)
+            {
+                // TODO: End existing Innate Spell
+                uint oldInnatePassiveSpell4Id = entry.Spell4IdInnateAbilityPassive[innateIndex];
+                if (player.HasSpell(oldInnatePassiveSpell4Id, out Spell.Spell oldInnatePassive))
+                    oldInnatePassive.Finish();
+            }
+
+            uint innatePassiveSpell4Id = entry.Spell4IdInnateAbilityPassive[innateIndexToCast];
+            if (innatePassiveSpell4Id != 0)
+            {
+                if (player.HasSpell(innatePassiveSpell4Id, out Spell.Spell currentPassiveBuff))
+                    return;
+
+                CharacterSpell passiveSpell = GetSpell(GameTableManager.Instance.Spell4.GetEntry(entry.Spell4IdInnateAbilityActive[innateIndexToCast]).Spell4BaseIdBaseSpell);
+                if (passiveSpell == null)
+                    throw new InvalidOperationException($"Selected Innate Passive does not have an associated Spell4 Entry (ID: {innatePassiveSpell4Id})");
+
+                player.CastSpell(innatePassiveSpell4Id, new SpellParameters
+                {
+                    UserInitiatedSpellCast = false
+                });
+            }
+        }
+
+        /// <summary>
+        /// This uses passive On Start abilities that were caught in sniffs. Provides a lot of Procs and hidden class functionality.
+        /// </summary>
+        private void CastClassPassives()
+        {
+            if (classPassives.TryGetValue(player.Class, out List<uint> classPassiveSpells))
+            {
+                foreach (uint spell4Id in classPassiveSpells)
+                {
+                    if (player.HasSpell(spell4Id, out Spell.Spell currentClassPassive))
+                        continue;
+
+                    player.CastSpell(spell4Id, new SpellParameters
+                    {
+                        UserInitiatedSpellCast = false
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set the supplied spell as the spell to Continuously Cast when GCD expires. Should only be called by a <see cref="CharacterSpell"/>.
+        /// </summary>
+        public void SetAsContinuousCast(CharacterSpell spell)
+        {
+            continuousSpell = spell;
+        }
+
         public void SendInitialPackets()
         {
             SendServerAbilities();
@@ -357,6 +616,9 @@ namespace NexusForever.WorldServer.Game.Entity
             SendServerAbilityPoints();
             SendServerActionSets();
             SendServerAmpLists();
+            SendServerPlayerInnate();
+            CastInnatePassive();
+            CastClassPassives();
 
             player.Session.EnqueueMessageEncrypted(new ServerCooldownList
             {
@@ -419,8 +681,8 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             player.Session.EnqueueMessageEncrypted(new ServerAbilityPoints
             {
-                AbilityPoints      = actionSets[ActiveActionSet].TierPoints,
-                TotalAbilityPoints = ActionSet.MaxTierPoints
+                AbilityPoints      = 0, //actionSets[ActiveActionSet].TierPoints,
+                TotalAbilityPoints = 0 //ActionSet.MaxTierPoints
             });
         }
 
@@ -440,6 +702,14 @@ namespace NexusForever.WorldServer.Game.Entity
                 ActionSet actionSet = GetActionSet(i);
                 player.Session.EnqueueMessageEncrypted(actionSet.BuildServerAmpList());
             }
+        }
+
+        private void SendServerPlayerInnate()
+        {
+            player.Session.EnqueueMessageEncrypted(new ServerPlayerInnate
+            {
+                InnateIndex = InnateIndex
+            });
         }
     }
 }

@@ -117,11 +117,13 @@ namespace NexusForever.Database.Character
         public async Task<List<CharacterModel>> GetCharacters(uint accountId)
         {
             using var context = new CharacterContext(config);
+
             return await context.Character.Where(c => c.AccountId == accountId)
                 .AsSplitQuery()
                 .Include(c => c.Appearance)
                 .Include(c => c.Customisation)
                 .Include(c => c.Item)
+                    .ThenInclude(c => c.Runes)
                 .Include(c => c.Bone)
                 .Include(c => c.Currency)
                 .Include(c => c.Path)
@@ -139,6 +141,7 @@ namespace NexusForever.Database.Character
                 .Include(c => c.Mail)
                     .ThenInclude(c => c.Attachment)
                         .ThenInclude(c => c.Item)
+                            .ThenInclude(c => c.Runes)
                 .Include(c => c.ZonemapHexgroup)
                 .Include(c => c.Quest)
                     .ThenInclude(c => c.QuestObjective)
@@ -147,6 +150,8 @@ namespace NexusForever.Database.Character
                 .Include(c => c.Contact)
                 .Include(c => c.TradeskillMaterials)
                 .Include(c => c.Reputation)
+                .Include(c => c.RewardTrack)
+                    .ThenInclude(c => c.Milestone)
                 .ToListAsync();
         }
 
@@ -210,12 +215,14 @@ namespace NexusForever.Database.Character
         /// <summary>
         /// Used by the Global Contact Manager to get the next unique ID.
         /// </summary>
-        public ulong? GetNextContactId()
+        public ulong GetNextContactId()
         {
             using var context = new CharacterContext(config);
 
-            return context.CharacterContact.Select(r => r.Id)
-                .DefaultIfEmpty().Max(r => r);
+            return context.CharacterContact
+                .Select(r => r.Id)
+                .DefaultIfEmpty()
+                .Max();
         }
 
         public async Task<List<CharacterContactModel>> GetPendingContactRequests(ulong characterId)
@@ -230,6 +237,13 @@ namespace NexusForever.Database.Character
             return await context.CharacterContact
                 .Where(c => c.ContactId == characterId && c.Accepted == 0 && contactTypes.Contains(c.Type))
                 .ToListAsync();
+        }
+
+        public List<PropertyBaseModel> GetProperties(uint type)
+        {
+            using var context = new CharacterContext(config);
+                
+            return context.PropertyBase.Where(p => p.Type == type).ToList();
         }
 
         public List<CharacterCreateModel> GetCharacterCreationData()

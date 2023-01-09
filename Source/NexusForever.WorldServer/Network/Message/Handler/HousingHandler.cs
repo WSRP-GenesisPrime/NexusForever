@@ -3,6 +3,9 @@ using System.Numerics;
 using System.Threading.Tasks;
 using NexusForever.Shared.Game.Events;
 using NexusForever.Shared;
+using System.Numerics;
+using System.Threading.Tasks;
+using NexusForever.Shared.Game.Events;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
@@ -25,6 +28,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
     public static class HousingHandler
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
         [MessageHandler(GameMessageOpcode.ClientHousingResidencePrivacyLevel)]
         public static void HandleHousingSetPrivacyLevel(WorldSession session, ClientHousingSetPrivacyLevel housingSetPrivacyLevel)
         {
@@ -84,15 +88,13 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
-            Residence residence = GlobalResidenceManager.Instance.GetResidence(housingPlugUpdate.ResidenceId);
-
             switch (housingPlugUpdate.Operation)
             {
                 case PlugUpdateOperation.Place:
-                    residenceMap.SetPlug(residence, session.Player, housingPlugUpdate);
+                    residenceMap.SetPlug(session.Player, housingPlugUpdate);
                     break;
                 case PlugUpdateOperation.Remove:
-                    residenceMap.RemovePlug(residence, session.Player, housingPlugUpdate);
+                    residenceMap.RemovePlug(session.Player, housingPlugUpdate);
                     break;
                 default:
                     log.Warn($"Operation {housingPlugUpdate.Operation} is unhandled.");
@@ -136,19 +138,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingRandomCommunityList)]
         public static void HandleHousingRandomCommunityList(WorldSession session, ClientHousingRandomCommunityList _)
         {
-            var serverHousingRandomCommunityList = new ServerHousingRandomCommunityList();
-            foreach (PublicCommunity community in GlobalResidenceManager.Instance.GetRandomVisitableCommunities())
-            {
-                serverHousingRandomCommunityList.Communities.Add(new ServerHousingRandomCommunityList.Community
-                {
-                    RealmId        = WorldServer.RealmId,
-                    NeighborhoodId = community.NeighbourhoodId,
-                    Owner          = community.Owner,
-                    Name           = community.Name
-                });
-            }
-
-            session.EnqueueMessageEncrypted(serverHousingRandomCommunityList);
+            GlobalResidenceManager.Instance.SendRandomVisitableCommunities(session);
         }
 
         [MessageHandler(GameMessageOpcode.ClientHousingRandomResidenceList)]
@@ -228,7 +218,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             // teleport player to correct residence instance
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            session.Player.Rotation    = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+            session.Player.Rotation    = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(new MapPosition
             {
                 Info     = new MapInfo
@@ -256,7 +246,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             // return player to correct residence instance
             ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-            session.Player.Rotation    = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+            session.Player.Rotation    = entrance.Rotation.ToEulerRadians();
             session.Player.TeleportTo(new MapPosition
             {
                 Info     = new MapInfo
@@ -454,7 +444,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 else
                     residence.Parent.RemoveChild(residence);
 
-                session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                 session.Player.TeleportTo(entrance.Entry, entrance.Position, community.Residence.Id);
             }
             else
@@ -463,7 +453,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 // otherwise they will be moved to the new instance during the unload
                 if (residence.Map != session.Player.Map)
                 {
-                    session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                    session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                     session.Player.TeleportTo(entrance.Entry, entrance.Position, community.Residence.Id);
                 }
 
@@ -501,26 +491,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (community?.Residence == null)
                 throw new InvalidPacketValueException();
 
-            ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(PropertyInfoId.Residence);
-            if (entrance == null)
-                throw new InvalidOperationException();
-
-            ResidenceChild child = community.Residence.GetChild(session.Player.CharacterId);
-            if (child == null)
-                throw new InvalidOperationException();
-
-            if (child.Residence.Map != null)
-                child.Residence.Map.RemoveChild(child.Residence);
-            else
-                child.Residence.Parent.RemoveChild(child.Residence);
-
-            child.Residence.PropertyInfoId = PropertyInfoId.Residence;
-
-            // shouldn't need to check for existing instance
-            // individual residence instances are unloaded when transfered to a community
-            // if for some reason the instance is still unloading the residence will be initalised again after
-            session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
-            session.Player.TeleportTo(entrance.Entry, entrance.Position, child.Residence.Id);
+            community.RemoveChildResidence(session.Player);
         }
 
         [MessageHandler(GameMessageOpcode.Client0721)]
@@ -535,6 +506,106 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         }
         
         [MessageHandler(GameMessageOpcode.ClientHousingPropUpdate)]
+        public static void HandleHousingDecorPropRequest(WorldSession session, ClientHousingPropUpdate propRequest)
+        {
+            if (session.Player == null || session.Player.Map == null)
+                return;
+
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
+                return;
+
+            switch (propRequest.Operation)
+            {
+                case 0:
+                    residenceMap.RequestDecorEntity(session.Player, propRequest);
+                    break;
+                case 1:
+                    residenceMap.CreateOrMoveDecorEntity(session.Player, propRequest);
+                    break;
+                case 2:
+                    residenceMap.DeleteDecorEntity(session.Player, propRequest);
+                    break;
+            }
+            
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientHousingEnterInside)]
+        public static void HandleHousingEnterinside(WorldSession session, ClientHousingEnterInside enterInside)
+        {
+            if (session.Player == null || session.Player.Map == null)
+                return;
+
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
+                return;
+
+            if (session.Player.Map.Entry.Id != 1229 && session.Player.Map.Entry.Id != 3174)
+                return;
+
+            Residence residence = GlobalResidenceManager.Instance.GetResidence(enterInside.ResidenceId);
+
+            if (!session.Player.CanUseHousingDoors() || residence.ResidenceInfoEntry == null)
+            {
+                session.EnqueueMessageEncrypted(new ServerHousingResult
+                {
+                    RealmId = WorldServer.RealmId,
+                    ResidenceId = enterInside.ResidenceId,
+                    PlayerName = session.Player.Name,
+                    Result = HousingResult.Failed
+                });
+                return;
+            }
+
+            session.Player.Dismount(); // All observing clients crash if going in while mounted?
+
+            if (session.Player.HouseOutsideLocation != Vector3.Zero || session.Player.Position.Y < -720f)
+            {
+                Vector3 location = session.Player.HouseOutsideLocation;
+                session.Player.HouseOutsideLocation = Vector3.Zero;
+                if (location == Vector3.Zero)
+                {
+                    ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
+                    session.Player.TeleportTo(entrance.Entry, entrance.Position, instanceId: enterInside.ResidenceId);
+                }
+                else
+                {
+                    session.Player.MovementManager.SetRotation(new Vector3(-90f, 0f, 0f));
+                    session.Player.MovementManager.SetPosition(location, true, true);
+                }
+                return;
+            }
+
+            Vector3 teleportPosition = GlobalResidenceManager.Instance.GetResidenceInsideLocation(residence.ResidenceInfoEntry.Id, residence.PropertyInfoId);
+            if (teleportPosition != Vector3.Zero)
+            {
+                session.Player.HouseOutsideLocation = session.Player.Position;
+                session.Player.MovementManager.SetRotation(new Vector3(90f, 0f, 0f));
+                session.Player.MovementManager.SetPosition(teleportPosition, true, true);
+            }
+            else
+                session.Player.SendSystemMessage("Unknown teleport location.");
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientHousingRemodelInterior)]
+        public static void HandleHousingRemodelInterior(WorldSession session, ClientHousingRemodelInterior remodelInterior)
+        {
+            if (!(session.Player.Map is ResidenceMapInstance residenceMap))
+                throw new InvalidPacketValueException();
+
+            residenceMap.DecorUpdate(session.Player, remodelInterior);
+        }
+
+        /*[MessageHandler(GameMessageOpcode.Client0721)]
+        public static void Handle0721(WorldSession session, Client0721 client0721)
+        {
+            session.EnqueueMessageEncrypted(new Server022C
+            {
+                Unknown0 = true,
+                Unknown1 = session.Player.Rotation.X,
+                Unknown2 = -0f
+            });
+        }*/
+        
+        /*[MessageHandler(GameMessageOpcode.ClientHousingPropUpdate)]
         public static void HandleHousingDecorPropRequest(WorldSession session, ClientHousingPropUpdate propRequest)
         {
             if (session.Player == null || !(session.Player.Map is ResidenceMapInstance residenceMap))
@@ -555,9 +626,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     residenceMap.DeleteDecorEntity(session.Player, propRequest);
                     break;
             }
-        }
+        }*/
 
-        [MessageHandler(GameMessageOpcode.ClientHousingEnterInside)]
+        /*[MessageHandler(GameMessageOpcode.ClientHousingEnterInside)]
         public static void HandleHousingEnterinside(WorldSession session, ClientHousingEnterInside enterInside)
         {
             if (session.Player == null || session.Player.Map == null)
@@ -608,15 +679,15 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
             else
                 session.Player.SendSystemMessage("Unknown teleport location.");
-        }
+        }*/
 
-        [MessageHandler(GameMessageOpcode.ClientHousingRemodelInterior)]
+        /*[MessageHandler(GameMessageOpcode.ClientHousingRemodelInterior)]
         public static void HandleHousingRemodelInterior(WorldSession session, ClientHousingRemodelInterior remodelInterior)
         {
             if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.DecorUpdate(session.Player, remodelInterior);
-        }
+        }*/
     }
 }

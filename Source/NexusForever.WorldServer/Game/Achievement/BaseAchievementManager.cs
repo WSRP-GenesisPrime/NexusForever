@@ -100,7 +100,7 @@ namespace NexusForever.WorldServer.Game.Achievement
                 throw new ArgumentException();
 
             if (HasCompletedAchievement(info.Id))
-                throw new ArgumentException();
+                return;
 
             Achievement<T> achievement = GetAchievement(id);
             if (info.ChecklistEntries.Count == 0)

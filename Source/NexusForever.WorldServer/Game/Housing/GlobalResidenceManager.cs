@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Threading.Tasks;
 using NexusForever.Database;
 using NexusForever.Database.Character.Model;
@@ -15,6 +16,9 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing.Static;
+using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Network;
+using NexusForever.WorldServer.Network.Message.Model;
 using NLog;
 
 namespace NexusForever.WorldServer.Game.Housing
@@ -48,6 +52,49 @@ namespace NexusForever.WorldServer.Game.Housing
         private readonly Dictionary<ulong, PublicCommunity> visitableCommunities = new();
 
         private ImmutableDictionary</*plotIndex*/ byte, PlotPlacement> plotPlacements;
+        private readonly Dictionary</*plugId*/ uint, /*residenceInfoId*/uint> residenceLookup = new Dictionary<uint, uint>
+            {
+                { 80, 11 },     // Cozy Granok House
+                { 83, 14 },     // Cozy Aurin House
+                { 86, 17 },     // Spacious Exile Human House
+                { 294, 18 },    // Cozy Draken House
+                { 295, 19 },    // Cozy Chua House
+                { 298, 20 },    // Spacious Cassian House
+                { 299, 21 },    // Spacious Draken House
+                { 293, 22 },    // Cozy Cassian House
+                { 296, 23 },    // Spacious Chua House
+                { 367, 25 },    // Spaceship (Pre-Order)
+                { 297, 26 },    // Spacious Aurin House
+                { 291, 27 },    // Spacious Granok House
+                { 292, 28 },    // Cozy Exile Human House
+                { 530, 32 },    // Underground Bunker
+                { 534, 34 },    // Blackhole House
+                { 543, 35 },    // Osun House
+                { 554, 37 },    // Bird house
+                { 557, 38 }     // Royal Piglet
+            };
+        private readonly Dictionary</*residenceInfoId*/uint, Vector3> residenceTeleportLocation = new Dictionary<uint, Vector3>
+            {
+                { 11, new Vector3(1484.125f, -895.60f, 1440.239f) },
+                { 14, new Vector3(1478.511f, -897.57f, 1444.243f) },
+                { 17, new Vector3(1469.454f, -894.02f, 1444.689f) },
+                { 18, new Vector3(1483.797f, -822.27f, 1440.55f) },
+                { 19, new Vector3(1472.78f, -814.75f, 1444.42f) },
+                { 20, new Vector3(1476.702f, -811.31f, 1442.166f) },
+                { 21, new Vector3(1486.109f, -851.82f, 1440.203f) },
+                { 22, new Vector3(1482.395f, -811.40f, 1444.539f) },
+                { 23, new Vector3(1486.433f, -867.77f, 1455.389f) },
+                { 25, new Vector3(1491.635f, -903.55f, 1439.926f) },
+                { 26, new Vector3(1466.468f, -893f, 1457.137f) },
+                { 27, new Vector3(1480.618f, -895.67f, 1425.404f) },
+                { 28, new Vector3(1476.236f, -912.67f, 1442.122f) },
+                { 32, new Vector3(1497.198f, -912.67f, 1452.01f) },
+                { 34, new Vector3(1472f, -903.01f, 1442f) },
+                { 35, new Vector3(1530.391f, -969.07f, 1440.467f) },
+                { 37, new Vector3(1488.702f, -985.76f, 1440.08f) },
+                { 38, new Vector3(1491.635f, -903.55f, 1439.926f) }
+            };
+
         private double timeToSave = SaveDuration;
 
         private GlobalResidenceManager()
@@ -65,6 +112,7 @@ namespace NexusForever.WorldServer.Game.Housing
             CachePlotPlacements();
 
             InitialiseResidences();
+            CachePlotPlacements();
         }
 
         private void InitialiseResidences()
@@ -75,7 +123,8 @@ namespace NexusForever.WorldServer.Game.Housing
                 {
                     ICharacter character = CharacterManager.Instance.GetCharacterInfo(model.OwnerId.Value);
                     if (character == null)
-                        throw new DatabaseDataException($"Character owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
+                        continue;
+                        //throw new DatabaseDataException($"Character owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
 
                     var residence = new Residence(model);
                     StoreResidence(residence, character);
@@ -84,7 +133,8 @@ namespace NexusForever.WorldServer.Game.Housing
                 {
                     Community community = GlobalGuildManager.Instance.GetGuild<Community>(model.GuildOwnerId.Value);
                     if (community == null)
-                        throw new DatabaseDataException($"Community owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
+                        continue;
+                        //throw new DatabaseDataException($"Community owner {model.OwnerId.Value} of residence {model.Id} is invalid!");
 
                     var residence = new Residence(model);
                     community.Residence = residence;
@@ -114,6 +164,21 @@ namespace NexusForever.WorldServer.Game.Housing
             log.Info($"Loaded {residences.Count} housing residences!");
         }
 
+        private void CachePlotPlacements()
+        {
+            var builder = ImmutableDictionary.CreateBuilder<byte, PlotPlacement>();
+
+            builder.Add(0, new PlotPlacement(62612, 35031, new Vector3(1472f, -715.01f, 1440f)));
+            builder.Add(1, new PlotPlacement(23863, 30343, new Vector3(1424f, -715.7094f, 1472f)));
+            builder.Add(2, new PlotPlacement(23789, 27767, new Vector3(1456f, -714.7094f, 1392f)));
+            builder.Add(3, new PlotPlacement(23789, 27767, new Vector3(1488f, -714.7094f, 1392f)));
+            builder.Add(4, new PlotPlacement(23789, 27767, new Vector3(1456f, -714.7094f, 1488f)));
+            builder.Add(5, new PlotPlacement(23789, 27767, new Vector3(1488f, -714.7094f, 1488f)));
+            builder.Add(6, new PlotPlacement(23863, 30343, new Vector3(1424f, -715.7094f, 1408f)));
+
+            plotPlacements = builder.ToImmutable();
+        }
+
         /// <summary>
         /// Shutdown <see cref="GlobalResidenceManager"/> and any related resources.
         /// </summary>
@@ -137,21 +202,6 @@ namespace NexusForever.WorldServer.Game.Housing
             }
         }
 
-        private void CachePlotPlacements()
-        {
-            var builder = ImmutableDictionary.CreateBuilder<byte, PlotPlacement>();
-
-            builder.Add(0, new PlotPlacement(62612, 35031, new Vector3(1472f, -715.01f, 1440f)));
-            builder.Add(1, new PlotPlacement(23863, 30343, new Vector3(1424f, -715.7094f, 1472f)));
-            builder.Add(2, new PlotPlacement(23789, 27767, new Vector3(1456f, -714.7094f, 1392f)));
-            builder.Add(3, new PlotPlacement(23789, 27767, new Vector3(1488f, -714.7094f, 1392f)));
-            builder.Add(4, new PlotPlacement(23789, 27767, new Vector3(1456f, -714.7094f, 1488f)));
-            builder.Add(5, new PlotPlacement(23789, 27767, new Vector3(1488f, -714.7094f, 1488f)));
-            builder.Add(6, new PlotPlacement(23863, 30343, new Vector3(1424f, -715.7094f, 1408f)));
-
-            plotPlacements = builder.ToImmutable();
-        }
-
         private void SaveResidences()
         {
             var tasks = new List<Task>();
@@ -168,6 +218,7 @@ namespace NexusForever.WorldServer.Game.Housing
         {
             var residence = new Residence(player);
             StoreResidence(residence, player);
+            player.ResidenceManager.SetResidence(residence);
 
             log.Trace($"Created new residence {residence.Id} for player {player.Name}.");
             return residence;
@@ -281,20 +332,19 @@ namespace NexusForever.WorldServer.Game.Housing
         }
 
         /// <summary>
-        /// Get the <see cref="ResidenceEntrance"/> for the provided <see cref="Residence"/>
+        /// Remove an existing <see cref="Residence"/> from cache by supplied <see cref="Community"/>.
         /// </summary>
-        public WorldLocation2Entry GetResidenceEntranceLocation(Residence residence)
+        /// <param name="community"></param>
+        public void RemoveCommunity(Community community)
         {
-            HousingPropertyInfoEntry propertyEntry = GameTableManager.Instance.HousingPropertyInfo.GetEntry((ulong) residence.PropertyInfoId);
-            if (propertyEntry == null)
-                throw new HousingException();
+            DeregisterCommunityVists(community.Residence.Id);
 
-            return GameTableManager.Instance.WorldLocation2.GetEntry(propertyEntry.WorldLocation2Id);
+            residences.Remove(community.Residence.Id);
+
+            communityOwnerCache.Remove(community.Residence.GuildOwnerId.Value);
+            communitySearchCache.Remove(community.Name);
         }
 
-        /// <summary>
-        /// Get the <see cref="ResidenceEntrance"/> for the provided <see cref="Residence"/>
-        /// </summary>
         public ResidenceEntrance GetResidenceEntrance(PropertyInfoId propertyInfoId)
         {
             HousingPropertyInfoEntry propertyEntry = GameTableManager.Instance.HousingPropertyInfo.GetEntry((ulong)propertyInfoId);
@@ -371,6 +421,73 @@ namespace NexusForever.WorldServer.Game.Housing
                 .Values
                 .OrderBy(r => random.Next())
                 .Take(50);
+        }
+
+        /// <summary>
+        /// Sends Random Visitable Communities to given <see cref="WorldSession"/>.
+        /// </summary>
+        /// <param name="session"></param>
+        public void SendRandomVisitableCommunities(WorldSession session)
+        {
+            var serverHousingRandomCommunityList = new ServerHousingRandomCommunityList();
+            foreach (PublicCommunity community in GetRandomVisitableCommunities())
+            {
+                serverHousingRandomCommunityList.Communities.Add(new ServerHousingRandomCommunityList.Community
+                {
+                    RealmId = WorldServer.RealmId,
+                    NeighborhoodId = community.NeighbourhoodId,
+                    Owner = community.Owner,
+                    Name = community.Name
+                });
+            }
+
+            session.EnqueueMessageEncrypted(serverHousingRandomCommunityList);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="HousingResidenceInfoEntry"/> ID if the plug ID is known.
+        /// </summary>
+        public uint GetResidenceEntryForPlug(uint plugItemId)
+        {
+            return residenceLookup.TryGetValue(plugItemId, out uint residenceId) ? residenceId : 0u;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="Vector3"/> location for the house inside
+        /// </summary>
+        public Vector3 GetResidenceInsideLocation(uint residenceInfoId, PropertyInfoId propertyInfoId)
+        {
+            if (residenceTeleportLocation.TryGetValue(residenceInfoId, out Vector3 teleportLocation))
+            {
+                if (propertyInfoId != PropertyInfoId.Residence)
+                {
+                    teleportLocation = teleportLocation + GetResidenceOffset(propertyInfoId) - GetResidenceOffset(PropertyInfoId.Residence);
+                }
+                return teleportLocation;
+            }
+            return Vector3.Zero;
+        }
+
+        public static Vector3 GetResidenceOffset(PropertyInfoId propertyInfo)
+        {
+            switch (propertyInfo)
+            {
+                case PropertyInfoId.Residence:
+                    return new Vector3(1472f - 0.00012207031f, -715f, 1440f);
+                case PropertyInfoId.CommunityResidence1:
+                    return new Vector3(352f, -715, -640f);
+                case PropertyInfoId.CommunityResidence2:
+                    return new Vector3(640f - 0.000061035156f, -715, -640f - 0.000061035156f);
+                case PropertyInfoId.CommunityResidence3:
+                    return new Vector3(224f + 0.000030517578f, -715, -256f);
+                case PropertyInfoId.CommunityResidence4:
+                    return new Vector3(512f, -715, -256f - 0.000030517578f);
+                case PropertyInfoId.CommunityResidence5:
+                    return new Vector3(800f, -715f, -256f - 0.000030517578f);
+                case PropertyInfoId.Community:
+                    return new Vector3(528f, -715f, -464f);
+            }
+            return Vector3.Zero;
         }
 
         /// <summary>

@@ -54,7 +54,10 @@ namespace NexusForever.Shared.GameTable
         public GameTable<ArchiveLinkEntry> ArchiveLink { get; private set; }
         public GameTable<AttributeMilestoneGroupEntry> AttributeMilestoneGroup { get; private set; }
         public GameTable<AttributeMiniMilestoneGroupEntry> AttributeMiniMilestoneGroup { get; private set; }
+
+        [GameData]
         public GameTable<BindPointEntry> BindPoint { get; private set; }
+        
         public GameTable<BinkMovieEntry> BinkMovie { get; private set; }
         public GameTable<BinkMovieSubtitleEntry> BinkMovieSubtitle { get; private set; }
         public GameTable<BugCategoryEntry> BugCategory { get; private set; }
@@ -233,6 +236,7 @@ namespace NexusForever.Shared.GameTable
 
         [GameData]
         public GameTable<HousingBuildEntry> HousingBuild { get; private set; }
+
         public GameTable<HousingContributionInfoEntry> HousingContributionInfo { get; private set; }
         public GameTable<HousingContributionTypeEntry> HousingContributionType { get; private set; }
 
@@ -243,6 +247,7 @@ namespace NexusForever.Shared.GameTable
 
         [GameData]
         public GameTable<HousingDecorTypeEntry> HousingDecorType { get; private set; }
+
         public GameTable<HousingMannequinPoseEntry> HousingMannequinPose { get; private set; }
         public GameTable<HousingMapInfoEntry> HousingMapInfo { get; private set; }
         public GameTable<HousingNeighborhoodInfoEntry> HousingNeighborhoodInfo { get; private set; }
@@ -260,6 +265,7 @@ namespace NexusForever.Shared.GameTable
 
         [GameData]
         public GameTable<HousingResidenceInfoEntry> HousingResidenceInfo { get; private set; }
+        
         public GameTable<HousingResourceEntry> HousingResource { get; private set; }
 
         [GameData]
@@ -295,10 +301,16 @@ namespace NexusForever.Shared.GameTable
         public GameTable<ItemImbuementEntry> ItemImbuement { get; private set; }
         public GameTable<ItemImbuementRewardEntry> ItemImbuementReward { get; private set; }
         public GameTable<ItemProficiencyEntry> ItemProficiency { get; private set; }
+
+        [GameData]
         public GameTable<ItemQualityEntry> ItemQuality { get; private set; }
+
         public GameTable<ItemRandomStatEntry> ItemRandomStat { get; private set; }
         public GameTable<ItemRandomStatGroupEntry> ItemRandomStatGroup { get; private set; }
+
+        [GameData]
         public GameTable<ItemRuneInstanceEntry> ItemRuneInstance { get; private set; }
+
         public GameTable<ItemSetEntry> ItemSet { get; private set; }
         public GameTable<ItemSetBonusEntry> ItemSetBonus { get; private set; }
 
@@ -308,7 +320,9 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<ItemSpecialEntry> ItemSpecial { get; private set; }
 
+        [GameData]
         public GameTable<ItemStatEntry> ItemStat { get; private set; }
+
         public GameTable<LanguageEntry> Language { get; private set; }
         public GameTable<LevelDifferentialAttributeEntry> LevelDifferentialAttribute { get; private set; }
         
@@ -417,6 +431,8 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<PetFlairEntry> PetFlair { get; private set; }
         public GameTable<PlayerNotificationTypeEntry> PlayerNotificationType { get; private set; }
+
+        [GameData]
         public GameTable<PositionalRequirementEntry> PositionalRequirement { get; private set; }
 
         [GameData]
@@ -481,8 +497,13 @@ namespace NexusForever.Shared.GameTable
         public GameTable<RewardRotationEssenceEntry> RewardRotationEssence { get; private set; }
         public GameTable<RewardRotationItemEntry> RewardRotationItem { get; private set; }
         public GameTable<RewardRotationModifierEntry> RewardRotationModifier { get; private set; }
+
+        [GameData]
         public GameTable<RewardTrackEntry> RewardTrack { get; private set; }
+
+        [GameData]
         public GameTable<RewardTrackRewardsEntry> RewardTrackRewards { get; private set; }
+
         public GameTable<SalvageEntry> Salvage { get; private set; }
         public GameTable<SalvageExceptionEntry> SalvageException { get; private set; }
         public GameTable<SkyCloudSetEntry> SkyCloudSet { get; private set; }
@@ -524,6 +545,7 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<Spell4EffectsEntry> Spell4Effects { get; private set; }
 
+        [GameData]
         public GameTable<Spell4GroupListEntry> Spell4GroupList { get; private set; }
 
         [GameData]
@@ -554,7 +576,9 @@ namespace NexusForever.Shared.GameTable
         [GameData]
         public GameTable<Spell4TelegraphEntry> Spell4Telegraph { get; private set; }
 
+        [GameData]
         public GameTable<Spell4ThresholdsEntry> Spell4Thresholds { get; private set; }
+
         public GameTable<Spell4TierRequirementsEntry> Spell4TierRequirements { get; private set; }
 
         [GameData]
@@ -573,6 +597,8 @@ namespace NexusForever.Shared.GameTable
 
         [GameData]
         public GameTable<SpellLevelEntry> SpellLevel { get; private set; }
+
+        [GameData]
         public GameTable<SpellPhaseEntry> SpellPhase { get; private set; }
 
         [GameData]
@@ -635,12 +661,16 @@ namespace NexusForever.Shared.GameTable
         public GameTable<UnitVehicleEntry> UnitVehicle { get; private set; }
 
         public GameTable<VeteranTierEntry> VeteranTier { get; private set; }
+
+        [GameData]
         public GameTable<VirtualItemEntry> VirtualItem { get; private set; }
 
         [GameData]
         public GameTable<VisualEffectEntry> VisualEffect { get; private set; }
 
+        [GameData]
         public GameTable<VitalEntry> Vital { get; private set; }
+
         public GameTable<WaterSurfaceEffectEntry> WaterSurfaceEffect { get; private set; }
 
         [GameData]
@@ -665,6 +695,7 @@ namespace NexusForever.Shared.GameTable
 
         [GameData]
         public GameTable<WorldSocketEntry> WorldSocket { get; private set; }
+
         public GameTable<WorldWaterEnvironmentEntry> WorldWaterEnvironment { get; private set; }
         public GameTable<WorldWaterFogEntry> WorldWaterFog { get; private set; }
         public GameTable<WorldWaterLayerEntry> WorldWaterLayer { get; private set; }

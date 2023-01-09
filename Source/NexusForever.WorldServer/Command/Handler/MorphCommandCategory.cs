@@ -27,37 +27,29 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature subtype.", ParameterFlags.Optional)]
             string subtype)
         {
-            try
+            Player player = context.InvokingPlayer;
+
+            bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(type);
+            if (storyTellerOnly && !player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))
             {
-                Player player = context.InvokingPlayer;
-
-                bool storyTellerOnly = CreatureHelper.IsStoryTellerOnly(type);
-                if (storyTellerOnly && !player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller))
-                {
-                    context.SendError("This creature category is only for storytellers and game masters!");
-                    return;
-                }
-
-                uint? creatureID = CreatureHelper.GetCreatureIdFromType(type, subtype);
-                if (creatureID == null)
-                {
-                    context.SendError("A Creature ID for the given type and variant could not be found!");
-                    return;
-                }
-
-                Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong)creatureID);
-                if (creature2 == null || creatureID == 0)
-                {
-                    return;
-                }
-
-                ChangePlayerDisplayInfo(player, creature2);
+                context.SendError("This creature category is only for storytellers and game masters!");
+                return;
             }
-            catch (Exception e)
+
+            uint? creatureID = CreatureHelper.GetCreatureIdFromType(type, subtype);
+            if (creatureID == null)
             {
-                log.Error($"Exception caught in MorphCommandCategory.HandleMorph!\n{e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                context.SendError("A Creature ID for the given type and variant could not be found!");
+                return;
             }
+
+            Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong)creatureID);
+            if (creature2 == null || creatureID == 0)
+            {
+                return;
+            }
+
+            ChangePlayerDisplayInfo(player, creature2);
         }
 
         [Command(Permission.GMFlag, "Change into a creature by Creature2Entry ID.", "id")]
@@ -65,24 +57,16 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature2Entry ID.")]
             uint creatureID)
         {
-            try
-            {
-                Player player = context.InvokingPlayer;
+            Player player = context.InvokingPlayer;
 
-                Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong)creatureID);
-                if (creature2 == null || creatureID == 0)
-                {
-                    context.SendError("Invalid Creature2Entry ID.");
-                    return;
-                }
-
-                ChangePlayerDisplayInfo(player, creature2);
-            }
-            catch (Exception e)
+            Creature2Entry creature2 = GameTableManager.Instance.Creature2.GetEntry((ulong)creatureID);
+            if (creature2 == null || creatureID == 0)
             {
-                log.Error($"Exception caught in MorphCommandCategory.HandleMorph!\n{e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                context.SendError("Invalid Creature2Entry ID.");
+                return;
             }
+
+            ChangePlayerDisplayInfo(player, creature2);
         }
 
         [Command(Permission.Morph, "Change back to your usual amazing self.", "demorph")]
@@ -97,42 +81,34 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Creature type.", ParameterFlags.Optional)]
             string type)
         {
-            try
-            {
-                Player player = context.InvokingPlayer;
+            Player player = context.InvokingPlayer;
 
-                bool storyteller = player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller);
-                if (type != null && (!CreatureHelper.IsStoryTellerOnly(type) || storyteller))
+            bool storyteller = player.Session.AccountRbacManager.HasPermission(Permission.MorphStoryteller);
+            if (type != null && (!CreatureHelper.IsStoryTellerOnly(type) || storyteller))
+            {
+                List<string> variants = CreatureHelper.getCreatureVariantsForType(type);
+                if (variants != null && variants.Count > 0)
                 {
-                    List<string> variants = CreatureHelper.getCreatureVariantsForType(type);
-                    if (variants != null && variants.Count > 0)
+                    string message = string.Format("Morph list: {0}", type);
+                    foreach (string entry in variants)
                     {
-                        string message = string.Format("Morph list: {0}", type);
-                        foreach (string entry in variants)
-                        {
-                            message = message + "\n" + entry;
-                        }
-                        context.SendMessage(message);
+                        message = message + "\n" + entry;
                     }
-                }
-                else
-                {
-                    List<string> types = CreatureHelper.getCreatureTypeList(storyteller);
-                    if (types != null && types.Count > 0)
-                    {
-                        string message = string.Format("Available morph types:");
-                        foreach (string entry in types)
-                        {
-                            message = message + "\n" + entry;
-                        }
-                        context.SendMessage(message);
-                    }
+                    context.SendMessage(message);
                 }
             }
-            catch (Exception e)
+            else
             {
-                log.Error($"Exception caught in MorphCommandCategory.HandleMorphList!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                List<string> types = CreatureHelper.getCreatureTypeList(storyteller);
+                if (types != null && types.Count > 0)
+                {
+                    string message = string.Format("Available morph types:");
+                    foreach (string entry in types)
+                    {
+                        message = message + "\n" + entry;
+                    }
+                    context.SendMessage(message);
+                }
             }
         }
 

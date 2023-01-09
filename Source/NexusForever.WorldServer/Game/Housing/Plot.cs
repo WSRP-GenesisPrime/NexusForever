@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using NexusForever.Shared;
 using NexusForever.Database.Character;
 using NexusForever.Database.Character.Model;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
+using NexusForever.Shared;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.Shared.Game;
+using NexusForever.WorldServer.Game.Spell.Static;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Linq;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
@@ -24,6 +26,7 @@ namespace NexusForever.WorldServer.Game.Housing
         public ResidenceMapInstance Map { get; private set; }
         public List<WorldEntity> PlotEntities { get; } = new List<WorldEntity>();
 
+
         public HousingPlotInfoEntry PlotInfoEntry
         {
             get => plotInfoEntry;
@@ -33,7 +36,6 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask |= PlotSaveMask.PlotInfoId;
             }
         }
-
         private HousingPlotInfoEntry plotInfoEntry;
 
         public HousingPlugItemEntry PlugItemEntry
@@ -45,7 +47,6 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask |= PlotSaveMask.PlugItemId;
             }
         }
-
         private HousingPlugItemEntry plugItemEntry;
 
         public HousingPlugFacing PlugFacing
@@ -57,7 +58,6 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask |= PlotSaveMask.PlugFacing;
             }
         }
-
         private HousingPlugFacing plugFacing;
 
         public byte BuildState
@@ -69,7 +69,6 @@ namespace NexusForever.WorldServer.Game.Housing
                 saveMask |= PlotSaveMask.BuildState;
             }
         }
-
         private byte buildState;
 
         private PlotSaveMask saveMask;
@@ -89,6 +88,11 @@ namespace NexusForever.WorldServer.Game.Housing
             plugItemEntry = GameTableManager.Instance.HousingPlugItem.GetEntry(model.PlugItemId);
             plugFacing    = (HousingPlugFacing)model.PlugFacing;
             buildState    = model.BuildState;
+            if (buildState < 4)
+                BuildState = 4;
+
+            if (PlugItemEntry != null)
+                buildEntry = GameTableManager.Instance.HousingBuild.GetEntry(PlugItemEntry.HousingBuildId);
 
             saveMask = PlotSaveMask.None;
             if (buildState < 4)
@@ -185,34 +189,47 @@ namespace NexusForever.WorldServer.Game.Housing
             }
         }
 
-        public void SetPlug(uint plugItemId, HousingPlugFacing plugFacing = HousingPlugFacing.East)
-        {
-            // TODO
-            PlugItemEntry  = GameTableManager.Instance.HousingPlugItem.GetEntry(plugItemId);
-            PlugFacing = plugFacing;
-
-            // BuildState needs to be cleared to get rid of the plug entity properly
-            BuildState = 0;
-            BuildStartTime = DateTime.UtcNow;
-        }
-
         /// <summary>
         /// Used when creating plugs initially
         /// </summary>
-        public void SetPlug(uint plugItemId)
+        public void SetPlug(uint plugItemId, ResidenceMapInstance map = null)
         {
             PlugItemEntry = GameTableManager.Instance.HousingPlugItem.GetEntry(plugItemId);
-            buildEntry = GameTableManager.Instance.HousingBuild.GetEntry(PlugItemEntry.HousingBuildId);
-            PlugFacing = HousingPlugFacing.East;
-            BuildState = 4;
+            buildEntry    = GameTableManager.Instance.HousingBuild.GetEntry(PlugItemEntry.HousingBuildId);
+            PlugFacing    = HousingPlugFacing.East;
+            BuildState    = 4;
+
+            if (map == null)
+                return;
+
+            Map = map;
+            Map.SendResidences();
+            Map.SendResidencePlots();
+
+            CreatePlug(() =>
+            {
+                Map.SendResidences();
+                Map.SendResidencePlots();
+                EmitPlotUpdate();
+            });
         }
 
         public void SetPlug(ResidenceMapInstance map, uint plugItemId, Player player, HousingPlugFacing plugFacing = HousingPlugFacing.East)
         {
+            if (map == null || map.Entry?.Id != 1229)
+            {
+                SetPlug(plugItemId, map);
+                return;
+            }
+
             Map = map;
             PlugItemEntry = GameTableManager.Instance.HousingPlugItem.GetEntry(plugItemId);
-            buildEntry = GameTableManager.Instance.HousingBuild.GetEntry(PlugItemEntry.HousingBuildId);
-            PlugFacing = plugFacing;
+            buildEntry    = GameTableManager.Instance.HousingBuild.GetEntry(PlugItemEntry.HousingBuildId);
+            PlugFacing    = plugFacing;
+
+            player.AchievementManager.CheckAchievements(player, Achievement.Static.AchievementType.HousePlugType, PlugItemEntry.HousingPlotTypeId);
+            if (Index != 0u)
+                player.AchievementManager.CheckAchievements(player, Achievement.Static.AchievementType.HousePlugCount, 1);
 
             // BuildState needs to be cleared to get rid of the plug entity properly
             BuildState = 0;
@@ -257,7 +274,7 @@ namespace NexusForever.WorldServer.Game.Housing
                 }
                 
             });
-            Map.EnqueueAdd(yard, new MapPosition
+            Map.EnqueueAdd(yard, new MapPosition 
             {
                 Position = plotPlacement.Position
             });
@@ -289,10 +306,10 @@ namespace NexusForever.WorldServer.Game.Housing
             EmitPlotUpdate();
 
             // This Packet makes the Yard begin to collapse
-            Map.EnqueueToAll(new Server088C
+            Map.EnqueueToAll(new ServerEntityDeath
             {
                 UnitId = yard.Guid,
-                Unknown0 = true
+                Dead   = true
             });
 
             // TODO: Move build timers to a queue system akin to Spells
@@ -307,20 +324,19 @@ namespace NexusForever.WorldServer.Game.Housing
             buildTimer = null;
             buildAction = null;
             yard.RemoveFromMap();
+            EmitPlotUpdate();
         }
 
-        public void CreatePlug(Action action)
+        private void CreatePlug(Action action)
         {
+            PlugEntity?.RemoveFromMap(); 
+
             // Instatiate new plug entity and assign to Plot's PlugEntity cache
             var newPlug = new Plug(PlotInfoEntry, PlugItemEntry, action);
-
-            if (PlugEntity != null)
-                PlugEntity.EnqueueReplace(newPlug);
-            else
-                Map.EnqueueAdd(newPlug, new MapPosition
-                {
-                    Position = GlobalResidenceManager.Instance.GetPlotPlacementInformation(Index).Position
-                });
+            Map.EnqueueAdd(newPlug, new MapPosition
+            {
+                Position = GlobalResidenceManager.Instance.GetPlotPlacementInformation(Index).Position
+            });
 
             // Update plot with PlugEntity reference
             SetPlugEntity(newPlug);
@@ -334,9 +350,19 @@ namespace NexusForever.WorldServer.Game.Housing
                     if (PlugItemEntry.Id == 18)
                         break;
 
-                    ResidenceEntity residenceEntity = new ResidenceEntity(6241, PlotInfoEntry, null);
+                    ResidenceEntity residenceEntity = new ResidenceEntity(6241, PlotInfoEntry, (uint guid) =>
+                    {
+                        // Resend the Action Bar because buttons may've been enabled after adding a house
+                        var actionBarPacket = new ServerShowActionBar
+                        {
+                            ShortcutSet = ShortcutSet.FloatingSpellBar,
+                            ActionBarShortcutSetId = 1553,
+                            Guid = guid
+                        };
+                        Map.EnqueueToAll(actionBarPacket);
+                    });
                     AddPlotEntity(residenceEntity);
-                    Map.EnqueueAdd(residenceEntity, new MapPosition
+                    Map.EnqueueAdd(residenceEntity, new MapPosition 
                     {
                         Position = new Vector3(1471f, -715f, 1443f)
                     });
@@ -374,6 +400,7 @@ namespace NexusForever.WorldServer.Game.Housing
                 throw new HousingException("RemovePlug should not be called on the Center Plot index");
 
             PlugItemEntry = null;
+            PlugEntity.RemoveFromMap();
             PlugEntity = null;
             PlugFacing = HousingPlugFacing.East;
             BuildState = 0;

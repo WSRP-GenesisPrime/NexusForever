@@ -11,6 +11,7 @@ using NexusForever.Shared.Game;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Quest.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using NexusForever.WorldServer.Script;
 
 namespace NexusForever.WorldServer.Game.Quest
 {
@@ -87,6 +88,7 @@ namespace NexusForever.WorldServer.Game.Quest
         private readonly List<QuestObjective> objectives = new();
 
         private UpdateTimer questTimer;
+        private bool checkState = false;
 
         /// <summary>
         /// Create a new <see cref="Quest"/> from an existing database model.
@@ -103,8 +105,10 @@ namespace NexusForever.WorldServer.Game.Quest
             if (timer != null)
                 questTimer = new UpdateTimer(timer.Value);
 
-            foreach (CharacterQuestObjectiveModel objectiveModel in model.QuestObjective)
+            foreach (CharacterQuestObjectiveModel objectiveModel in model.QuestObjective.OrderBy(o => o.Index))
                 objectives.Add(new QuestObjective(info, info.Objectives[objectiveModel.Index], objectiveModel));
+
+            checkState = true;
         }
 
         /// <summary>
@@ -123,6 +127,8 @@ namespace NexusForever.WorldServer.Game.Quest
                 state = QuestState.Achieved;
 
             saveMask = QuestSaveMask.Create;
+
+            checkState = true;
         }
 
         public void InitialiseTimer()
@@ -217,6 +223,13 @@ namespace NexusForever.WorldServer.Game.Quest
                     questTimer = null;
                 }
             }
+
+            if (checkState)
+            {
+                // TODO: Objectives should check, when they become active, to see if portions of them are already complete.
+                ScriptManager.Instance.GetScript<QuestScript>(Id)?.OnQuestStateChange(player, this, state);
+                checkState = false;
+            }
         }
 
         /// <summary>
@@ -224,6 +237,16 @@ namespace NexusForever.WorldServer.Game.Quest
         /// </summary>
         public void EnqueueDelete(bool set)
         {
+            // Don't delete quests that have been mentioned, they may not be able to be re-collected.
+            if (!CanDelete())
+            {
+                saveMask &= ~QuestSaveMask.Delete;
+                
+                if (Info.IsQuestMentioned)
+                    State = QuestState.Mentioned;
+                return;
+            }
+
             if (set)
                 saveMask |= QuestSaveMask.Delete;
             else
@@ -271,30 +294,29 @@ namespace NexusForever.WorldServer.Game.Quest
             if (PendingDelete)
                 return;
 
-            if (State == QuestState.Achieved)
-                return;
+            // Store incomplete objective progress so we can calculate and send updates after
+            Dictionary<byte /*index*/, uint/*progress*/> incompleteObjectivesPreUpdate = objectives.Where(o => !o.IsComplete())
+                .ToDictionary(o => o.Index, o => o.Progress);
 
             // Order in reverse Index so that sequential steps don't completed by the same action
             foreach (QuestObjective objective in objectives
-                .Where(o => o.ObjectiveInfo.Entry.Type == (uint)type && o.ObjectiveInfo.Entry.Data == data)
+                .Where(o => o.ObjectiveInfo.Entry.Type == (uint)type && o.IsTarget(data))
                 .OrderByDescending(o => o.Index))
             {
-                if (objective.IsComplete())
-                    continue;
+                ObjectiveUpdate(objective, progress);
+            }
 
-                if (!CanUpdateObjective(objective))
-                    continue;
-
-                uint oldProgress = objective.Progress;
-                objective.ObjectiveUpdate(progress);
-
-                if (objective.Progress != oldProgress)
+            // Send objective progress in index order
+            foreach (KeyValuePair<byte, uint> incompleteObjective in incompleteObjectivesPreUpdate)
+            {
+                QuestObjective objective = objectives[incompleteObjective.Key];
+                if (objective.Progress != incompleteObjective.Value)
                     SendQuestObjectiveUpdate(objective);
             }
 
             // TODO: Should you be able to complete optional objectives after required are completed?
-            if (RequiredObjectivesComplete())
-                CompleteOptionalObjectives();
+            if (AreAllRequiredObjectivesCompleted())
+                CompleteAllOptionalObjectives();
 
             if (objectives.All(o => o.IsComplete()))
                 State = QuestState.Achieved;
@@ -315,54 +337,84 @@ namespace NexusForever.WorldServer.Game.Quest
             if (objective == null)
                 return;
 
-            if (objective.IsComplete())
-                return;
+            // Store incomplete objective progress so we can calculate and send updates after
+            Dictionary<byte /*index*/, uint/*progress*/> incompleteObjectivesPreUpdate = objectives.Where(o => !o.IsComplete())
+                .ToDictionary(o => o.Index, o => o.Progress);
 
-            if (!CanUpdateObjective(objective))
-                return;
+            ObjectiveUpdate(objective, progress);
 
-            uint oldProgress = objective.Progress;
-            objective.ObjectiveUpdate(progress);
-
-            if (objective.Progress != oldProgress)
-                SendQuestObjectiveUpdate(objective);
-
-            // TODO: Should you be able to complete optional objectives after required are completed?
-            if (RequiredObjectivesComplete())
-                CompleteOptionalObjectives();
+            // Send objective progress in index order
+            foreach (KeyValuePair<byte, uint> incompleteObjective in incompleteObjectivesPreUpdate)
+            {
+                QuestObjective o = objectives[incompleteObjective.Key];
+                if (o.Progress != incompleteObjective.Value)
+                    SendQuestObjectiveUpdate(o);
+            }
 
             if (objectives.All(o => o.IsComplete()))
                 State = QuestState.Achieved;
         }
 
-        private bool CanUpdateObjective(QuestObjective objective)
+        private bool CanUpdateObjective(QuestObjective objective, uint progress)
         {
             if (objective.ObjectiveInfo.IsSequential())
             {
                 for (int i = 0; i < objective.Index; i++)
-                    if (!objectives[i].IsComplete())
-                        return false;
+                    if ((objectives[i].ObjectiveInfo.Entry.Flags & 0x02) != 0) // Ensure each previous step wasn't optional.
+                        if (!objectives[i].IsComplete())
+                            return false;
             }
+
+            if (objective.IsChecklist())
+                if ((objective.Progress & (1 << (int)progress)) != 0)
+                    return false;
 
             // TODO: client also checks objective flags 1 and 8 in the same function
             return true;
         }
 
-        private bool RequiredObjectivesComplete()
+        private bool AreAllRequiredObjectivesCompleted()
         {
-            return objectives
-                .Where(o => !o.ObjectiveInfo.IsOptional())
-                .All(o => o.IsComplete());
+            if (objectives.Count == 1 && !objectives[0].IsComplete())
+                return false;
+
+            foreach (QuestObjective objective in objectives)
+            {
+                if (objective.ObjectiveInfo.Entry.Flags == 0u ||
+                    (objective.ObjectiveInfo.Entry.Flags & 0x02) != 0 || 
+                    (objective.ObjectiveInfo.Entry.Flags & 0x04) != 0)
+                    if (!objective.IsComplete())
+                        return false;
+            }
+
+            return true;
         }
 
-        private void CompleteOptionalObjectives()
+        private void CompleteAllOptionalObjectives()
         {
-            foreach (QuestObjective objective in objectives
-                .Where(o => o.ObjectiveInfo.IsOptional() && !o.IsComplete()))
+            foreach (QuestObjective objective in objectives)
             {
-                objective.Complete();
-                SendQuestObjectiveUpdate(objective);
+                if ((objective.ObjectiveInfo.Entry.Flags & 0x02) == 0 && !objective.IsComplete())
+                    objective.Complete();
             }
+        }
+
+        private void ObjectiveUpdate(QuestObjective objective, uint progress)
+        {
+            if (objective == null)
+                throw new ArgumentNullException(nameof(objective));
+
+            if (objective.IsComplete())
+                return;
+
+            if (!CanUpdateObjective(objective, progress))
+                return;
+
+            objective.ObjectiveUpdate(progress);
+            ScriptManager.Instance.GetScript<QuestScript>(Id)?.OnObjectiveUpdate(player, this, objective);
+
+            if (AreAllRequiredObjectivesCompleted())
+                CompleteAllOptionalObjectives();
         }
 
         private void SendQuestObjectiveUpdate(QuestObjective objective)
@@ -394,6 +446,8 @@ namespace NexusForever.WorldServer.Game.Quest
             foreach (CommunicatorMessage message in GlobalQuestManager.Instance.GetQuestCommunicatorQuestStateTriggers(Id, state))
                 if (message.Meets(player))
                     player.QuestManager.QuestMention(message.QuestId);
+
+            ScriptManager.Instance.GetScript<QuestScript>(Id)?.OnQuestStateChange(player, this, State);
         }
 
         public IEnumerator<QuestObjective> GetEnumerator()

@@ -26,7 +26,7 @@ namespace NexusForever.WorldServer.Game.Housing.Static
         Music           = 0x004000,
         PropertyInfo    = 0x008000,
         GuildOwner      = 0x010000,
-		ResidenceInfo	= 0x400000,
-		NSFWLock		= 0x800000
+        ResidenceInfo   = 0x020000,
+		NSFWLock        = 0x800000
     }
 }
