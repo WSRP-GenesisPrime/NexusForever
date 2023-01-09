@@ -21,7 +21,8 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Item2Id of item to unlock.")]
             uint item2Id)
         {
-            context.InvokingPlayer?.CostumeManager?.UnlockItemByItem2Id(item2Id);
+            string resultMsg = context.InvokingPlayer?.CostumeManager?.UnlockItemByItem2Id(item2Id);
+            context.SendMessage(resultMsg);
         }
 
         [Command(Permission.CostumeOverrideId, "Override an item slot with a displayID.", "overrideid")]
