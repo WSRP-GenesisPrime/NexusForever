@@ -388,7 +388,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             foreach (DecorInfo decorInfo in housingCommunityDonate.Decor)
             {
-                Decor decor = residence.GetDecor(decorInfo.DecorId);
+                Decor decor = residence.GetDecor((ulong)decorInfo.DecorId);
                 if (decor == null)
                     throw new InvalidPacketValueException();
 
@@ -594,7 +594,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             residenceMap.DecorUpdate(session.Player, remodelInterior);
         }
 
-        [MessageHandler(GameMessageOpcode.Client0721)]
+        /*[MessageHandler(GameMessageOpcode.Client0721)]
         public static void Handle0721(WorldSession session, Client0721 client0721)
         {
             session.EnqueueMessageEncrypted(new Server022C
@@ -603,9 +603,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 Unknown1 = session.Player.Rotation.X,
                 Unknown2 = -0f
             });
-        }
+        }*/
         
-        [MessageHandler(GameMessageOpcode.ClientHousingPropUpdate)]
+        /*[MessageHandler(GameMessageOpcode.ClientHousingPropUpdate)]
         public static void HandleHousingDecorPropRequest(WorldSession session, ClientHousingPropUpdate propRequest)
         {
             if (session.Player == null || !(session.Player.Map is ResidenceMapInstance residenceMap))
@@ -626,9 +626,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     residenceMap.DeleteDecorEntity(session.Player, propRequest);
                     break;
             }
-        }
+        }*/
 
-        [MessageHandler(GameMessageOpcode.ClientHousingEnterInside)]
+        /*[MessageHandler(GameMessageOpcode.ClientHousingEnterInside)]
         public static void HandleHousingEnterinside(WorldSession session, ClientHousingEnterInside enterInside)
         {
             if (session.Player == null || session.Player.Map == null)
@@ -679,15 +679,15 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             }
             else
                 session.Player.SendSystemMessage("Unknown teleport location.");
-        }
+        }*/
 
-        [MessageHandler(GameMessageOpcode.ClientHousingRemodelInterior)]
+        /*[MessageHandler(GameMessageOpcode.ClientHousingRemodelInterior)]
         public static void HandleHousingRemodelInterior(WorldSession session, ClientHousingRemodelInterior remodelInterior)
         {
             if (!(session.Player.Map is ResidenceMapInstance residenceMap))
                 throw new InvalidPacketValueException();
 
             residenceMap.DecorUpdate(session.Player, remodelInterior);
-        }
+        }*/
     }
 }

@@ -748,7 +748,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             });
         }
         
-        [MessageHandler(GameMessageOpcode.ClientCharacterAppearanceChange)]
+        /*[MessageHandler(GameMessageOpcode.ClientCharacterAppearanceChange)]
         public static void HandleAppearanceChange(WorldSession session, ClientCharacterAppearanceChange appearanceChange)
         {
             // merge seperate label and value lists into a single dictonary
@@ -757,7 +757,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 .ToDictionary(p => p.l, p => p.v);
 
             session.Player.SetCharacterCustomisation(customisations, appearanceChange.Bones, (Race)appearanceChange.Race, (Sex)appearanceChange.Sex, appearanceChange.UseServiceTokens);
-        }
+        }*/
 
         [MessageHandler(GameMessageOpcode.ClientPvpModeSet)]
         public static void HandlePvpModeSet(WorldSession session, ClientPvpModeSet pvpModeSet)

@@ -6,7 +6,6 @@ using System.Numerics;
 using NexusForever.Shared;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Map.Search;
 
@@ -17,17 +16,6 @@ namespace NexusForever.WorldServer.Game.Entity
         public uint Guid { get; protected set; }
         public BaseMap Map { get; protected set; }
         public WorldZoneEntry Zone { get; private set; }
-        public Residence CurrentResidence
-        {
-            get
-            {
-                if (Map is ResidenceMapInstance rmap)
-                {
-                    return rmap.GetResidenceByZone(Zone);
-                }
-                return null;
-            }
-        }
         public Vector3 Position { get; protected set; }
 
         public MapInfo PreviousMap { get; private set; }
@@ -72,8 +60,8 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public virtual void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
         {
-            Guid     = guid;
-            Map      = map;
+            Guid = guid;
+            Map = map;
             Position = vector;
 
             UpdateVision();
@@ -103,12 +91,12 @@ namespace NexusForever.WorldServer.Game.Entity
 
             visibleGrids.Clear();
 
-            Guid        = 0;
+            Guid = 0;
             PreviousMap = new MapInfo
             {
                 Entry = Map.Entry
             };
-            Map         = null;
+            Map = null;
         }
 
         /// <summary>
@@ -198,7 +186,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         protected virtual void UpdateVision()
         {
-            Map.Search(Position, Map.VisionRange, new SearchCheckRange(Position, Map.VisionRange), out List<GridEntity> intersectedEntities, this);
+            Map.Search(Position, Map.VisionRange, new SearchCheckRange(Position, Map.VisionRange), out List<GridEntity> intersectedEntities);
 
             // new entities now in vision range
             foreach (GridEntity entity in intersectedEntities.Except(visibleEntities.Values))

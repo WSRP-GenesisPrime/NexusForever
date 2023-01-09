@@ -16,9 +16,6 @@ namespace NexusForever.WorldServer.Game.Entity
         private Plug ReplacementPlug { get; set; }
         private Action onAddToMapAction;
 
-        private Plug ReplacementPlug;
-        private Action onAddToMapAction;
-
         public Plug(HousingPlotInfoEntry plotEntry, HousingPlugItemEntry plugEntry, Action action = null)
             : base(EntityType.Plug)
         {

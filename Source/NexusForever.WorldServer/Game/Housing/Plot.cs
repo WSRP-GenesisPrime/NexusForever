@@ -26,10 +26,6 @@ namespace NexusForever.WorldServer.Game.Housing
         public ResidenceMapInstance Map { get; private set; }
         public List<WorldEntity> PlotEntities { get; } = new List<WorldEntity>();
 
-        public Plug PlugEntity { get; private set; }
-        public ResidenceMapInstance Map { get; private set; }
-        public List<WorldEntity> PlotEntities { get; } = new List<WorldEntity>();
-        public DateTime BuildStartTime { get; private set; } = new DateTime(2018, 12, 1);
 
         public HousingPlotInfoEntry PlotInfoEntry
         {

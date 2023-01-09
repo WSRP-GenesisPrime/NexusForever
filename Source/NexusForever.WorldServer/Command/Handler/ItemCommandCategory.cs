@@ -46,37 +46,28 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Maximum amount of results to return.")]
             int? maxResults)
         {
-            try
-            {
-                List<Item2Entry> searchResults = SearchManager.Instance
-                    .Search<Item2Entry>(name, context.Language, e => e.LocalizedTextIdName, true)
-                    .Take(maxResults ?? 25)
-                    .ToList();
+            
+            List<Item2Entry> searchResults = SearchManager.Instance
+                .Search<Item2Entry>(name, context.Language, e => e.LocalizedTextIdName, true)
+                .Take(maxResults ?? 25)
+                .ToList();
 
-                if (searchResults.Count == 0)
-                {
-                    context.SendMessage($"Item lookup results was 0 entries for '{name}'.");
-                    return;
-                }
+            if (searchResults.Count == 0)
+            {
+                context.SendMessage($"Item lookup results was 0 entries for '{name}'.");
+                return;
+            }
 
             var target = context.InvokingPlayer;
             foreach (Item2Entry itemEntry in searchResults)
             {
                 var builder = new ChatMessageBuilder
                 {
-                    var builder = new ChatMessageBuilder
-                    {
-                        Type = ChatChannelType.System,
-                        Text = $"({itemEntry.Id}) "
-                    };
-                    builder.AppendItem(itemEntry.Id);
-                    target.Session.EnqueueMessageEncrypted(builder.Build());
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in ItemCommandCategory.HandleItemLookup!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                    Type = ChatChannelType.System,
+                    Text = $"({itemEntry.Id}) "
+                };
+                builder.AppendItem(itemEntry.Id);
+                target.Session.EnqueueMessageEncrypted(builder.Build());
             }
         }
     }

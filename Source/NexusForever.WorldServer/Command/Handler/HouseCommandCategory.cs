@@ -21,7 +21,7 @@ namespace NexusForever.WorldServer.Command.Handler
     public class HouseCommandCategory : CommandCategory
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
-        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
+        /*[Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
         public void HandleHouseDecorAdd(ICommandContext context,
             [Parameter("Decor info id entry to add to the crate.")]
             uint decorInfoId,
@@ -53,11 +53,31 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value, color);
             }
-            catch (Exception e)
+        }*/
+        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "add")]
+        public void HandleHouseDecorAdd(ICommandContext context,
+                [Parameter("Decor info id entry to add to the crate.")]
+                uint decorInfoId,
+                [Parameter("Quantity of decor to add to the crate.")]
+                uint? quantity,
+                [Parameter("Color of the decor to add to the crate.")]
+                ushort? color)
+        {
+            DecorAdd_impl(context, decorInfoId, quantity, color);
+        }
+
+        public static void DecorAdd_impl(ICommandContext context, uint decorInfoId, uint? quantity, ushort? color = null)
+        {
+            quantity ??= 1u;
+
+            HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
+            if (entry == null)
             {
-                log.Error($"Exception caught in HouseCommandCategory.HandleHouseDecorAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                context.SendMessage($"Invalid decor info id {decorInfoId}!");
+                return;
             }
+
+            context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value, color);
         }
 
         [Command(Permission.HouseDecorLookup, "Returns a list of decor ids that match the supplied name.", "decorlookup")]
@@ -87,7 +107,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
+        /*[Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
         public void HandleHouseDecorAddDummy(ICommandContext context,
             [Parameter("Decor info id entry to add to the crate.")]
             uint decorInfoId,
@@ -97,7 +117,7 @@ namespace NexusForever.WorldServer.Command.Handler
             ushort? color)
         {
             HouseDecorCommandCategory.DecorAdd_impl(context, decorInfoId, quantity, color);
-        }
+        }*/
 
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]
         public void HandleHouseTeleport(ICommandContext context,
@@ -165,7 +185,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 }
 
                 ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-                target.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                target.Rotation = entrance.Rotation.ToEulerRadians();
                 target.TeleportTo(entrance.Entry, entrance.Position, residence.Parent?.Id ?? residence.Id);
             }
             catch (Exception e)
@@ -318,13 +338,13 @@ namespace NexusForever.WorldServer.Command.Handler
                         ClientHousingPlugUpdate pu = new ClientHousingPlugUpdate
                         {
                             Operation = PlugUpdateOperation.Place,
-                            PlotInfo = residence.GetPlotByIndex(0).PlotInfoEntry.Id,
-                            PlugFacing = (uint)residence.GetPlotByIndex(0).PlugFacing,
+                            PlotInfo = residence.GetPlot(0).PlotInfoEntry.Id,
+                            PlugFacing = (uint)residence.GetPlot(0).PlugFacing,
                             PlugItem = id,
                             ResidenceId = residence.Id,
                             RealmId = WorldServer.RealmId
                         };
-                        residence.Map.SetPlug(residence, target, pu);
+                        residence.Map.SetPlug(target, pu);
                         /*if (residence.SetHouse(plugItem))
                         {
                             residence.getMap().HandleHouseChange(target, residence.GetPlot(0));

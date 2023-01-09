@@ -268,9 +268,9 @@ namespace NexusForever.WorldServer.Game.Entity
                 return GenericError.AccountItemMaxEntitlementCount;
 
             EntitlementFlags entitlementFlags = (EntitlementFlags)entry.Flags;
-            if (entitlementFlags.HasFlag(EntitlementFlags.Disabled))
+            /*if (entitlementFlags.HasFlag(EntitlementFlags.Disabled))
                 return GenericError.DbFailure;
-
+            */
             EntitlementType entitlementType = (EntitlementType)entry.Id;
             if (entitlementFlags.HasFlag(EntitlementFlags.Character))
             {

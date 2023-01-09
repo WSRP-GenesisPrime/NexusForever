@@ -54,7 +54,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// </summary>
         public virtual void Initialise(WorldEntry entry)
         {
-            Entry       = entry;
+            Entry = entry;
             File = BaseMapManager.Instance.GetBaseMap(Entry.AssetPath);
             entityCache = EntityCacheManager.Instance.GetEntityCache((ushort)Entry.Id);
 
@@ -70,7 +70,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// </summary>
         public virtual void Update(double lastTick)
         {
-            if (!HasLoaded) 
+            if (!HasLoaded)
                 return;
 
             ProcessGridActions();
@@ -87,43 +87,43 @@ namespace NexusForever.WorldServer.Game.Map
                 switch (action)
                 {
                     case GridActionAdd actionAdd:
-                    {
-                        if (CanAddEntity(actionAdd.Entity, actionAdd.Vector))
-                            AddEntity(actionAdd.Entity, actionAdd.Vector);
-                        else
                         {
-                            // retry threshold to prevent any issues with stuck actions
-                            actionAdd.RequeueCount++;
-                            if (actionAdd.RequeueCount > (ConfigurationManager<WorldServerConfiguration>.Instance.Config.Map.GridActionMaxRetry ?? 5u))
+                            if (CanAddEntity(actionAdd.Entity, actionAdd.Vector))
+                                AddEntity(actionAdd.Entity, actionAdd.Vector);
+                            else
                             {
-                                log.Error($"Failed to add entity to map {Entry.Id} at position X: {actionAdd.Vector.X}, Y: {actionAdd.Vector.Y}, Z: {actionAdd.Vector.Z}!");
+                                // retry threshold to prevent any issues with stuck actions
+                                actionAdd.RequeueCount++;
+                                if (actionAdd.RequeueCount > (ConfigurationManager<WorldServerConfiguration>.Instance.Config.Map.GridActionMaxRetry ?? 5u))
+                                {
+                                    log.Error($"Failed to add entity to map {Entry.Id} at position X: {actionAdd.Vector.X}, Y: {actionAdd.Vector.Y}, Z: {actionAdd.Vector.Z}!");
+                                }
+                                else
+                                    newActions.Add(action);
+                            }
+
+                            break;
+                        }
+                    case GridActionPending actionPending:
+                        {
+                            if (actionPending.Entity.Map == null)
+                            {
+                                newActions.Add(new GridActionAdd
+                                {
+                                    Entity = actionPending.Entity,
+                                    Vector = actionPending.Vector
+                                });
                             }
                             else
-                                newActions.Add(action);
-                        }
+                                newActions.Add(actionPending);
 
-                        break;
-                    }
-                    case GridActionPending actionPending:
-                    {
-                        if (actionPending.Entity.Map == null)
-                        {
-                            newActions.Add(new GridActionAdd
-                            {
-                                Entity = actionPending.Entity,
-                                Vector = actionPending.Vector
-                            });
+                            break;
                         }
-                        else
-                            newActions.Add(actionPending);
-
-                        break;
-                    }
                     case GridActionRelocate actionRelocate:
                         RelocateEntity(actionRelocate.Entity, actionRelocate.Vector);
                         break;
                     case GridActionRemove actionRemove:
-                        if(actionRemove.Entity.Map == null)
+                        if (actionRemove.Entity.Map == null)
                         {
                             log.Info("Tried to remove entity that was already removed.");
                             break;
@@ -220,10 +220,6 @@ namespace NexusForever.WorldServer.Game.Map
             }
         }
 
-        public virtual void OnRemoveFromMap(Player player)
-        {
-        }
-
         /// <summary>
         /// Returns if <see cref="GridEntity"/> can be added to <see cref="BaseMap"/>.
         /// </summary>
@@ -286,7 +282,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// <summary>
         /// Return all <see cref="GridEntity"/>'s from <see cref="Vector3"/> in range that satisfy <see cref="ISearchCheck"/>.
         /// </summary>
-        public virtual void Search(Vector3 vector, float radius, ISearchCheck check, out List<GridEntity> intersectedEntities, GridEntity searcher = null)
+        public void Search(Vector3 vector, float radius, ISearchCheck check, out List<GridEntity> intersectedEntities)
         {
             // negative radius is unlimited distance
             if (radius < 0)
@@ -484,7 +480,7 @@ namespace NexusForever.WorldServer.Game.Map
             MapGrid grid = GetGrid(vector);
             grid.AddEntity(entity, vector);
 
-            uint guid = entity.GuidLocked ? entity.Guid : entityCounter.Dequeue();
+            uint guid = entityCounter.Dequeue();
             entities.Add(guid, entity);
 
             entity.OnAddToMap(this, guid, vector);
@@ -494,16 +490,11 @@ namespace NexusForever.WorldServer.Game.Map
 
         protected virtual void RemoveEntity(GridEntity entity)
         {
-            string playerText = "";
-            if(entity is Player removedPlayer)
-            {
-                playerText = $" Player name is {removedPlayer.Name}.";
-            }
-            log.Trace($"Removing entity {entity.Guid} from map {Entry.Id}; Map is {(entity.Map != null ? "not null" : "null")}.{playerText}");
-
             Debug.Assert(entity.Map != null);
 
             GetGrid(entity.Position).RemoveEntity(entity);
+
+            log.Trace($"Removed entity {entity.Guid} from map {Entry.Id}.");
 
             entityCounter.Enqueue(entity.Guid);
             entities.Remove(entity.Guid);

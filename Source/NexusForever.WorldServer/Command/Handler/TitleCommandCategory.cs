@@ -17,15 +17,10 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("")]
             ushort characterTitleId)
         {
-            try
+            if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
             {
-                if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
-                {
-                    context.SendMessage($"Invalid character title id {characterTitleId}!");
-                    return;
-                }
-
-                context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
+                context.SendMessage($"Invalid character title id {characterTitleId}!");
+                return;
             }
 
             context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
@@ -36,15 +31,10 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("")]
             ushort characterTitleId)
         {
-            try
+            if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
             {
-                if (GameTableManager.Instance.CharacterTitle.GetEntry(characterTitleId) == null)
-                {
-                    context.SendMessage($"Invalid character title id {characterTitleId}!");
-                    return;
-                }
-
-                context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);
+                context.SendMessage($"Invalid character title id {characterTitleId}!");
+                return;
             }
 
             context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);

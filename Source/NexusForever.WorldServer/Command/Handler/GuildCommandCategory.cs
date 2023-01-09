@@ -56,7 +56,7 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             Player player = context.Invoker as Player;
 
-            ulong guildId = GlobalGuildManager.Instance.GetGuild(type, name)?.Id ?? 0;
+            ulong guildId = GlobalGuildManager.Instance.GetGuild(name)?.Id ?? 0;
 
             GuildResultInfo info = player.GuildManager.CanJoinGuild(guildId);
             if (info.Result != GuildResult.Success)

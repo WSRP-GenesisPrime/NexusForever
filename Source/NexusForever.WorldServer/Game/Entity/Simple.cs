@@ -11,6 +11,7 @@ using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Reputation.Static;
 using NexusForever.WorldServer.Script;
 using EntityModel = NexusForever.Database.World.Model.EntityModel;
+using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Game.Entity
 {

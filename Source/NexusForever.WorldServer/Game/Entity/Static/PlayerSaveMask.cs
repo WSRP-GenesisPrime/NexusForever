@@ -16,7 +16,7 @@ namespace NexusForever.WorldServer.Game.Entity.Static
         Xp          = 0x0010,
         Flags       = 0x0020,
         Appearance  = 0x0100,
-        BindPoint   = 0x0200
-        Innate      = 0x0080,
+        BindPoint   = 0x0200,
+        Innate      = 0x0080
     }
 }

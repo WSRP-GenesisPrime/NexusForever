@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -36,8 +35,8 @@ namespace NexusForever.WorldServer.Game.Guild
         private ulong nextGuildId;
 
         private readonly Dictionary</*guildId*/ ulong, GuildBase> guilds = new();
-        private readonly Dictionary<(GuildType Type, string Name), /*guildId*/ ulong> guildNameCache = new(new GuildNameEqualityComparer());
-        private readonly Dictionary</*guildId*/ ulong, List</*memberId*/ ulong>> guildMemberCache = new();
+        private readonly Dictionary<string, ulong> guildNameCache = new(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<ulong, List<ulong>> guildMemberCache = new();
 
         private ImmutableDictionary<GuildOperation, (GuildOperationHandlerDelegate, GuildOperationHandlerResultDelegate)> guildOperationHandlers;
         private delegate GuildResultInfo GuildOperationHandlerResultDelegate(GuildBase guild, GuildMember member, Player player, ClientGuildOperation operation);
@@ -90,7 +89,7 @@ namespace NexusForever.WorldServer.Game.Guild
                 }
 
                 guilds.Add(guild.Id, guild);
-                guildNameCache.Add((guild.Type, guild.Name), guild.Id);
+                guildNameCache.Add(guild.Name, guild.Id);
 
                 // cache character guilds for faster lookup on character login
                 List<GuildMember> members = guild.ToList();
@@ -251,20 +250,21 @@ namespace NexusForever.WorldServer.Game.Guild
             return guilds.TryGetValue(guildId, out GuildBase guild) ? (T)guild : null;
         }
 
+
         /// <summary>
-        /// Returns <see cref="GuildBase"/> with supplied <see cref="GuildType"/> and name.
+        /// Returns <see cref="GuildBase"/> with supplied name.
         /// </summary>
-        public GuildBase GetGuild(GuildType guildType, string name)
+        public GuildBase GetGuild(string name)
         {
-            return guildNameCache.TryGetValue((guildType, name), out ulong guildId) ? GetGuild(guildId) : null; 
+            return guildNameCache.TryGetValue(name, out ulong guildId) ? GetGuild(guildId) : null;
         }
 
         /// <summary>
-        /// Returns <see cref="GuildBase"/> with supplied <see cref="GuildType"> and name.
+        /// Returns <see cref="GuildBase"/> with supplied name.
         /// </summary>
-        public T GetGuild<T>(GuildType guildType, string name) where T : GuildBase
+        public T GetGuild<T>(string name) where T : GuildBase
         {
-            return guildNameCache.TryGetValue((guildType, name), out ulong guildId) ? (T)GetGuild(guildId) : null;
+            return guildNameCache.TryGetValue(name, out ulong guildId) ? (T)GetGuild(guildId) : null;
         }
 
         /// <summary>
@@ -335,17 +335,17 @@ namespace NexusForever.WorldServer.Game.Guild
                     guild = new ArenaTeam(type, name, leaderRankName, councilRankName, memberRankName);
                     break;
                 case GuildType.Community:
-                {
-                    var community = new Community(name, leaderRankName, councilRankName, memberRankName);
-                    guild = community;
-                    break;
-                }
+                    {
+                        var community = new Community(name, leaderRankName, councilRankName, memberRankName);
+                        guild = community;
+                        break;
+                    }
                 default:
                     throw new ArgumentException();
             }
 
             guilds.Add(guild.Id, guild);
-            guildNameCache.Add((guild.Type, guild.Name), guild.Id);
+            guildNameCache.Add(guild.Name, guild.Id);
             return guild;
         }
 
@@ -360,12 +360,12 @@ namespace NexusForever.WorldServer.Game.Guild
 
                 player.Session.EnqueueMessageEncrypted(new ServerChat
                 {
-                    Channel  = new Channel
+                    Channel = new Channel
                     {
                         Type = ChatChannelType.Debug
                     },
                     FromName = "GlobalGuildManager",
-                    Text     = $"{operation.Operation} not implemented!",
+                    Text = $"{operation.Operation} not implemented!",
                 });
 
                 return;

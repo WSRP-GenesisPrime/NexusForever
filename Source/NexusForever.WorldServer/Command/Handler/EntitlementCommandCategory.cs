@@ -41,7 +41,7 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        [Command(Permission.EntitlementAccountAdd, "Create or update an account entitlement.", "add")]
+        [Command(Permission.EntitlementAdd, "Create or update an account entitlement.", "add")]
         public void HandleEntitlementCommandAccountAdd(ICommandContext context,
                 [Parameter("Entitlement type to modify.", ParameterFlags.None, typeof(EnumParameterConverter<EntitlementType>))]
                 EntitlementType entitlementType,

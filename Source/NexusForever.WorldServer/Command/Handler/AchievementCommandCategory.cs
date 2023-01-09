@@ -35,18 +35,13 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Achievement id to grant.")]
             ushort achievementId)
         {
-            try
+            AchievementInfo info = GlobalAchievementManager.Instance.GetAchievement(achievementId);
+            if (info == null)
             {
-                AchievementInfo info = GlobalAchievementManager.Instance.GetAchievement(achievementId);
-                if (info == null)
-                {
-                    context.SendMessage($"Invalid achievement id {achievementId}!");
-                    return;
-                }
-                log.Info($"{context.InvokingPlayer.Name} requesting achievement grant ID {achievementId}.");
-                context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
+                context.SendMessage($"Invalid achievement id {achievementId}!");
+                return;
             }
-
+            log.Info($"{context.InvokingPlayer.Name} requesting achievement grant ID {achievementId}.");
             context.InvokingPlayer.AchievementManager.GrantAchievement(achievementId);
         }
     }

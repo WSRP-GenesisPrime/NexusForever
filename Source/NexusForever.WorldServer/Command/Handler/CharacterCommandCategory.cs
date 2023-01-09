@@ -22,20 +22,10 @@ namespace NexusForever.WorldServer.Command.Handler
             Player target = context.InvokingPlayer;
             if (target.Level >= 50)
             {
-                Player target = context.InvokingPlayer;
-                if (target.Level >= 50)
-                {
-                    context.SendMessage("You must be less than max level.");
-                    return;
-                }
-
-                target.GrantXp(amount);
+                context.SendMessage("You must be less than max level.");
+                return;
             }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in CharacterCommandCategory.HandleCharacterXP!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            target.GrantXp(amount);
         }
 
         [Command(Permission.CharacterLevel, "Add level to character", "level")]
@@ -46,20 +36,11 @@ namespace NexusForever.WorldServer.Command.Handler
             Player target = context.InvokingPlayer;
             if (level <= target.Level || level > 50)
             {
-                Player target = context.InvokingPlayer;
-                if (level <= target.Level || level > 50)
-                {
-                    context.SendMessage("Level must be greater than your current level and less than max level.");
-                    return;
-                }
+                context.SendMessage("Level must be greater than your current level and less than max level.");
+                return;
+            }
 
-                target.XpManager.SetLevel(level);
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in CharacterCommandCategory.HandleCharacterLevel!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            target.XpManager.SetLevel(level);
 
         }
 

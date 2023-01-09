@@ -147,15 +147,5 @@ namespace NexusForever.Shared.Network
         {
             return GetEnumerator();
         }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            return sessions.Values.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
     }
 }

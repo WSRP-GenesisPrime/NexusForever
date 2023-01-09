@@ -24,19 +24,11 @@ namespace NexusForever.WorldServer.Command.Handler
         {
             foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
             {
-                foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
+                session.EnqueueMessageEncrypted(new ServerRealmBroadcast
                 {
-                    session.EnqueueMessageEncrypted(new ServerRealmBroadcast
-                    {
-                        Tier = tier,
-                        Message = message
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in BroadcastCommandCategory.HandleBroadcastMessage!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                    Tier = tier,
+                    Message = message
+                });
             }
         }
     }

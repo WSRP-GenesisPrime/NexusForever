@@ -254,18 +254,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
         private bool firstTimeLoggingIn;
 
-        /// <summary>
-        /// Character Customisation models. Stored for modification purposes.
-        /// </summary>
-        private Dictionary</*label*/uint, Customisation> characterCustomisations = new Dictionary<uint, Customisation>();
-        private HashSet<Customisation> deletedCharacterCustomisations = new HashSet<Customisation>();
-        private Dictionary<ItemSlot, Appearance> characterAppearances = new Dictionary<ItemSlot, Appearance>();
-        private HashSet<Appearance> deletedCharacterAppearances = new HashSet<Appearance>();
-        private List<Bone> characterBones = new List<Bone>();
-        private HashSet<Bone> deletedCharacterBones = new HashSet<Bone>();
 
         private MovementSpeed movementSpeed;
-        private bool firstTimeLoggingIn;
 
         /// <summary>
         /// Create a new <see cref="Player"/> from supplied <see cref="WorldSession"/> and <see cref="CharacterModel"/>.

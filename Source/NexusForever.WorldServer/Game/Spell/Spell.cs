@@ -56,7 +56,7 @@ namespace NexusForever.WorldServer.Game.Spell
         protected uint duration = 0;
 
         protected readonly SpellEventManager events = new();
-        
+
         protected readonly List<SpellTargetInfo> targets = new();
         protected readonly List<Telegraph> telegraphs = new();
         protected readonly List<Proxy> proxies = new();
@@ -67,11 +67,11 @@ namespace NexusForever.WorldServer.Game.Spell
 
         protected Spell(UnitEntity caster, SpellParameters parameters, CastMethod castMethod)
         {
-            this.caster     = caster;
+            this.caster = caster;
             this.parameters = parameters;
-            CastingId       = GlobalSpellManager.Instance.NextCastingId;
-            status          = SpellStatus.Initiating;
-            CastMethod      = castMethod;
+            CastingId = GlobalSpellManager.Instance.NextCastingId;
+            status = SpellStatus.Initiating;
+            CastMethod = castMethod;
 
             if (parameters.RootSpellInfo == null)
                 parameters.RootSpellInfo = parameters.SpellInfo;
@@ -194,8 +194,8 @@ namespace NexusForever.WorldServer.Game.Spell
                 if (caster.IsCasting() && parameters.UserInitiatedSpellCast && !parameters.IsProxy)
                     return CastResult.SpellAlreadyCasting;
 
-                if (player.SpellManager.GetSpellCooldown(parameters.SpellInfo.Entry.Id) > 0d && 
-                    parameters.UserInitiatedSpellCast && 
+                if (player.SpellManager.GetSpellCooldown(parameters.SpellInfo.Entry.Id) > 0d &&
+                    parameters.UserInitiatedSpellCast &&
                     !parameters.IsProxy)
                     return CastResult.SpellCooldown;
 
@@ -207,8 +207,8 @@ namespace NexusForever.WorldServer.Game.Spell
                         return CastResult.SpellGroupCooldown;
                 }
 
-                if (player.SpellManager.GetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum) > 0d && 
-                    !parameters.IsProxy && 
+                if (player.SpellManager.GetGlobalSpellCooldown(parameters.SpellInfo.Entry.GlobalCooldownEnum) > 0d &&
+                    !parameters.IsProxy &&
                     parameters.UserInitiatedSpellCast)
                     return CastResult.SpellGlobalCooldown;
 
@@ -345,8 +345,8 @@ namespace NexusForever.WorldServer.Game.Spell
                 player.Session.EnqueueMessageEncrypted(new Server07F9
                 {
                     ServerUniqueId = CastingId,
-                    CastResult     = result,
-                    CancelCast     = true
+                    CastResult = result,
+                    CancelCast = true
                 });
 
                 if (result == CastResult.CasterMovement)
@@ -456,9 +456,9 @@ namespace NexusForever.WorldServer.Game.Spell
                         EmotesId = emotesId,
                         SourceUnitId = caster.Guid
                     }, true);
-                    
+
                     if (visualEffect.Duration > 0)
-                        events.EnqueueEvent(new SpellEvent(visualEffect.Duration / 1000d, () => 
+                        events.EnqueueEvent(new SpellEvent(visualEffect.Duration / 1000d, () =>
                         {
                             caster.EnqueueToVisible(new ServerEntityEmote
                             {
@@ -476,7 +476,6 @@ namespace NexusForever.WorldServer.Game.Spell
             targets.Clear();
 
             targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.Caster, caster));
-            targets.Add(new SpellTargetInfo(SpellEffectTargetFlags.TargetOrInvoker, parameters.OverrideTargetId > 0 ? caster.Map.GetEntity<UnitEntity>(parameters.OverrideTargetId) : (caster.TargetGuid > 0 ? caster.Map.GetEntity<UnitEntity>(caster.TargetGuid) : caster)));
 
             if (parameters.PrimaryTargetId > 0)
             {
@@ -781,7 +780,7 @@ namespace NexusForever.WorldServer.Game.Spell
             {
                 player.Session.EnqueueMessageEncrypted(new ServerSpellCastResult
                 {
-                    Spell4Id   = parameters.SpellInfo.Entry.Id,
+                    Spell4Id = parameters.SpellInfo.Entry.Id,
                     CastResult = castResult
                 });
             }
@@ -802,16 +801,16 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             ServerSpellStart spellStart = new ServerSpellStart
             {
-                CastingId            = CastingId,
-                CasterId             = caster.Guid,
-                PrimaryTargetId      = GetPrimaryTargetId(),
-                Spell4Id             = parameters.SpellInfo.Entry.Id,
-                RootSpell4Id         = parameters.RootSpellInfo?.Entry.Id ?? 0,
-                ParentSpell4Id       = parameters.ParentSpellInfo?.Entry.Id ?? 0,
-                FieldPosition        = new Position(caster.Position),
-                Yaw                  = caster.Rotation.X,
+                CastingId = CastingId,
+                CasterId = caster.Guid,
+                PrimaryTargetId = GetPrimaryTargetId(),
+                Spell4Id = parameters.SpellInfo.Entry.Id,
+                RootSpell4Id = parameters.RootSpellInfo?.Entry.Id ?? 0,
+                ParentSpell4Id = parameters.ParentSpellInfo?.Entry.Id ?? 0,
+                FieldPosition = new Position(caster.Position),
+                Yaw = caster.Rotation.X,
                 UserInitiatedSpellCast = parameters.UserInitiatedSpellCast,
-                InitialPositionData  = new List<InitialPosition>(),
+                InitialPositionData = new List<InitialPosition>(),
                 TelegraphPositionData = new List<TelegraphPosition>()
             };
 
@@ -876,9 +875,9 @@ namespace NexusForever.WorldServer.Game.Spell
 
             var serverSpellGo = new ServerSpellGo
             {
-                ServerUniqueId     = CastingId,
+                ServerUniqueId = CastingId,
                 PrimaryDestination = new Position(caster.Position),
-                Phase              = currentPhase
+                Phase = currentPhase
             };
 
             byte targetCount = 0;
@@ -893,11 +892,11 @@ namespace NexusForever.WorldServer.Game.Spell
 
                 var networkTargetInfo = new TargetInfo
                 {
-                    UnitId        = targetInfo.Entity.Guid,
-                    Ndx           = targetCount++,
-                    TargetFlags   = (byte)targetInfo.Flags,
+                    UnitId = targetInfo.Entity.Guid,
+                    Ndx = targetCount++,
+                    TargetFlags = (byte)targetInfo.Flags,
                     InstanceCount = 1,
-                    CombatResult  = CombatResult.Hit
+                    CombatResult = CombatResult.Hit
                 };
 
                 foreach (SpellTargetInfo.SpellTargetEffectInfo targetEffectInfo in targetInfo.Effects)
@@ -915,8 +914,8 @@ namespace NexusForever.WorldServer.Game.Spell
                     {
                         Spell4EffectId = targetEffectInfo.Entry.Id,
                         EffectUniqueId = targetEffectInfo.EffectId,
-                        DelayTime      = targetEffectInfo.Entry.DelayTime,
-                        TimeRemaining  = duration > 0 ? (int)duration : -1
+                        DelayTime = targetEffectInfo.Entry.DelayTime,
+                        TimeRemaining = duration > 0 ? (int)duration : -1
                     };
 
                     if (targetEffectInfo.Damage != null)
@@ -924,15 +923,15 @@ namespace NexusForever.WorldServer.Game.Spell
                         networkTargetEffectInfo.InfoType = 1;
                         networkTargetEffectInfo.DamageDescriptionData = new DamageDescription
                         {
-                            RawDamage          = targetEffectInfo.Damage.RawDamage,
-                            RawScaledDamage    = targetEffectInfo.Damage.RawScaledDamage,
-                            AbsorbedAmount     = targetEffectInfo.Damage.AbsorbedAmount,
+                            RawDamage = targetEffectInfo.Damage.RawDamage,
+                            RawScaledDamage = targetEffectInfo.Damage.RawScaledDamage,
+                            AbsorbedAmount = targetEffectInfo.Damage.AbsorbedAmount,
                             ShieldAbsorbAmount = targetEffectInfo.Damage.ShieldAbsorbAmount,
-                            AdjustedDamage     = targetEffectInfo.Damage.AdjustedDamage,
-                            OverkillAmount     = targetEffectInfo.Damage.OverkillAmount,
-                            KilledTarget       = targetEffectInfo.Damage.KilledTarget,
-                            CombatResult       = targetEffectInfo.Damage.CombatResult,
-                            DamageType         = targetEffectInfo.Damage.DamageType
+                            AdjustedDamage = targetEffectInfo.Damage.AdjustedDamage,
+                            OverkillAmount = targetEffectInfo.Damage.OverkillAmount,
+                            KilledTarget = targetEffectInfo.Damage.KilledTarget,
+                            CombatResult = targetEffectInfo.Damage.CombatResult,
+                            DamageType = targetEffectInfo.Damage.DamageType
                         };
                     }
 
@@ -1009,7 +1008,7 @@ namespace NexusForever.WorldServer.Game.Spell
             caster.EnqueueToVisible(new ServerSpellBuffRemove
             {
                 CastingId = CastingId,
-                CasterId  = unitId
+                CasterId = unitId
             }, true);
         }
 
@@ -1026,7 +1025,7 @@ namespace NexusForever.WorldServer.Game.Spell
             {
                 if (parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence > 0 && !PrerequisiteManager.Instance.Meets(player, parameters.SpellInfo.Entry.PrerequisiteIdCasterPersistence))
                     Finish();
-                
+
                 // TODO: Check if target can still persist
 
                 persistCheck.Reset();

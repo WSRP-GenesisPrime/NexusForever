@@ -28,16 +28,10 @@ namespace NexusForever.WorldServer.Command.Handler
                 uint amount)
             {
                 AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
-                if (entry == null)
+                if (entry == null || currencyId == AccountCurrencyType.MaxLevelToken) // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
                 {
-                    AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
-                    if (entry == null || currencyId == AccountCurrencyType.MaxLevelToken) // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
-                    {
-                        context.SendMessage("Invalid currencyId. Please try again.");
-                        return;
-                    }
-
-                    context.InvokingPlayer.Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
+                    context.SendMessage("Invalid currencyId. Please try again.");
+                    return;
                 }
 
                 context.InvokingPlayer.Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
@@ -63,15 +57,11 @@ namespace NexusForever.WorldServer.Command.Handler
                 [Parameter("Amount of currency to grant.")]
                 uint amount)
             {
-                try
+                
+                if (GameTableManager.Instance.CurrencyType.GetEntry((uint)currencyId) == null)
                 {
-                    if (GameTableManager.Instance.CurrencyType.GetEntry((uint)currencyId) == null)
-                    {
-                        context.SendMessage("Invalid currencyId. Please try again.");
-                        return;
-                    }
-
-                    context.InvokingPlayer.CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
+                    context.SendMessage("Invalid currencyId. Please try again.");
+                    return;
                 }
 
                 context.InvokingPlayer.CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
