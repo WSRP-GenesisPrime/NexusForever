@@ -14,6 +14,7 @@ using System.Numerics;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Reputation.Static;
 using EntityModel = NexusForever.Database.World.Model.EntityModel;
+using NexusForever.Shared.Configuration;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -73,13 +74,21 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void Update(double lastTick)
         {
             base.Update(lastTick);
-
+            
             if (engageTimer.IsTicking)
             {
-                engageTimer.Update(lastTick);
-                if (engageTimer.HasElapsed)
+                // (GENESIS PRIME) Aggro Switch enabled/disabled in WorldServer config
+                if (ConfigurationManager<WorldServerConfiguration>.Instance.Config.AggroSwitchEnabled)
                 {
-                    EngageTimerElapsed();
+                    engageTimer.Update(lastTick);
+                    if (engageTimer.HasElapsed)
+                    {
+                        EngageTimerElapsed();
+                        engageTimer.Reset(false);
+                    }
+                }
+                else
+                {
                     engageTimer.Reset(false);
                 }
             }

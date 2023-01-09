@@ -37,5 +37,8 @@ namespace NexusForever.WorldServer
         public ContactLimits Contacts { get; set; }
         public uint MaxPlayers { get; set; } = 50u;
         public uint? DefaultRole { get; set; } = null;
+
+        // (GENESIS PRIME) Aggro Switch enabled/disabled in WorldServer config
+        public bool AggroSwitchEnabled { get; set; } = true;
     }
 }
