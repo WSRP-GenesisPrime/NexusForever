@@ -49,7 +49,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             PrerequisiteEntry entry = GameTableManager.Instance.Prerequisite.GetEntry(prerequisiteId);
             if (entry == null)
                 throw new ArgumentException();
-            
+
             switch ((EvaluationMode)entry.Flags)
             {
                 case EvaluationMode.EvaluateAND:
