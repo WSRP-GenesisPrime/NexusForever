@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
@@ -60,7 +61,8 @@ namespace NexusForever.WorldServer.Game.Map
         /// </summary>
         public override void Initialise(WorldEntry entry)
         {
-            base.Initialise(entry);
+            Entry = entry;
+            Task.Run(() => { base.Initialise(entry); });
 
             // TODO: find where this should come from, this is just an arbitrary value
             instanceLimit = 100u;
@@ -72,6 +74,9 @@ namespace NexusForever.WorldServer.Game.Map
         public override void Update(double lastTick)
         {
             base.Update(lastTick);
+
+            if (!HasLoaded)
+                return;
 
             ProcessInstanceRemovals(lastTick);
             ProcessUnload(lastTick);

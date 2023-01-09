@@ -19,25 +19,37 @@ namespace NexusForever.WorldServer.Game.Spell
         public Vector3 Position { get; private set; }
         public Vector3 Rotation { get; private set; }
         public TelegraphDamageEntry TelegraphDamage { get; }
+        public TelegraphTargetTypeFlags TelegraphTargetTypeFlags => (TelegraphTargetTypeFlags)TelegraphDamage.TargetTypeFlags;
 
-        private float casterHitRadius => Caster.HitRadius * 0.5f;
+        private float casterHitRadius = 0f;
+        //private bool npcsSpawned = false;
 
         public Telegraph(TelegraphDamageEntry telegraphDamageEntry, UnitEntity caster, Vector3 position, Vector3 rotation)
         {
             TelegraphDamage = telegraphDamageEntry;
-            Caster          = caster;
-            Position        = position;
-            Rotation        = rotation;
+            Caster = caster;
+            Position = position;
+            Rotation = rotation;
+            casterHitRadius = Caster.HitRadius * 0.5f;
 
             ApplyPositionOffsets();
             ApplyRotationOffsets();
+
+            //log.Info($"Telegraph {TelegraphDamage.Id} Position is {Position.X}, {Position.Z}");
+            //log.Info($"Telegraph {TelegraphDamage.Id} Rotation is {Rotation.X} ({Rotation.X.ToDegrees()}°) (Entry has {TelegraphDamage.RotationDegrees})");
+
+            //if ((DamageShape)TelegraphDamage.DamageShapeEnum == DamageShape.Cone || (DamageShape)TelegraphDamage.DamageShapeEnum == DamageShape.LongCone)
+            //{
+            //    Caster.Map.EnqueueAdd(new Simple(16718u), Position.GetPointForTelegraph(Rotation.X + MathF.PI / 2, TelegraphDamage.Param00 - (Caster.HitRadius * 0.5f)));
+            //    Vector3 endPos = Position.GetPointForTelegraph(Rotation.X + MathF.PI / 2, TelegraphDamage.Param01 + (Caster.HitRadius * 0.5f));
+            //    endPos.Y = Caster.Map.GetTerrainHeight(endPos.X, endPos.Z);
+            //    Caster.Map.EnqueueAdd(new Simple(16718u), endPos);
+            //}
         }
 
         private void ApplyPositionOffsets()
         {
-            if (TelegraphDamage.ZPositionOffset == 0u
-                && TelegraphDamage.XPositionOffset == 0u
-                && TelegraphDamage.YPositionOffset == 0u)
+            if (TelegraphDamage.ZPositionOffset == 0u && TelegraphDamage.XPositionOffset == 0u && TelegraphDamage.YPositionOffset == 0u)
                 return;
 
             Vector3 startingPosition = Position;
@@ -64,13 +76,48 @@ namespace NexusForever.WorldServer.Game.Spell
             Rotation = new Vector3(rotationRadians, Rotation.Y, Rotation.Z);
         }
 
+        private void FilterTargets(IEnumerable<SpellTargetInfo> targets, ISearchCheck check, out List<SpellTargetInfo> filteredTargets)
+        {
+            filteredTargets = new();
+            filteredTargets = targets.Where(x => check.CheckEntity(x.Entity)).ToList();
+        }
+
         /// <summary>
         /// Returns any <see cref="UnitEntity"/> inside the <see cref="Telegraph"/>.
         /// </summary>
-        public IEnumerable<UnitEntity> GetTargets()
+        public IEnumerable<SpellTargetInfo> GetTargets(Spell spell, List<SpellTargetInfo> targets)
         {
-            Caster.Map.Search(Position, GridSearchSize(), new SearchCheckTelegraph(this, Caster), out List<GridEntity> targets);
-            return targets.Select(t => t as UnitEntity);
+            FilterTargets(targets, new SearchCheckTelegraph(this, Caster), out targets);
+
+            foreach (var target in targets.ToList())
+                if (!(EvaluateDamageFlagsForTarget(target.Entity, spell)))
+                    targets.Remove(target);
+
+            return targets;
+        }
+
+        private bool EvaluateDamageFlagsForTarget(GridEntity target, Spell spell)
+        {
+            TelegraphDamageFlag damageFlag = (TelegraphDamageFlag)TelegraphDamage.TelegraphDamageFlags;
+
+            // This is Invalid
+            //if (damageFlag.HasFlag(TelegraphDamageFlag.SpellMustBeMultiPhase))
+            //    if (spell.CastMethod != CastMethod.Multiphase)
+            //        return false;
+
+            if (damageFlag.HasFlag(TelegraphDamageFlag.CasterMustBeNPC))
+                if (Caster is Player)
+                    return false;
+
+            if (damageFlag.HasFlag(TelegraphDamageFlag.CasterMustBePlayer))
+                if (Caster is not Player)
+                    return false;
+
+            if (damageFlag.HasFlag(TelegraphDamageFlag.TargetMustBeUnit))
+                if (target is not UnitEntity)
+                    return false;
+
+            return true;
         }
 
         /// <summary>
@@ -83,64 +130,72 @@ namespace NexusForever.WorldServer.Game.Spell
             switch ((DamageShape)TelegraphDamage.DamageShapeEnum)
             {
                 case DamageShape.Circle:
-                {
                     float telegraphRange = TelegraphDamage.Param00;
+
                     return Vector2.Distance(new Vector2(Position.X, Position.Z), new Vector2(position.X, position.Z)) <= telegraphRange + hitRadius;
-                }
                 case DamageShape.Cone:
                 case DamageShape.LongCone:
-                {
-                    float telegraphStart = TelegraphDamage.Param00 - casterHitRadius;
-                    float telegraphRadius = TelegraphDamage.Param01 + casterHitRadius;
-                    float telegraphAngleInDegrees = TelegraphDamage.Param02 + (TelegraphDamage.Param00 / 2f);
+                    {
+                        float telegraphStart = TelegraphDamage.Param00 - casterHitRadius;
+                        float telegraphRadius = TelegraphDamage.Param01 + casterHitRadius;
+                        float telegraphAngleInDegrees = TelegraphDamage.Param02 + (TelegraphDamage.Param00 / 2f);
 
-                    return IsHitInsideAngle(position, hitRadius, telegraphStart, telegraphRadius, telegraphAngleInDegrees);
-                }
+                        return IsHitInsideAngle(position, hitRadius, telegraphStart, telegraphRadius, telegraphAngleInDegrees);
+                    }
                 case DamageShape.Square:
                 case DamageShape.Rectangle:
-                {
-                    /// <remarks>This is not perfect. It works, but there are more efficient options like https://yal.cc/rot-rect-vs-circle-intersection </remarks>
-                    float telegraphWidth  = TelegraphDamage.Param00;
-                    float telegraphHeight = TelegraphDamage.Param01;
-                    float telegraphLength = TelegraphDamage.Param02;
-
-                    // TODO: If target is higher or lower than telegraph height, this should not hit. Confirm functionality.
-                    if (position.Y >= Position.Y + telegraphHeight || position.Y <= Position.Y - telegraphHeight)
-                        return false;
-
-                    // Find the points in the local co-ordinate space
-                    var bottomRight = new Vector3(-telegraphWidth, 0, -telegraphLength);
-                    var bottomLeft  = new Vector3(telegraphWidth, 0, -telegraphLength);
-                    var topRight    = new Vector3(-telegraphWidth, 0, telegraphLength);
-                    var topLeft     = new Vector3(telegraphWidth, 0, telegraphLength);
-
-                    // Rectangle's origin is at it's base, so adjust the starting points appropriately.
-                    if ((DamageShape)TelegraphDamage.DamageShapeEnum == DamageShape.Rectangle)
                     {
-                        bottomRight.Z = 0;
-                        bottomLeft.Z  = 0;
+                        /// <remarks>This is not perfect. It works, but there are more efficient options like https://yal.cc/rot-rect-vs-circle-intersection </remarks>
+                        float telegraphWidth = TelegraphDamage.Param00;
+                        float telegraphHeight = TelegraphDamage.Param01;
+                        float telegraphLength = TelegraphDamage.Param02;
+
+                        // TODO: If target is higher or lower than telegraph height, this should not hit. Confirm functionality.
+                        if (position.Y >= Position.Y + telegraphHeight || position.Y <= Position.Y - telegraphHeight)
+                            return false;
+
+                        // Find the points in the local co-ordinate space
+                        var bottomRight = new Vector3(-telegraphWidth, 0, -telegraphLength);
+                        var bottomLeft = new Vector3(telegraphWidth, 0, -telegraphLength);
+                        var topRight = new Vector3(-telegraphWidth, 0, telegraphLength);
+                        var topLeft = new Vector3(telegraphWidth, 0, telegraphLength);
+
+                        // Rectangle's origin is at it's base, so adjust the starting points appropriately.
+                        if ((DamageShape)TelegraphDamage.DamageShapeEnum == DamageShape.Rectangle)
+                        {
+                            bottomRight.Z = 0;
+                            bottomLeft.Z = 0;
+                        }
+
+                        // Translate points to global co-ordinate space, and apply rotation based on the Telegraph's rotation
+                        bottomLeft = Vector3.Add(RotatePoint(bottomLeft, Rotation.X), Position);
+                        bottomRight = Vector3.Add(RotatePoint(bottomRight, Rotation.X), Position);
+                        topLeft = Vector3.Add(RotatePoint(topLeft, Rotation.X), Position);
+                        topRight = Vector3.Add(RotatePoint(topRight, Rotation.X), Position);
+
+                        Vector3[] points = new Vector3[] { bottomLeft, topLeft, topRight, bottomRight };
+
+                        //if (!npcsSpawned)
+                        //{
+                        //    foreach (Vector3 point in points)
+                        //        Caster.Map.EnqueueAdd(new Simple(16718u), point);
+
+                        //    npcsSpawned = true;
+                        //}
+
+                        return IsHitInsidePolygon(points, position, hitRadius);
                     }
-
-                    // Translate points to global co-ordinate space, and apply rotation based on the Telegraph's rotation
-                    bottomLeft  = Vector3.Add(RotatePoint(bottomLeft, Rotation.X), Position);
-                    bottomRight = Vector3.Add(RotatePoint(bottomRight, Rotation.X), Position);
-                    topLeft     = Vector3.Add(RotatePoint(topLeft, Rotation.X), Position);
-                    topRight    = Vector3.Add(RotatePoint(topRight, Rotation.X), Position);
-
-                    Vector3[] points = new Vector3[] { bottomLeft, topLeft, topRight, bottomRight };
-                    return IsHitInsidePolygon(points, position, hitRadius);
-                }
                 case DamageShape.Pie:
-                {
-                    float telegraphRadius         = TelegraphDamage.Param01;
-                    float telegraphAngleInDegrees = TelegraphDamage.Param02;
+                    {
+                        float telegraphRadius = TelegraphDamage.Param01;
+                        float telegraphAngleInDegrees = TelegraphDamage.Param02;
 
-                    float closestDistance = Position.GetDistance(position) - hitRadius;
-                    if (closestDistance > telegraphRadius)
-                        return false;
+                        float closestDistance = Position.GetDistance(position) - hitRadius;
+                        if (closestDistance > telegraphRadius)
+                            return false;
 
-                    return !IsHitInsideAngle(position, hitRadius, 0f, telegraphRadius, telegraphAngleInDegrees);
-                }
+                        return !IsHitInsideAngle(position, hitRadius, 0f, telegraphRadius, telegraphAngleInDegrees);
+                    }
                 default:
                     log.Warn($"Unhandled telegraph shape {(DamageShape)TelegraphDamage.DamageShapeEnum}.");
                     return false;
@@ -186,12 +241,16 @@ namespace NexusForever.WorldServer.Game.Spell
                 return false;
 
             float angleRadian = (Position.GetAngle(targetPosition) - Rotation.X).CondenseRadianIntoRotationRadian();
+            //float distX = Position.X - targetPosition.X;
+            //float distZ = Position.Z - targetPosition.Z;
+            //float diff = MathF.Sqrt((distX * distX) + (distZ * distZ));
+            //log.Info($"Target is ({angleRadian.NormaliseRadians()}) {angleRadian.ToDegrees()}° from me. ({distX}, {distZ}, {diff}");
 
             float angleDegrees = MathF.Abs(angleRadian.NormaliseRadians().ToDegrees());
             if (angleDegrees > angle / 2f || angleDegrees < -angle / 2f)
             {
                 // Checks for edge radius is skipped if the caster is not a Player. This optimises this method, but also allows for player's to dodge attacks appropriately.
-                if (Caster is not Player)
+                if (!(Caster is Player))
                     return false;
 
                 if (angleDegrees > angle || angleDegrees < -angle)
@@ -207,7 +266,7 @@ namespace NexusForever.WorldServer.Game.Spell
                     }
                     else
                         rightEdge = Position.GetPointForTelegraph(((angle / 2f) * -1f).ToRadians() + Rotation.X + MathF.PI / 2, telegraphRadius);
-
+                    //Caster.Map.EnqueueAdd(new Simple(16718u), new Vector3(rightEdge.X, Caster.Map.GetTerrainHeight(rightEdge.X, rightEdge.Z), rightEdge.Z));
                     if (IsRadiusIntersectingLine(Position, rightEdge, targetPosition, hitRadius))
                         return true;
                 }
@@ -221,7 +280,7 @@ namespace NexusForever.WorldServer.Game.Spell
                     }
                     else
                         leftEdge = Position.GetPointForTelegraph((angle / 2f).ToRadians() + Rotation.X + MathF.PI / 2, telegraphRadius);
-
+                    //Caster.Map.EnqueueAdd(new Simple(16718u), new Vector3(leftEdge.X, Caster.Map.GetTerrainHeight(leftEdge.X, leftEdge.Z), leftEdge.Z));
                     if (IsRadiusIntersectingLine(Position, leftEdge, targetPosition, hitRadius))
                         return true;
                 }
@@ -234,6 +293,9 @@ namespace NexusForever.WorldServer.Game.Spell
 
         #region Math Stuff
 
+        /// <summary>
+        /// Returns a boolean whether a point sits in a horizontal plane of points.
+        /// </summary>
         /// <remarks>
         /// Based on code available in http://www.jeffreythompson.org/collision-detection/poly-circle.php
         /// </remarks>
@@ -264,11 +326,13 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             // go through each of the vertices, plus
             // the next vertex in the list
+            int next = 0;
             for (int current = 0; current < polygon.Length; current++)
             {
+
                 // get next vertex in list
                 // if we've hit the end, wrap around to 0
-                int next = current + 1;
+                next = current + 1;
                 if (next == polygon.Length)
                     next = 0;
 
@@ -279,8 +343,8 @@ namespace NexusForever.WorldServer.Game.Spell
 
                 // check for collision between the circle and
                 // a line formed between the two vertices
-                if (IsRadiusIntersectingLine(vc, vn, position, hitRadius)) 
-                    return true;
+                bool collision = IsRadiusIntersectingLine(vc, vn, position, hitRadius);
+                if (collision) return true;
             }
 
             return false;
@@ -288,6 +352,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private static bool IsRadiusIntersectingLine(Vector3 lineStart, Vector3 lineEnd, Vector3 circleOrigin, float radius)
         {
+
             // is either end INSIDE the circle?
             // if so, return true immediately
             bool inside1 = lineStart.GetDistance(circleOrigin) < radius;
@@ -299,17 +364,20 @@ namespace NexusForever.WorldServer.Game.Spell
 
             // is this point actually on the line segment?
             // if so keep going, but if not, return false
-            if (!IsPointIntersectingLine(lineStart.X, lineStart.Z, lineEnd.X, lineEnd.Z, closestPoint.X, closestPoint.Y))
+            bool onSegment = IsPointIntersectingLine(lineStart.X, lineStart.Z, lineEnd.X, lineEnd.Z, closestPoint.X, closestPoint.Y);
+            if (!onSegment)
                 return false;
 
             // get distance to closest point
-            float distX    = closestPoint.X - circleOrigin.X;
-            float distZ    = closestPoint.Y - circleOrigin.Z;
+            float distX = closestPoint.X - circleOrigin.X;
+            float distZ = closestPoint.Y - circleOrigin.Z;
             float distance = MathF.Sqrt((distX * distX) + (distZ * distZ));
 
             // is the circle on the line?
             if (distance <= radius)
+            {
                 return true;
+            }
 
             return false;
         }
@@ -319,7 +387,7 @@ namespace NexusForever.WorldServer.Game.Spell
             // get length of the line
             float distX = startPoint.X - endPoint.X;
             float distZ = startPoint.Y - endPoint.Y;
-            float len   = MathF.Sqrt((distX * distX) + (distZ * distZ));
+            float len = MathF.Sqrt((distX * distX) + (distZ * distZ));
 
             // get dot product of the line and circle
             float dot = (((circleOrigin.X - startPoint.X) * (endPoint.X - startPoint.X)) + ((circleOrigin.Y - startPoint.Y) * (endPoint.Y - startPoint.Y))) / MathF.Pow(len, 2);
@@ -334,6 +402,7 @@ namespace NexusForever.WorldServer.Game.Spell
 
         private static bool IsPointIntersectingLine(float x1, float y1, float x2, float y2, float px, float py)
         {
+
             // get distance from the point to the two ends of the line
             float d1 = Vector2.Distance(new Vector2(px, py), new Vector2(x1, y1));
             float d2 = Vector2.Distance(new Vector2(px, py), new Vector2(x2, y2));
@@ -350,8 +419,9 @@ namespace NexusForever.WorldServer.Game.Spell
             // note we use the buffer here to give a range, rather
             // than one #
             if (d1 + d2 >= lineLen - buffer && d1 + d2 <= lineLen + buffer)
+            {
                 return true;
-
+            }
             return false;
         }
 
@@ -365,7 +435,6 @@ namespace NexusForever.WorldServer.Game.Spell
 
             return new Vector3(newX, point.Y, newY);
         }
-
         #endregion
     }
 }

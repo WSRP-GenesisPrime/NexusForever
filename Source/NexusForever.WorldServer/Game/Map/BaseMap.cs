@@ -7,6 +7,7 @@ using System.Numerics;
 using NexusForever.Database.World.Model;
 using NexusForever.Shared;
 using NexusForever.Shared.Configuration;
+using NexusForever.Shared.Game;
 using NexusForever.Shared.Game.Map;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.IO.Map;
@@ -31,7 +32,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// </summary>
         public virtual float VisionRange { get; protected set; } = DefaultVisionRange;
 
-        public WorldEntry Entry { get; private set; }
+        public WorldEntry Entry { get; protected set; }
         public MapFile File { get; private set; }
 
         private readonly MapGrid[] grids = new MapGrid[MapDefines.WorldGridCount * MapDefines.WorldGridCount];
@@ -43,14 +44,25 @@ namespace NexusForever.WorldServer.Game.Map
         protected readonly Dictionary<uint /*guid*/, GridEntity> entities = new();
         private EntityCache entityCache;
 
+        public bool HasLoaded { get; private set; } = false;
+
+        private Dictionary<uint /*entityId*/, DateTime /*spawnTimer*/> entityRespawnTimers = new();
+        private UpdateTimer spawnCheckTimer = new(1d);
+
         /// <summary>
         /// Initialise <see cref="BaseMap"/> with <see cref="WorldEntry"/>.
         /// </summary>
         public virtual void Initialise(WorldEntry entry)
         {
             Entry       = entry;
-            File        = BaseMapManager.Instance.GetBaseMap(Entry.AssetPath);
+            File = BaseMapManager.Instance.GetBaseMap(Entry.AssetPath);
             entityCache = EntityCacheManager.Instance.GetEntityCache((ushort)Entry.Id);
+
+            // TODO: Remove Crimson Isle "hack" because the ship at the end of zone has massive offset
+            if (Entry.Id == 870)
+                VisionRange = 256f;
+
+            HasLoaded = true;
         }
 
         /// <summary>
@@ -58,8 +70,12 @@ namespace NexusForever.WorldServer.Game.Map
         /// </summary>
         public virtual void Update(double lastTick)
         {
+            if (!HasLoaded) 
+                return;
+
             ProcessGridActions();
             UpdateGrids(lastTick);
+            CheckForSpawns(lastTick);
         }
 
         private void ProcessGridActions()
@@ -143,6 +159,35 @@ namespace NexusForever.WorldServer.Game.Map
             }
         }
 
+        private void CheckForSpawns(double lastTick)
+        {
+            spawnCheckTimer.Update(lastTick);
+            if (spawnCheckTimer.HasElapsed)
+            {
+                // Process re-spawns
+                foreach ((uint entityId, DateTime respawnTime) in entityRespawnTimers)
+                {
+                    if (respawnTime > DateTime.UtcNow)
+                        return;
+
+                    EntityModel model = entityCache.GetEntity(entityId);
+                    if (model != null)
+                    {
+                        MapGrid grid = GetGrid(new Vector3(model.X, model.Y, model.Z));
+                        // Check if grid is active, Respawn Entity
+                        if (grid != null)
+                            if (activeGrids.Contains(grid.Coord))
+                                SpawnEntity(model);
+
+                    }
+
+                    entityRespawnTimers.Remove(entityId);
+                }
+
+                spawnCheckTimer.Reset();
+            }
+        }
+
         /// <summary>
         /// Enqueue <see cref="GridEntity"/> to be added to <see cref="BaseMap"/>.
         /// </summary>
@@ -152,7 +197,7 @@ namespace NexusForever.WorldServer.Game.Map
         /// </remarks>
         public void EnqueueAdd(GridEntity entity, MapPosition position)
         {
-            entity.OnEnqueueAddToMap();
+            entity.OnEnqueueAddToMap(position);
 
             if (entity.Map != null)
             {
@@ -379,24 +424,45 @@ namespace NexusForever.WorldServer.Game.Map
         protected virtual void SpawnGrid(uint gridX, uint gridZ)
         {
             foreach (EntityModel model in entityCache.GetEntities(gridX, gridZ))
+                SpawnEntity(model);
+        }
+
+        private bool CanEntitySpawn(EntityModel model)
+        {
+            if (entityRespawnTimers.TryGetValue(model.Id, out DateTime respawnTime))
+                if (respawnTime > DateTime.UtcNow)
+                    return false;
+
+            return true;
+        }
+
+        private void SpawnEntity(EntityModel model)
+        {
+            if (!CanEntitySpawn(model))
+                return;
+
+            // non issue once all entities types are handled
+            if ((EntityType)model.Type == EntityType.Platform)
+                model.Type = (byte)EntityType.SimpleCollidable;
+            WorldEntity entity = EntityManager.Instance.NewEntity((EntityType)model.Type) ?? EntityManager.Instance.NewEntity(EntityType.Simple);
+            entity.Initialise(model);
+
+            var position = new MapPosition
             {
-                // non issue once all entities types are handled
-                WorldEntity entity = EntityManager.Instance.NewEntity((EntityType)model.Type) ?? EntityManager.Instance.NewEntity(EntityType.Simple);
-                entity.Initialise(model);
+                Position = new Vector3(model.X, model.Y, model.Z)
+            };
 
-                var position = new MapPosition
-                {
-                    Position = new Vector3(model.X, model.Y, model.Z)
-                };
-
-                if (CanEnter(entity, position))
-                    EnqueueAdd(entity, position);
-            }
+            if (CanEnter(entity, position))
+                EnqueueAdd(entity, position);
         }
 
         private bool CanAddEntity(GridEntity entity, Vector3 vector)
         {
             ActivateGrid(entity, vector);
+
+            // If the entity has not been removed from previous map, they should not be added to new one
+            if (entity.Map != null)
+                return false;
 
             // if the grid doesn't exist we can't add the new entity to it
             MapGrid grid = GetGrid(vector);
@@ -447,7 +513,7 @@ namespace NexusForever.WorldServer.Game.Map
 
         protected virtual void RelocateEntity(GridEntity entity, Vector3 vector)
         {
-            //Debug.Assert(entity.Map != null);
+            Debug.Assert(entity.Map != null);
             try
             {
                 ActivateGrid(entity, vector);
@@ -486,6 +552,21 @@ namespace NexusForever.WorldServer.Game.Map
         {
             // TODO: handle cases for water and props
             return File.GetTerrainHeight(new Vector3(x, 0, z));
+        }
+
+        /// <summary>
+        /// Enqueues <see cref="GridEntity"/> to be respawned at given <see cref="DateTime"/>.
+        /// </summary>
+        public void EnqueueRespawn(GridEntity entity, DateTime respawnTime)
+        {
+            if (entity is not WorldEntity)
+                return;
+
+            uint entityId = (entity as WorldEntity).EntityId;
+            if (entityId == 0u)
+                throw new InvalidOperationException("Cannot respawn an Entity that doesn't have an EntityId.");
+
+            entityRespawnTimers.TryAdd(entityId, respawnTime);
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Guild;
+using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 
@@ -22,21 +24,29 @@ namespace NexusForever.WorldServer.Game.Housing
         }
 
         /// <summary>
+        /// Should only be used by <see cref="GlobalResidenceManager"/> when creating a <see cref="Residence"/>.
+        /// </summary>
+        public void SetResidence(Residence residence)
+        {
+            Residence = residence;
+        }
+
+        /// <summary>
         /// Create new <see cref="Decor"/> from supplied <see cref="HousingDecorInfoEntry"/> to residence your crate.
         /// </summary>
         /// <remarks>
         /// Decor will be created for your residence regardless of the current residence you are on.
         /// </remarks>
-        public void DecorCreate(HousingDecorInfoEntry entry, uint quantity = 1u)
+        public void DecorCreate(HousingDecorInfoEntry entry, uint quantity = 1u, ushort? color = null)
         {
             Residence ??= GlobalResidenceManager.Instance.CreateResidence(owner);
 
             if (Residence.Map != null)
-                Residence.Map.DecorCreate(Residence, entry, quantity);
+                Residence.Map.DecorCreate(Residence, entry, quantity, color);
             else
             {
                 for (uint i = 0u; i < quantity; i++)
-                    Residence.DecorCreate(entry);
+                    Residence.DecorCreate(entry, color);
             }
         }
 
@@ -71,7 +81,7 @@ namespace NexusForever.WorldServer.Game.Housing
             owner.Session.EnqueueMessageEncrypted(new ServerHousingBasics
             {
                 ResidenceId     = Residence?.Id ?? 0ul,
-                /*NeighbourhoodId = GuildManager.GetGuild<Community>(GuildType.Community)?.Id ?? 0ul,*/
+                NeighbourhoodId = owner.GuildManager.GetGuild<Community>(GuildType.Community)?.Id ?? 0ul,
                 PrivacyLevel    = flags
             });
         }

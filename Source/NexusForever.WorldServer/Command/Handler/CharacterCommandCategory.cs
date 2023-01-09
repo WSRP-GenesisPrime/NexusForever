@@ -19,7 +19,8 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount of XP to grant character.")]
             uint amount)
         {
-            try
+            Player target = context.InvokingPlayer;
+            if (target.Level >= 50)
             {
                 Player target = context.InvokingPlayer;
                 if (target.Level >= 50)
@@ -42,7 +43,8 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Level to set character.")]
             byte level)
         {
-            try
+            Player target = context.InvokingPlayer;
+            if (level <= target.Level || level > 50)
             {
                 Player target = context.InvokingPlayer;
                 if (level <= target.Level || level > 50)
@@ -74,112 +76,104 @@ namespace NexusForever.WorldServer.Command.Handler
            [Parameter("Property value.")]
             float val)
         {
-            try
+            Player target = context.InvokingPlayer;
+            switch (prop.ToLower())
             {
-                Player target = context.InvokingPlayer;
-                switch (prop.ToLower())
-                {
-                    case "speed":
-                        if (val < 1f)
-                        {
-                            context.SendError("Speed multiplier can not be below 1.");
-                            return;
-                        }
-                        else if (val > 8f)
-                        {
-                            context.SendError("Speed multiplier can not be above 8.");
-                            return;
-                        }
-                        else
-                        {
-                            target.SetBaseProperty(Property.MoveSpeedMultiplier, val);
-                            context.SendMessage("Gotta go fast!");
-                        }
-                        break;
-                    case "mountspeed":
-                        if (val < 1f)
-                        {
-                            context.SendError("Mount speed multiplier can not be below 1.");
-                            return;
-                        }
-                        else if (val > 5f)
-                        {
-                            context.SendError("Mount speed multiplier can not be above 5.");
-                            return;
-                        }
-                        else
-                        {
-                            target.SetBaseProperty(Property.MountSpeedMultiplier, val);
-                            context.SendMessage("Nyooom!");
-                        }
-                        break;
-                    case "gravity":
-                        if (val < 0.1f)
-                        {
-                            context.SendError("Gravity multiplier can not be below 0.1.");
-                            return;
-                        }
-                        else if (val > 5f)
-                        {
-                            context.SendError("Gravity multiplier can not be above 5.");
-                            return;
-                        }
-                        else
-                        {
-                            target.SetBaseProperty(Property.GravityMultiplier, val);
-                            context.SendMessage("Like a feather!");
-                        }
-                        break;
-                    case "jump":
-                        if (val < 1f)
-                        {
-                            context.SendError("Jump height can not be below 1.");
-                            return;
-                        }
-                        else if (val > 20f)
-                        {
-                            context.SendError("Jump height can not be above 20.");
-                            return;
-                        }
-                        else
-                        {
-                            target.SetBaseProperty(Property.JumpHeight, val);
-                            context.SendMessage("A giant leap for whatever-you-are!");
-                        }
-                        break;
-                    case "slowfall":
-                        if (val < 0f)
-                        {
-                            context.SendError("Slowfall multiplier can not be below 0.");
-                            return;
-                        }
-                        else
-                        {
-                            target.SetBaseProperty(Property.SlowFallMultiplier, val);
-                            context.SendMessage("I believe I can flyyyyy...");
-                        }
-                        break;
-                    case "friction":
-                        if (val < 0f)
-                        {
-                            context.SendError("Friction can not be below 0.");
-                            return;
-                        }
-                        else
-                        {
-                            target.SetBaseProperty(Property.FrictionMax, val);
-                            context.SendMessage("Grippy!");
-                        }
-                        break;
-                    default:
-                        context.SendMessage("I'm afraid I can't let you do that!\nValid props are: speed, mountspeed, gravity, jump.");
-                        break;
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in CharacterCommandCategory.HandleProps!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                case "speed":
+                    if (val < 1f)
+                    {
+                        context.SendError("Speed multiplier can not be below 1.");
+                        return;
+                    }
+                    else if (val > 8f)
+                    {
+                        context.SendError("Speed multiplier can not be above 8.");
+                        return;
+                    }
+                    else
+                    {
+                        target.SetBaseProperty(Property.MoveSpeedMultiplier, val);
+                        context.SendMessage("Gotta go fast!");
+                    }
+                    break;
+                case "mountspeed":
+                    if (val < 1f)
+                    {
+                        context.SendError("Mount speed multiplier can not be below 1.");
+                        return;
+                    }
+                    else if (val > 5f)
+                    {
+                        context.SendError("Mount speed multiplier can not be above 5.");
+                        return;
+                    }
+                    else
+                    {
+                        target.SetBaseProperty(Property.MountSpeedMultiplier, val);
+                        context.SendMessage("Nyooom!");
+                    }
+                    break;
+                case "gravity":
+                    if (val < 0.1f)
+                    {
+                        context.SendError("Gravity multiplier can not be below 0.1.");
+                        return;
+                    }
+                    else if (val > 5f)
+                    {
+                        context.SendError("Gravity multiplier can not be above 5.");
+                        return;
+                    }
+                    else
+                    {
+                        target.SetBaseProperty(Property.GravityMultiplier, val);
+                        context.SendMessage("Like a feather!");
+                    }
+                    break;
+                case "jump":
+                    if (val < 1f)
+                    {
+                        context.SendError("Jump height can not be below 1.");
+                        return;
+                    }
+                    else if (val > 20f)
+                    {
+                        context.SendError("Jump height can not be above 20.");
+                        return;
+                    }
+                    else
+                    {
+                        target.SetBaseProperty(Property.JumpHeight, val);
+                        context.SendMessage("A giant leap for whatever-you-are!");
+                    }
+                    break;
+                case "slowfall":
+                    if (val < 0f)
+                    {
+                        context.SendError("Slowfall multiplier can not be below 0.");
+                        return;
+                    }
+                    else
+                    {
+                        target.SetBaseProperty(Property.SlowFallMultiplier, val);
+                        context.SendMessage("I believe I can flyyyyy...");
+                    }
+                    break;
+                case "friction":
+                    if (val < 0f)
+                    {
+                        context.SendError("Friction can not be below 0.");
+                        return;
+                    }
+                    else
+                    {
+                        target.SetBaseProperty(Property.FrictionMax, val);
+                        context.SendMessage("Grippy!");
+                    }
+                    break;
+                default:
+                    context.SendMessage("I'm afraid I can't let you do that!\nValid props are: speed, mountspeed, gravity, jump.");
+                    break;
             }
         }
 
@@ -302,7 +296,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 target.CastSpell(63490, 1, new SpellParameters
                 {
                     UserInitiatedSpellCast = false,
-                    OverrideTargetId = target.Guid
+                    PositionalUnitId = target.Guid
                 });
             }
             for (int i = 0; i < bestLargeStacks; ++i)
@@ -310,7 +304,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 target.CastSpell(63491, 1, new SpellParameters
                 {
                     UserInitiatedSpellCast = false,
-                    OverrideTargetId = target.Guid
+                    PositionalUnitId = target.Guid
                 });
             }
         }

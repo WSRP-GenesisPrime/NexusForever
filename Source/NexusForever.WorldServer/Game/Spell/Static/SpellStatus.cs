@@ -6,6 +6,8 @@
         Casting,
         Executing,
         Finished,
+        Waiting,
+        Failed,
         Finishing
     }
 }

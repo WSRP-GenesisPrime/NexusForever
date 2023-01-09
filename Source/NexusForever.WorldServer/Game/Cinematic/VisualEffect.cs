@@ -1,6 +1,10 @@
-﻿using NexusForever.WorldServer.Game.Entity;
+﻿using NexusForever.WorldServer.Game.Cinematic.Static;
+using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace NexusForever.WorldServer.Game.Cinematic
 {
@@ -16,25 +20,31 @@ namespace NexusForever.WorldServer.Game.Cinematic
 
         public VisualEffect(uint visualEffectId, Position position = null, uint initialDelay = 0, bool removeOnCameraEnd = false)
         {
-            Id                = GlobalCinematicManager.Instance.NextCinematicId;
-            VisualEffectId    = visualEffectId;
+            Id = GlobalCinematicManager.Instance.NextCinematicId;
+            VisualEffectId = visualEffectId;
 
-            Position          = position ?? new Position();
+            if (position != null)
+                Position = position;
+            else
+                Position = new Position();
 
-            InitialDelay      = initialDelay;
             RemoveOnCameraEnd = removeOnCameraEnd;
+            InitialDelay = initialDelay;
         }
 
         public VisualEffect(uint visualEffectId, uint unitId, Position position = null, uint initialDelay = 0, uint duration = 0, bool removeOnCameraEnd = false)
         {
-            Id                = GlobalCinematicManager.Instance.NextCinematicId;
-            VisualEffectId    = visualEffectId;
+            Id = GlobalCinematicManager.Instance.NextCinematicId;
+            VisualEffectId = visualEffectId;
 
-            Position          = position ?? new Position();
+            if (position != null)
+                Position = position;
+            else
+                Position = new Position();
 
-            UnitId            = unitId;
-            InitialDelay      = initialDelay;
-            Duration          = duration;
+            UnitId = unitId;
+            InitialDelay = initialDelay;
+            Duration = duration;
             RemoveOnCameraEnd = removeOnCameraEnd;
         }
 
@@ -47,22 +57,20 @@ namespace NexusForever.WorldServer.Game.Cinematic
         {
             session.EnqueueMessageEncrypted(new ServerCinematicVisualEffect
             {
-                Delay             = InitialDelay,
-                UnitId            = UnitId,
-                VisualHandle      = Id,
-                VisualEffectId    = VisualEffectId,
-                Position          = Position,
+                Delay = InitialDelay,
+                UnitId = UnitId,
+                VisualHandle = Id,
+                VisualEffectId = VisualEffectId,
+                Position = Position,
                 RemoveOnCameraEnd = RemoveOnCameraEnd
             });
 
             if (Duration > 0)
-            {
                 session.EnqueueMessageEncrypted(new ServerCinematicVisualEffectEnd
                 {
-                    Delay        = InitialDelay + Duration,
+                    Delay = InitialDelay + Duration,
                     VisualHandle = Id
                 });
-            }
         }
     }
 }

@@ -1,13 +1,14 @@
 ﻿using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Database;
+using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
 using NexusForever.WorldServer.Command.Static;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
-using System;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -48,45 +49,22 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 context.SendMessage($"Account {email} created successfully");
             }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in AccountCommandCategory.HandleAccountCreate!\n{e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
-        }
+                
+            role ??= (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? (uint)Role.Player);
+                
+            (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role);
 
-        [Command(Permission.AccountChangePass, "Change the password of an account.", "changepass")]
-        public void HandleAccountChangePass(ICommandContext context,
-            [Parameter("Email address of the account to change")]
-            string email,
-            [Parameter("New password")]
-            string password)
-        {
-            try
+            if (context.InvokingPlayer != null)
             {
-                (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
-                if (email == null || email.Length <= 0)
-                {
-                    context.SendError("Account name wasn't specified properly.");
-                    return;
-                }
-                DatabaseManager.Instance.AuthDatabase.ChangeAccountPassword(email, salt, verifier);
+                log.Info($"Account {email} created successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
+            }
+            else
+            {
+                log.Info($"Account {email} created successfully.");
+            }
 
-                if (context.InvokingPlayer != null)
-                {
-                    log.Info($"Account {email} password changed successfully by {context.InvokingPlayer.Name} ({context.InvokingPlayer.Session.Account.Email}).");
-                }
-                else
-                {
-                    log.Info($"Account {email} password changed successfully.");
-                }
-                context.SendMessage($"Account {email} successfully changed!");
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in AccountCommandCategory.HandleAccountChangePass!\n{e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            context.SendMessage($"Account {email} created successfully");
         }
 
         [Command(Permission.AccountChangeMyPass, "Change the password of your account.", "changemypass")]
@@ -134,6 +112,94 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 log.Error($"Exception caught in AccountCommandCategory.HandleAccountDelete!\n{e.Message} :\n{e.StackTrace}");
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
+            }
+        }
+
+        [Command(Permission.AccountPassword, "Change a password for this account.", "password")]
+        public void HandleAccountPassword(ICommandContext context,
+            [Parameter("Password for the account.")]
+            string password,
+            [Parameter("Confirm password for the account.")]
+            string confirm)
+        {
+            if (password != confirm)
+            {
+                context.SendMessage("Password and confirmation must match. Please try again.");
+                return;
+            }
+
+            if (password.Length < 8)
+            {
+                context.SendMessage("Password must be at least 8 characters long. Please try another.");
+                return;
+            }
+
+            string email = (context.Invoker as Player).Session.Account.Email;
+            (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            DatabaseManager.Instance.AuthDatabase.SetPasswordForAccount(email, salt, verifier);
+
+            context.SendMessage($"Account password changed.");
+        }
+
+        [Command(Permission.AccountAdminPassword, "Change a password for a given account.", "changepassword")]
+        public void HandleAccountPassword(ICommandContext context,
+            [Parameter("Username of the account.")]
+            string email,
+            [Parameter("Password for the account.")]
+            string password,
+            [Parameter("Confirm password for the account.")]
+            string confirm)
+        {
+            if (!DatabaseManager.Instance.AuthDatabase.AccountExists(email))
+            {
+                context.SendMessage("Account not found. Please confirm username and try again.");
+                return;
+            }
+
+            if (password != confirm)
+            {
+                context.SendMessage("Password and confirmation must match. Please try again.");
+                return;
+            }
+
+            if (password.Length < 8)
+            {
+                context.SendMessage("Password must be at least 8 characters long. Please try another.");
+                return;
+            }
+
+            (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
+            DatabaseManager.Instance.AuthDatabase.SetPasswordForAccount(email, salt, verifier);
+
+            context.SendMessage($"Account password changed.");
+        }
+
+        [Command(Permission.AccountInventory, "A collection of commands to manage account inventory.", "inventory")]
+        public class AccountInventoryCommandCategory : CommandCategory
+        {
+            [Command(Permission.AccountInventoryItemAdd, "Add an item to the account inventory.", "add")]
+            public void HandleAccountInventoryCommandItemAdd(ICommandContext context,
+                [Parameter("Item to add")]
+                uint itemId,
+                [Parameter("Item quantity")]
+                uint? quantity)
+            {
+                quantity ??= 1u;
+
+                if (context.GetTargetOrInvoker<Player>() == null)
+                {
+                    context.SendMessage("You need to have a target to add an Account Item to!");
+                    return;
+                }
+
+                AccountItemEntry accountItem = GameTableManager.Instance.AccountItem.GetEntry(itemId);
+                if (accountItem == null)
+                {
+                    context.SendMessage($"Could not find Account Item with ID {itemId}. Please try again with a valid ID.");
+                    return;
+                }
+
+                context.GetTargetOrInvoker<Player>().Session.AccountInventory.ItemCreate(accountItem);
             }
         }
     }

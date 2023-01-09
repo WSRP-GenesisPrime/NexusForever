@@ -3,6 +3,7 @@ using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Entity.Network.Model;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Script;
 using System;
 using System.Numerics;
 
@@ -15,6 +16,9 @@ namespace NexusForever.WorldServer.Game.Entity
         private Plug ReplacementPlug { get; set; }
         private Action onAddToMapAction;
 
+        private Plug ReplacementPlug;
+        private Action onAddToMapAction;
+
         public Plug(HousingPlotInfoEntry plotEntry, HousingPlugItemEntry plugEntry, Action action = null)
             : base(EntityType.Plug)
         {
@@ -25,17 +29,20 @@ namespace NexusForever.WorldServer.Game.Entity
             CreateFlags = EntityCreateFlag.SpawnAnimation;
             DisplayInfo = 22896;
             Properties.Add(Property.BaseHealth, new PropertyValue(Property.BaseHealth, 101f, 101f));
+
+            ScriptManager.Instance.GetScript<PlugScript>(PlugEntry.Id)?.OnCreate(this);
         }
 
         protected override IEntityModel BuildEntityModel()
         {
             return new PlugModel
             {
-                SocketId  = (ushort)PlotEntry.WorldSocketId,
-                PlugId    = (ushort)PlugEntry.WorldIdPlug02,
+                SocketId  = (ushort)(PlotEntry?.WorldSocketId ?? 0u),
+                PlugId    = (ushort)(PlugEntry?.WorldIdPlug02 ?? 0u),
                 PlugFlags = 63
             };
         }
+
 
         /// <summary>
         /// Queue a replacement <see cref="Plug"/> to assume this entity's WorldSocket and WorldPlug location
@@ -50,6 +57,8 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             base.OnAddToMap(map, guid, vector);
 
+            ScriptManager.Instance.GetScript<PlugScript>(PlugEntry.Id)?.OnAddToMap(this);
+
             if (onAddToMapAction != null)
             {
                 onAddToMapAction.Invoke();
@@ -61,7 +70,7 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (ReplacementPlug != null)
             {
-                Map.EnqueueAdd(ReplacementPlug, new MapPosition
+                Map?.EnqueueAdd(ReplacementPlug, new MapPosition
                 {
                     Position = Position
                 });

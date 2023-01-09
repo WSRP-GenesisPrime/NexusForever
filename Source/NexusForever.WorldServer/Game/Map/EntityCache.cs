@@ -12,6 +12,7 @@ namespace NexusForever.WorldServer.Game.Map
         public uint EntityCount { get; }
 
         private readonly Dictionary<(uint GridX, uint GridZ), HashSet<EntityModel>> entities = new();
+        private readonly Dictionary<uint /*entityId*/, EntityModel> entitiesById = new();
 
         public EntityCache(ImmutableList<EntityModel> models)
         {
@@ -32,6 +33,9 @@ namespace NexusForever.WorldServer.Game.Map
                 entities.Add(coord, new HashSet<EntityModel>());
 
             entities[coord].Add(model);
+
+            if (!entitiesById.ContainsKey(model.Id))
+                entitiesById.Add(model.Id, model);
         }
 
         /// <summary>
@@ -40,6 +44,11 @@ namespace NexusForever.WorldServer.Game.Map
         public IEnumerable<EntityModel> GetEntities(uint gridX, uint gridZ)
         {
             return entities.TryGetValue((gridX, gridZ), out HashSet<EntityModel> cellEntities) ? cellEntities : Enumerable.Empty<EntityModel>();
+        }
+
+        public EntityModel GetEntity(uint entityId)
+        {
+            return entitiesById.TryGetValue(entityId, out EntityModel model) ? model : null;
         }
     }
 }

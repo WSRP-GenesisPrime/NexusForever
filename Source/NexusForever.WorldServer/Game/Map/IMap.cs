@@ -7,6 +7,8 @@ namespace NexusForever.WorldServer.Game.Map
 {
     public interface IMap : IUpdate
     {
+        bool HasLoaded { get; }
+
         /// <summary>
         /// Initialise <see cref="IMap"/> with <see cref="WorldEntry"/>.
         /// </summary>

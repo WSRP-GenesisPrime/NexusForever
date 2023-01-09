@@ -140,8 +140,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 session.Characters.Clear();
                 session.Characters.AddRange(characters);
 
-                session.AccountCurrencyManager.SendCharacterListPacket();
-                session.GenericUnlockManager.SendUnlockList();
+                session.AccountInventory.SendCharacterListPackets();
 
                 session.EnqueueMessageEncrypted(new ServerAccountEntitlements
                 {
@@ -162,6 +161,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 // this is set in the tbl files so a value should always exist
                 uint characterSlots = (uint)(session.EntitlementManager.GetRewardProperty(RewardPropertyType.CharacterSlots).GetValue(0u) ?? 2u);
                 uint characterCount = (uint)characters.Count(c => c.DeleteTime == null);
+
+                session.AccountCurrencyManager.SendCharacterListPacket();
+                session.GenericUnlockManager.SendUnlockList();
 
                 var serverCharacterList = new ServerCharacterList
                 {
@@ -294,6 +296,20 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 if (creationEntry == null)
                     throw new InvalidPacketValueException();
 
+                // TODO: Remove below to let players make Novice characters in Tutorial.
+                if (creationEntry.Xp == 0u)
+                {
+                    creationEntry = GameTableManager.Instance.CharacterCreation.Entries.FirstOrDefault(c => c.Xp == 1710 && c.RaceId == creationEntry.RaceId && c.ClassId == creationEntry.ClassId && c.FactionId == creationEntry.FactionId && c.Sex == creationEntry.Sex && c.CharacterCreationStartEnum == (uint)CharacterCreationStart.Nexus);
+                    if (creationEntry == null)
+                    {
+                        session.EnqueueMessageEncrypted(new ServerCharacterCreate
+                        {
+                            Result = CharacterModifyResult.CreateFailed_Internal
+                        });
+                        return;
+                    }
+                }
+
                 if (creationEntry.EntitlementIdRequired != 0u)
                 {
                     // TODO: Aurin engineer has this
@@ -336,7 +352,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                         Value = value
                     });
 
-                    foreach (CharacterCustomizationEntry entry in AssetManager.Instance.GetCharacterCustomisation(customisations, creationEntry.RaceId, creationEntry.Sex, label, value))
+                    foreach(CharacterCustomizationEntry entry in AssetManager.Instance.GetCharacterCustomisation(customisations, creationEntry.RaceId, creationEntry.Sex, label, value))
                     {
                         character.Appearance.Add(new CharacterAppearanceModel
                         {
@@ -362,6 +378,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 character.LocationX = startingLocation.Position.X;
                 character.LocationY = startingLocation.Position.Y;
                 character.LocationZ = startingLocation.Position.Z;
+                character.RotationX = startingLocation.Rotation.X;
+                character.RotationY = startingLocation.Rotation.Y;
+                character.RotationZ = startingLocation.Rotation.Z;
                 character.WorldId = (ushort)startingLocation.World.Id;
 
                 character.ActiveSpec = 0;
@@ -406,8 +425,15 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 {
                     Id    = character.Id,
                     Stat  = (byte)Stat.Health,
-                    Value = 800
+                    Value = AssetManager.Instance.GetCharacterBaseProperties().First(x => x.Property == Property.BaseHealth).BaseValue * startingLevel
                 });
+                if ((Class)creationEntry.ClassId is Class.Esper or Class.Medic or Class.Spellslinger)
+                    character.Stat.Add(new CharacterStatModel
+                    {
+                        Id = character.Id,
+                        Stat = (byte)Stat.Focus,
+                        Value = 1000
+                    });
                 character.Stat.Add(new CharacterStatModel
                 {
                     Id    = character.Id,
@@ -428,8 +454,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 });
                 character.Stat.Add(new CharacterStatModel
                 {
-                    Id    = character.Id,
-                    Stat  = (byte)Stat.Sheathed,
+                    Id = character.Id,
+                    Stat = (byte)Stat.Sheathed,
                     Value = 1
                 });
 
@@ -445,7 +471,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                    session.Characters.Add(character);
 
                    if ((CharacterCreationStart)creationEntry.CharacterCreationStartEnum == CharacterCreationStart.Level50)
-                       session.AccountCurrencyManager.CurrencySubtractAmount(AccountCurrencyType.MaxLevelToken, 1u);
+                       session.AccountCurrencyManager.CurrencySubtractAmount(Game.Account.Static.AccountCurrencyType.MaxLevelToken, 1u);
 
                    session.EnqueueMessageEncrypted(new ServerCharacterCreate
                    {
@@ -585,7 +611,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     residence ??= GlobalResidenceManager.Instance.CreateResidence(session.Player);
 
                     ResidenceEntrance entrance = GlobalResidenceManager.Instance.GetResidenceEntrance(residence.PropertyInfoId);
-                    session.Player.Rotation = entrance.Rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+                    session.Player.Rotation = entrance.Rotation.ToEulerRadians();
                     MapManager.Instance.AddToMap(session.Player, new MapPosition
                     {
                         Info     = new MapInfo
@@ -701,14 +727,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientInnateChange)]
         public static void HandleInnateChange(WorldSession session, ClientInnateChange innateChange)
         {
-            // TODO: Validate that index exists and which ability it is
-
-            session.Player.InnateIndex = innateChange.InnateIndex;
-
-            session.EnqueueMessageEncrypted(new ServerPlayerInnate
-            {
-                InnateIndex = session.Player.InnateIndex
-            });
+            session.Player.SpellManager.SetInnate(innateChange.InnateIndex);
         }
 
         [MessageHandler(GameMessageOpcode.ClientInspectPlayerRequest)]
@@ -727,6 +746,32 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     .Select(i => i.BuildNetworkItem())
                     .ToList()
             });
+        }
+        
+        [MessageHandler(GameMessageOpcode.ClientCharacterAppearanceChange)]
+        public static void HandleAppearanceChange(WorldSession session, ClientCharacterAppearanceChange appearanceChange)
+        {
+            // merge seperate label and value lists into a single dictonary
+            Dictionary<uint, uint> customisations = appearanceChange.Labels
+                .Zip(appearanceChange.Values, (l, v) => new { l, v })
+                .ToDictionary(p => p.l, p => p.v);
+
+            session.Player.SetCharacterCustomisation(customisations, appearanceChange.Bones, (Race)appearanceChange.Race, (Sex)appearanceChange.Sex, appearanceChange.UseServiceTokens);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientPvpModeSet)]
+        public static void HandlePvpModeSet(WorldSession session, ClientPvpModeSet pvpModeSet)
+        {
+            if (session.Player == null)
+                throw new ArgumentNullException("Player does not exist!");
+
+            if (session.Player.InCombat)
+            {
+                session.Player.SendGenericError(GenericError.PlayerCannotWhileInCombat);
+                return;
+            }
+
+            session.Player.SetPvpMode(pvpModeSet.PvpMode);
         }
     }
 }

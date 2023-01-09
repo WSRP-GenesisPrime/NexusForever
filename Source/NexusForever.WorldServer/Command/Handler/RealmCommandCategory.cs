@@ -6,8 +6,6 @@ using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network;
-using NLog;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +14,6 @@ namespace NexusForever.WorldServer.Command.Handler
     [Command(Permission.Realm, "A collection of commands to manage the realm.", "realm")]
     public class RealmCommandCategory : CommandCategory
     {
-        private static readonly ILogger log = LogManager.GetCurrentClassLogger();
         [Command(Permission.RealmShutdown, "A collection of commands to manage realm shutdown.", "shutdown")]
         public class RealmShutdownCommandCategory : CommandCategory
         {
@@ -52,17 +49,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("New message of the day for the realm.")]
             string message)
         {
-            try
-            {
-                WorldServer.RealmMotd = message;
-                foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
-                    GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
-            }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in RealmCommandCategory.HandleRealmMotd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+            WorldServer.RealmMotd = message;
+            foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
+                GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
         }
 
         [Command(Permission.RealmMaxPlayers, "Set the maximum players allowed to connect.", "max")]

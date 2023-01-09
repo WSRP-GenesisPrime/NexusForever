@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NexusForever.Database.Auth;
 using NexusForever.Database.Character;
@@ -13,7 +14,6 @@ using NexusForever.Shared.Game;
 using NexusForever.Shared.Game.Events;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
-using NexusForever.Shared.GameTable.Static;
 using NexusForever.Shared.Network;
 using NexusForever.WorldServer.Game.Achievement;
 using NexusForever.WorldServer.Game.CharacterCache;
@@ -25,8 +25,9 @@ using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Guild.Static;
 using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Map;
-using NexusForever.WorldServer.Game.Quest.Static;
+using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Reputation;
 using NexusForever.WorldServer.Game.Reputation.Static;
@@ -34,6 +35,7 @@ using NexusForever.WorldServer.Game.Setting;
 using NexusForever.WorldServer.Game.Setting.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Social.Static;
+using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
@@ -42,7 +44,7 @@ using NLog;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
-    public class Player : UnitEntity, ISaveAuth, ISaveCharacter, ICharacter
+    public partial class Player : UnitEntity, ISaveAuth, ISaveCharacter, ICharacter
     {
         private readonly static ILogger log = LogManager.GetCurrentClassLogger();
 
@@ -51,11 +53,12 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public ulong CharacterId { get; }
         public string Name { get; }
-        public Sex Sex { get; set; }
-        public Race Race { get; set; }
+        public Sex Sex { get; private set; }
+        public Race Race { get; private set; }
         public Class Class { get; }
         public Faction Faction { get; }
         public List<float> Bones { get; } = new();
+        public WorldZoneEntry PreviousZone { get; private set; }
         public bool IsAdult {
             get
             {
@@ -112,16 +115,16 @@ namespace NexusForever.WorldServer.Game.Entity
         }
         private InputSets inputKeySet;
 
-        public byte InnateIndex
+        public ushort BindPoint
         {
-            get => innateIndex;
+            get => bindPoint;
             set
             {
-                innateIndex = value;
-                saveMask |= PlayerSaveMask.Innate;
+                bindPoint = value;
+                saveMask |= PlayerSaveMask.BindPoint;
             }
         }
-        private byte innateIndex;
+        private ushort bindPoint;
 
         public DateTime CreateTime { get; }
         public double TimePlayedTotal { get; private set; }
@@ -142,14 +145,13 @@ namespace NexusForever.WorldServer.Game.Entity
             set => MovementManager.SetPlatform(value);
         }
 
-        /// <summary>
-        /// Guid of the <see cref="VanityPet"/> currently summoned by the <see cref="Player"/>.
-        /// </summary>
-        public uint? VanityPetGuid { get; set; }
+        public PvPFlag PvPFlags { get; private set; }
 
         public bool IsSitting => currentChairGuid != null;
         private uint? currentChairGuid;
 
+        public uint? GhostGuid { get; set; }
+        
         /// <summary>
         /// Whether or not this <see cref="Player"/> is currently in a state after using an emote. Setting this to false will let all nearby entities know that the state has been reset.
         /// </summary>
@@ -218,9 +220,10 @@ namespace NexusForever.WorldServer.Game.Entity
         public ReputationManager ReputationManager { get; }
         public GuildManager GuildManager { get; }
         public ChatManager ChatManager { get; }
-        public ResidenceManager ResidenceManager { get; }
-        public CinematicManager CinematicManager { get; }
         public ContactManager ContactManager { get; }
+        public CinematicManager CinematicManager { get; }
+        public ResidenceManager ResidenceManager { get; }
+        public PetManager PetManager { get; }
 
         public VendorInfo SelectedVendorInfo { get; set; } // TODO unset this when too far away from vendor
 
@@ -246,9 +249,22 @@ namespace NexusForever.WorldServer.Game.Entity
             }
         }
         private Vector3 houseOutsideLocation = Vector3.Zero;
-        private UpdateTimer housingMapTeleport = new UpdateTimer(1d);
+        private UpdateTimer housingMapTeleport = new UpdateTimer(0.5d);
         public bool CanUseHousingDoors() => housingMapTeleport.HasElapsed;
 
+        private bool firstTimeLoggingIn;
+
+        /// <summary>
+        /// Character Customisation models. Stored for modification purposes.
+        /// </summary>
+        private Dictionary</*label*/uint, Customisation> characterCustomisations = new Dictionary<uint, Customisation>();
+        private HashSet<Customisation> deletedCharacterCustomisations = new HashSet<Customisation>();
+        private Dictionary<ItemSlot, Appearance> characterAppearances = new Dictionary<ItemSlot, Appearance>();
+        private HashSet<Appearance> deletedCharacterAppearances = new HashSet<Appearance>();
+        private List<Bone> characterBones = new List<Bone>();
+        private HashSet<Bone> deletedCharacterBones = new HashSet<Bone>();
+
+        private MovementSpeed movementSpeed;
         private bool firstTimeLoggingIn;
 
         /// <summary>
@@ -273,14 +289,17 @@ namespace NexusForever.WorldServer.Game.Entity
             Faction         = (Faction)model.FactionId;
             Faction1        = (Faction)model.FactionId;
             Faction2        = (Faction)model.FactionId;
-            innateIndex     = model.InnateIndex;
             flags           = (CharacterFlag)model.Flags;
+            bindPoint       = model.BindPoint;
 
             CreateTime      = model.CreateTime;
             TimePlayedTotal = model.TimePlayedTotal;
             TimePlayedLevel = model.TimePlayedLevel;
 
+            firstTimeLoggingIn = model.TimePlayedTotal == 0;
+
             Session.EntitlementManager.Initialise(model);
+            Session.RewardTrackManager.OnNewCharacter(this, model);
 
             foreach (CharacterStatModel statModel in model.Stat)
                 stats.Add((Stat)statModel.Stat, new StatValue(statModel));
@@ -305,8 +324,10 @@ namespace NexusForever.WorldServer.Game.Entity
             GuildManager            = new GuildManager(this, model);
             ContactManager          = new ContactManager(this, model);
             ChatManager             = new ChatManager(this);
-            ResidenceManager        = new ResidenceManager(this);
+            ContactManager          = new ContactManager(this, model);
             CinematicManager        = new CinematicManager(this);
+            ResidenceManager        = new ResidenceManager(this);
+            PetManager              = new PetManager(this);
 
             Costume costume = null;
             if (CostumeIndex >= 0)
@@ -335,16 +356,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
             BuildBaseProperties();
 
-            SetStat(Stat.Sheathed, 1u);
-
-            // temp
-            SetStat(Stat.Dash, 200F);
-            // sprint
-            SetStat(Stat.Resource0, 500f);
-            SetStat(Stat.Shield, 450u);
-
-            SetStat(Stat.Health, (uint) GetPropertyValue(Property.BaseHealth));
-
             CharacterManager.Instance.RegisterPlayer(this);
             firstTimeLoggingIn = model.TimePlayedTotal == 0;
         }
@@ -352,7 +363,7 @@ namespace NexusForever.WorldServer.Game.Entity
         public override void BuildBaseProperties()
         {
             var baseProperties = AssetManager.Instance.GetCharacterBaseProperties();
-            foreach (PropertyValue propertyValue in baseProperties)
+            foreach(PropertyValue propertyValue in baseProperties)
             {
                 float value = propertyValue.Value; // Intentionally copying value so that the PropertyValue does not get modified inside AssetManager
 
@@ -371,6 +382,19 @@ namespace NexusForever.WorldServer.Game.Entity
             }
 
             base.BuildBaseProperties();
+
+            if (firstTimeLoggingIn)
+            {
+                ModifyHealth(MaxHealth);
+                Shield = MaxShieldCapacity;
+            }
+
+            PetManager.UpdateStats();
+        }
+
+        public void FillStats()
+        {
+
         }
 
         public override void Update(double lastTick)
@@ -389,6 +413,7 @@ namespace NexusForever.WorldServer.Game.Entity
             SpellManager.Update(lastTick);
             CostumeManager.Update(lastTick);
             QuestManager.Update(lastTick);
+            MailManager.Update(lastTick);
 
             if (housingMapTeleport.IsTicking)
                 housingMapTeleport.Update(lastTick);
@@ -403,164 +428,6 @@ namespace NexusForever.WorldServer.Game.Entity
 
                 Save();
             }
-        }
-
-        /// <summary>
-        /// Modifies the appearance customisation of this <see cref="Player"/>. Called directly by a packet handler.
-        /// </summary>
-        public void SetCharacterCustomisation(Dictionary<uint, uint> customisations, List<float> bones, Race newRace, Sex newSex, bool usingServiceTokens)
-        {
-            // Set Sex and Race
-            Sex = newSex;
-            Race = newRace; // TODO: Ensure new Race is on the same faction
-
-            List<ItemSlot> itemSlotsModified = new List<ItemSlot>();
-            // Build models for all new customisations and store in customisations caches. The client sends through everything needed on every change.
-            foreach ((uint label, uint value) in customisations)
-            {
-                if (characterCustomisations.TryGetValue(label, out Customisation customisation))
-                    customisation.Value = value;
-                else
-                    characterCustomisations.TryAdd(label, new Customisation(CharacterId, label, value));
-
-                foreach (CharacterCustomizationEntry entry in AssetManager.Instance.GetCharacterCustomisation(customisations, (uint)newRace, (uint)newSex, label, value))
-                {
-                    if (characterAppearances.TryGetValue((ItemSlot)entry.ItemSlotId, out Appearance appearance))
-                        appearance.DisplayId = (ushort)entry.ItemDisplayId;
-                    else
-                        characterAppearances.TryAdd((ItemSlot)entry.ItemSlotId, new Appearance(CharacterId, (ItemSlot)entry.ItemSlotId, (ushort)entry.ItemDisplayId));
-
-                    // This is to track slots which are modified
-                    itemSlotsModified.Add((ItemSlot)entry.ItemSlotId);
-                }
-            }
-
-            for (int i = 0; i < bones.Count; i++)
-            {
-                if (i > characterBones.Count - 1)
-                    characterBones.Add(new Bone(CharacterId, (byte)i, bones[i]));
-                else
-                {
-                    var bone = characterBones.FirstOrDefault(x => x.BoneIndex == i);
-                    if (bone != null)
-                        bone.BoneValue = bones[i];
-                }
-            }
-
-            // Cleanup the unused customisations
-            foreach (ItemSlot slot in characterAppearances.Keys.Except(itemSlotsModified).ToList())
-            {
-                if (characterAppearances.TryGetValue(slot, out Appearance appearance))
-                {
-                    characterAppearances.Remove(slot);
-                    appearance.Delete();
-                    deletedCharacterAppearances.Add(appearance);
-                }
-            }
-            foreach (uint key in characterCustomisations.Keys.Except(customisations.Keys).ToList())
-            {
-                if (characterCustomisations.TryGetValue(key, out Customisation customisation))
-                {
-                    characterCustomisations.Remove(key);
-                    customisation.Delete();
-                    deletedCharacterCustomisations.Add(customisation);
-                }
-            }
-            if (Bones.Count > bones.Count)
-            {
-                for (int i = Bones.Count; i >= bones.Count; i--)
-                {
-                    Bone bone = characterBones[i];
-
-                    if (bone != null)
-                    {
-                        characterBones.RemoveAt(i);
-                        bone.Delete();
-                        deletedCharacterBones.Add(bone);
-                    }
-                }
-            }
-
-            // Update Player appearance values
-            SetAppearance(characterAppearances.Values
-                .Select(a => new ItemVisual
-                {
-                    Slot = a.ItemSlot,
-                    DisplayId = a.DisplayId
-                }));
-
-            Bones.Clear();
-            foreach (Bone bone in characterBones.OrderBy(bone => bone.BoneIndex))
-                Bones.Add(bone.BoneValue);
-
-            // Update surrounding entities, including the player, with new appearance
-            EmitVisualUpdate();
-
-            // TODO: Charge the player for service
-
-            // Enqueue the appearance changes to be saved to the DB.
-            saveMask |= PlayerSaveMask.Appearance;
-        }
-
-        /// <summary>
-        /// Update surrounding <see cref="WorldEntity"/>, including the <see cref="Player"/>, with a fresh appearance dataset.
-        /// </summary>
-        public void EmitVisualUpdate()
-        {
-            Costume costume = null;
-            if (CostumeIndex >= 0)
-                costume = CostumeManager.GetCostume((byte)CostumeIndex);
-
-            var entityVisualUpdate = new ServerEntityVisualUpdate
-            {
-                UnitId = Guid,
-                Sex = (byte)Sex,
-                Race = (byte)Race
-            };
-
-            foreach (Appearance characterAppearance in characterAppearances.Values)
-                entityVisualUpdate.ItemVisuals.Add(new ItemVisual
-                {
-                    Slot = characterAppearance.ItemSlot,
-                    DisplayId = characterAppearance.DisplayId
-                });
-
-            foreach (var itemVisual in Inventory.GetItemVisuals(costume))
-                entityVisualUpdate.ItemVisuals.Add(itemVisual);
-
-            if(costume != null)
-            {
-                foreach (var overrideItem in costume.getOverrides())
-                {
-                    if(overrideItem.Value == null)
-                    {
-                        continue;
-                    }
-                    ItemVisual iv = entityVisualUpdate.ItemVisuals.Where(iv => iv.Slot == overrideItem.Key).FirstOrDefault();
-                    if(iv != null)
-                    {
-                        iv.DisplayId = (ushort) overrideItem.Value;
-                    }
-                    else
-                    {
-                        iv = new ItemVisual
-                        {
-                            DisplayId = (ushort)overrideItem.Value,
-                            Slot = overrideItem.Key,
-                            DyeData = 0
-                        };
-                        entityVisualUpdate.ItemVisuals.Add(iv);
-                    }
-                }
-            }
-
-            EnqueueToVisible(entityVisualUpdate, true);
-
-            EnqueueToVisible(new ServerEntityBoneUpdate
-            {
-                UnitId = Guid,
-                Bones = Bones.ToList()
-            }, true);
         }
 
         /// <summary>
@@ -612,6 +479,8 @@ namespace NexusForever.WorldServer.Game.Entity
             Session.GenericUnlockManager.Save(context);
             Session.AccountCurrencyManager.Save(context);
             Session.EntitlementManager.Save(context);
+            Session.RewardTrackManager.Save(context);
+            Session.AccountInventory.Save(context);
 
             CostumeManager.Save(context);
             KeybindingManager.Save(context);
@@ -654,8 +523,11 @@ namespace NexusForever.WorldServer.Game.Entity
                     model.WorldId = (ushort)Map.Entry.Id;
                     entity.Property(p => p.WorldId).IsModified = true;
 
-                    model.WorldZoneId = (ushort)Zone.Id;
-                    entity.Property(p => p.WorldZoneId).IsModified = true;
+                    if (Zone != null)
+                    {
+                        model.WorldZoneId = (ushort)Zone.Id;
+                        entity.Property(p => p.WorldZoneId).IsModified = true;
+                    }
                 }
 
                 if ((saveMask & PlayerSaveMask.Path) != 0)
@@ -684,10 +556,10 @@ namespace NexusForever.WorldServer.Game.Entity
                     entity.Property(p => p.Flags).IsModified = true;
                 }
 
-                if ((saveMask & PlayerSaveMask.Innate) != 0)
+                if ((saveMask & PlayerSaveMask.BindPoint) != 0)
                 {
-                    model.InnateIndex = InnateIndex;
-                    entity.Property(p => p.InnateIndex).IsModified = true;
+                    model.BindPoint = BindPoint;
+                    entity.Property(p => p.BindPoint).IsModified = true;
                 }
 
                 if ((saveMask & PlayerSaveMask.Appearance) != 0)
@@ -715,7 +587,7 @@ namespace NexusForever.WorldServer.Game.Entity
                         characterBone.Save(context);
                     foreach (Customisation characterCustomisation in characterCustomisations.Values)
                         characterCustomisation.Save(context);
-                }
+                }   
 
                 saveMask = PlayerSaveMask.None;
             }
@@ -750,6 +622,7 @@ namespace NexusForever.WorldServer.Game.Entity
             ContactManager.Save(context);
 
             Session.EntitlementManager.Save(context);
+            Session.RewardTrackManager.Save(context);
         }
 
         protected override IEntityModel BuildEntityModel()
@@ -769,121 +642,79 @@ namespace NexusForever.WorldServer.Game.Entity
                     .ToList(),
                 GuildName = GuildManager.GuildAffiliation?.Name,
                 GuildType = GuildManager.GuildAffiliation?.Type ?? GuildType.None,
-                PvPFlag   = PvPFlag.Disabled
+                PvPFlag   = PvPFlags
             };
         }
 
-        public override void CancelEffect(uint castingId)
+        private void SendPacketsOnAddToMap()
         {
-            base.CancelEffect(castingId);
-            if (VehicleGuid != 0u)
-            {
-                Mount mount = GetVisible<Mount>(VehicleGuid);
-                if (mount != null && mount.castingId == castingId)
-                {
-                    Dismount();
-                }
-            }
+            SendPrePackets();
+            SendPlayerCreatePackets();
+            SendPlayerDataPackets();
         }
 
-        public override void OnAddToMap(BaseMap map, uint guid, Vector3 vector)
+        /// <summary>
+        /// Send the packets needed prior to Player or Entity Data
+        /// </summary>
+        /// /// <remark>
+        /// This must come before entities are sent, including the Players.
+        /// e.g. The client UI initialises the Holomark checkboxes during OnDocumentReady
+        /// </remark>
+        private void SendPrePackets()
         {
-            if(guid <= 0)
-            {
-                log.Warn($"Adding player {Name} ({CharacterId}) to map {map.Entry.Id} with guid 0!");
-            }
-            else
-            {
-                log.Info($"Adding player {Name} ({CharacterId}) to map {map.Entry.Id} with guid {guid}.");
-            }
-            IsLoading = true;
-
-            Session.EnqueueMessageEncrypted(new ServerChangeWorld
-            {
-                WorldId  = (ushort)map.Entry.Id,
-                Position = new Position(vector),
-                Yaw      = Rotation.X
-            });
-
-            // this must come before OnAddToMap
-            // the client UI initialises the Holomark checkboxes during OnDocumentReady
+            // 0x0845 ServerTimeOfDay
+            SendInGameTime();
+            // 0x0984
+            // 0x00FE ServerCharacterFlagsUpdated
             SendCharacterFlagsUpdated();
-
-            base.OnAddToMap(map, guid, vector);
-
-            // resummon vanity pet if it existed before teleport
-            if (pendingTeleport?.VanityPetId != null)
-            {
-                var vanityPet = new VanityPet(this, pendingTeleport.VanityPetId.Value);
-
-                var position = new MapPosition
-                {
-                    Position = Position
-                };
-
-                if (map.CanEnter(vanityPet, position))
-                    map.EnqueueAdd(vanityPet, position);
-            }
-
-            pendingTeleport = null;
-
-            SendPacketsAfterAddToMap();
-            if (PreviousMap == null)
-                OnLogin();
+            // 0x084C
+            // 0x07C8
+            // 0x0171 ServerPhase
+            // 0x0172
         }
 
-        public override void OnRelocate(Vector3 vector)
+        /// <summary>
+        /// Send the packets needed to spawn the Player entity for the client.
+        /// </summary>
+        private void SendPlayerCreatePackets()
         {
-            base.OnRelocate(vector);
-            saveMask |= PlayerSaveMask.Location;
-
-            ZoneMapManager.OnRelocate(vector);
+            // 0x0355 ServerEntityDestroy
+            // Destroy any entities that match the Guid for the player's new entity. This is what WS packet captures showed was happening.
+            Session.EnqueueMessageEncrypted(new ServerEntityDestroy
+            {
+                Guid = Guid,
+                Unknown0 = false
+            });
+            // 0x0262 ServerEntityCreate
+            // Send the client its new entity to use.
+            Session.EnqueueMessageEncrypted(BuildCreatePacket());
+            // 0x08B8 ServerSetUnitPathType
+            Session.EnqueueMessageEncrypted(new ServerSetUnitPathType
+            {
+                Guid = Guid,
+                Path = Path,
+            });
+            // 0x019B ServerPlayerChanged
+            Session.EnqueueMessageEncrypted(new ServerPlayerChanged
+            {
+                Guid = Guid,
+                Unknown1 = 1
+            });
         }
 
-        /*protected override void OnZoneUpdate()
-        {
-            if (Zone != null)
-            {
-                TextTable tt = GameTableManager.Instance.GetTextTable(Language.English);
-                if (tt != null)
-                {
-                    //GlobalChatManager.Instance.SendMessage(Session, $"New Zone: ({Zone.Id}){tt.GetEntry(Zone.LocalizedTextIdName)}");
-                }
-
-                uint tutorialId = AssetManager.Instance.GetTutorialIdForZone(Zone.Id);
-                if (tutorialId > 0)
-                {
-                    Session.EnqueueMessageEncrypted(new ServerTutorial
-                    {
-                        TutorialId = tutorialId
-                    });
-                }
-
-                QuestManager.ObjectiveUpdate(QuestObjectiveType.EnterZone, Zone.Id, 1);
-            }
-
-            ZoneMapManager.OnZoneUpdate();
-        }*/
-
-        private void SendPacketsAfterAddToMap()
+        /// <summary>
+        /// Send the client all data associated with this Player that is used to initialise systems.
+        /// </summary>
+        private void SendPlayerDataPackets()
         {
             DateTime start = DateTime.UtcNow;
 
-            SendInGameTime();
-            PathManager.SendInitialPackets();
-            BuybackManager.Instance.SendBuybackItems(this);
+            // Initialise Pets, they will get used in ServerPlayerCreate
+            PetManager.OnAddToMap(pendingTeleport);
 
-            ResidenceManager.SendHousingBasics();
-            ContactManager.OnLogin();
-
-            Session.EnqueueMessageEncrypted(new ServerHousingNeighbors());
-            Session.EnqueueMessageEncrypted(new ServerInstanceSettings());
-
-            SetControl(this);
-
-            CostumeManager.SendInitialPackets();
-
-            if (firstLoad)
+            // 0x025E ServerPlayerCreate
+            // - Inform the player of all necessary data. Used at start of new session or after switching characters.
+            if (PreviousMap == null)
             {
                 var playerCreate = new ServerPlayerCreate
                 {
@@ -892,22 +723,23 @@ namespace NexusForever.WorldServer.Game.Entity
                     {
                         FactionId = Faction1, // This does not do anything for the player's "main" faction. Exiles/Dominion
                         FactionReputations = ReputationManager
-                            .Select(r => new ServerPlayerCreate.Faction.FactionReputation
-                            {
-                                FactionId = r.Id,
-                                Value = r.Amount
-                            })
-                            .ToList()
+                        .Select(r => new ServerPlayerCreate.Faction.FactionReputation
+                        {
+                            FactionId = r.Id,
+                            Value = r.Amount
+                        })
+                        .ToList()
                     },
+                    BindPoint = BindPoint,
                     ActiveCostumeIndex = CostumeIndex,
                     InputKeySet = (uint)InputKeySet,
                     CharacterEntitlements = Session.EntitlementManager.GetCharacterEntitlements()
-                        .Select(e => new ServerPlayerCreate.CharacterEntitlement
-                        {
-                            Entitlement = e.Type,
-                            Count = e.Amount
-                        })
-                        .ToList(),
+                    .Select(e => new ServerPlayerCreate.CharacterEntitlement
+                    {
+                        Entitlement = e.Type,
+                        Count = e.Amount
+                    })
+                    .ToList(),
                     TradeskillMaterials = SupplySatchelManager.BuildNetworkPacket(),
                     Xp = XpManager.TotalXp,
                     RestBonusXp = XpManager.RestBonusXp
@@ -915,6 +747,9 @@ namespace NexusForever.WorldServer.Game.Entity
 
                 foreach (Currency currency in CurrencyManager)
                     playerCreate.Money[(byte)currency.Id - 1] = currency.Amount;
+
+                foreach (Pet pet in PetManager.GetCombatPets())
+                    playerCreate.Pets.Add(pet.GetPetPacket());
 
                 foreach (Item item in Inventory
                     .Where(b => b.Location != InventoryLocation.Ability)
@@ -926,35 +761,106 @@ namespace NexusForever.WorldServer.Game.Entity
                         Reason = ItemUpdateReason.NoReason
                     });
                 }
-
                 playerCreate.SpecIndex = SpellManager.ActiveActionSet;
                 Session.EnqueueMessageEncrypted(playerCreate);
-
-                firstLoad = false;
             }
 
-            TitleManager.SendTitles();
-            SpellManager.SendInitialPackets();
-            PetCustomisationManager.SendInitialPackets();
-            KeybindingManager.SendInitialPackets();
-            DatacubeManager.SendInitialPackets();
-            MailManager.SendInitialPackets();
-            ZoneMapManager.SendInitialPackets();
-            Session.AccountCurrencyManager.SendInitialPackets();
+            // 0x035F ServerQuestInit
             QuestManager.SendInitialPackets();
+            // 0x00AE ServerAchievementsInit
             AchievementManager.SendInitialPackets(null);
-            Session.EntitlementManager.SendInitialPackets();
+            // 0x06BC ServerPathLog
+            PathManager.SendInitialPackets();
+            // 0x0104 ServerGalacticArchiveInit
+            // 0x00E0 ServerDatacubeUpdateList
+            DatacubeManager.SendInitialPackets();
+            // 0x01B4 ServerZoneMap
+            ZoneMapManager.SendInitialPackets();
+            // 0x018B ServerPlayerTitleUpdate
+            TitleManager.SendTitles();
 
-            Session.EnqueueMessageEncrypted(new ServerPlayerInnate
-            {
-                InnateIndex = InnateIndex
-            });
+            // 0x0140
+            // 0x013C
+            // 0x0252
+
+            // 0x025A ServerCostumeItemList
+            CostumeManager.SendInitialPackets();
+
+            // 0x04AE ServerEntityGuildAffiliation
+            // 0x0905 ServerEntityVisualUpdate
+            // - Assume this is done if the Player had affiliation with guild with holomarks checked
+            // 0x01B3 ServerResurrectionShow
+            // - Seems to be if the player spawns in dead, this would be shown or it's sent as a way to let client know to hide it
+            // 0x0188 ServerFlightPathUpdate
+
+            // 0x0111 ServerItemAdd
+            // - Spells are delivered to client
+            SpellManager.SendInitialPackets();
+            // 0x092C ServerRewardPropertySet
+            // - Character Entitlements are sent on load, as well as a "refresh" of account ones.
+            Session.EntitlementManager.SendInitialPackets();
+            // 0x01A0
+            // 0x0169
+
+            // 0x07CD ServerRewardTrackUpdate
+            Session.RewardTrackManager.SendInitialPackets();
+            // 0x0967 ServerAccountCurrencyGrant
+            // - All Account currencies are sent to the client
+            Session.AccountCurrencyManager.SendInitialPackets();
+            // 0x019D
+            // 0x0914 ServerSpellAbilityCharges
+            // - These are sent for all spells. We do this as part of SpellManager init.
+            // 0x01A3
+            // 0x0856
+            // 0x0854
+            // 0x00D9 ServerCostumeList
+            // - This is sent as part of CostumeManager init.
+            // 0x012E ServerPetCustomizationList
+            PetCustomisationManager.SendInitialPackets();
+            // 0x01B2
+            // 0x06DF
+            // 0x019F ServerStanceChanged
+            // - We do this as part of SpellManager init.
+            // 0x036F
+            // - Many of these are sent.
+
+            // Map Entities Are Sent To Client
+
+            // 0x01A6 ServerGearscoreUpdate
+
+            // 0x056B
+
+
+            BuybackManager.Instance.SendBuybackItems(this);
+            MailManager.SendInitialPackets();
+            ResidenceManager.SendHousingBasics();
+            Session.EnqueueMessageEncrypted(new ServerHousingNeighbors());
 
             log.Trace($"Player {Name} took {(DateTime.UtcNow - start).TotalMilliseconds}ms to send packets after add to map.");
             
             // TODO: Move this to a script
             if (Map.Entry.Id == 3460 && firstTimeLoggingIn)
                 CinematicManager.QueueCinematic(new NoviceTutorialOnEnter(this));
+        }
+
+        public void SendPacketsAfterEntities()
+        {
+            // 0x0567
+            // Some spells for the Player get started
+            // 0x00F1 ServerInstanceSettings
+            Session.EnqueueMessageEncrypted(new ServerInstanceSettings());
+            // 0x007E
+
+            // Client packet 0x018F usually sent around here
+            // 0x07CA
+            // - Lots of these are sent
+
+            // 0x064D ServerOwnedItemAuctions
+            // 0x064C ServerOwnedCommodityOrders
+            // 0x064D ServerOwnedItemAuctions
+
+            // 0x0970 ServerAccountOperationResults
+            // - CREDD Exchange loaded update
         }
 
         public ItemProficiency GetItemProficiencies()
@@ -964,39 +870,54 @@ namespace NexusForever.WorldServer.Game.Entity
             return (ItemProficiency)classEntry.StartingItemProficiencies;
         }
 
-        public override void OnRemoveFromMap()
-        {
-            if (Guid <= 0)
-            {
-                log.Warn($"Removing player {Name} ({CharacterId}) from map {Map.Entry.Id} with guid 0!");
-            }
-            else
-            {
-                log.Info($"Removing player {Name} ({CharacterId}) from map {Map.Entry.Id} with guid {Guid}.");
-            }
-            DestroyDependents();
-            base.OnRemoveFromMap();
-        }
-
         public override void AddVisible(GridEntity entity)
         {
+            if (!CanSeeEntity(entity) || !entity.CanSeeEntity(this))
+                return;
+
             base.AddVisible(entity);
+
+            if (entity == this)
+                return;
+
             Session.EnqueueMessageEncrypted(((WorldEntity)entity).BuildCreatePacket());
 
             if (entity is Player playerEntity)
+            {
                 Session.EnqueueMessageEncrypted(new ServerSetUnitPathType
                 {
                     Guid = playerEntity.Guid,
                     Path = playerEntity.Path
                 });
-
-            if (entity == this)
-            {
-                Session.EnqueueMessageEncrypted(new ServerPlayerChanged
+            }
+            else
+                Session.EnqueueMessageEncrypted(new Server08B3
                 {
-                    Guid     = entity.Guid,
-                    Unknown1 = 1
+                    UnitId = Guid,
+                    Unknown0 = 0,
+                    Unknown1 = true
                 });
+
+            if (entity != this)
+                Session.EnqueueMessageEncrypted(new ServerEmote
+                {
+                    Guid = Guid,
+                    StandState = (entity as WorldEntity).StandState
+                });
+
+            if (entity is UnitEntity unitEntity && unitEntity.InCombat) 
+            {
+                Session.EnqueueMessageEncrypted(new ServerUnitEnteredCombat
+                {
+                    UnitId = unitEntity.Guid,
+                    InCombat = unitEntity.InCombat
+                });
+            }
+
+            if (entity is WorldEntity worldEntity && worldEntity.Loot.Count > 0)
+            {
+                foreach (LootInstance loot in worldEntity.Loot)
+                    loot.SendLootNotify(Session);
             }
         }
 
@@ -1008,8 +929,7 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 Session.EnqueueMessageEncrypted(new ServerEntityDestroy
                 {
-                    Guid     = entity.Guid,
-                    Unknown0 = true
+                    Guid     = entity.Guid
                 });
             }
         }
@@ -1125,26 +1045,6 @@ namespace NexusForever.WorldServer.Game.Entity
             return pendingTeleport == null;
         }
 
-        private void OnLogin()
-        {
-            string motd = WorldServer.RealmMotd;
-            if (motd?.Length > 0)
-                GlobalChatManager.Instance.SendMessage(Session, motd, "MOTD", ChatChannelType.Realm);
-
-            GuildManager.OnLogin();
-            ChatManager.OnLogin();
-            GlobalChatManager.Instance.JoinDefaultChatChannels(this);
-
-            ShutdownManager.Instance.OnLogin(this);
-        }
-
-        private void OnLogout()
-        {
-            GuildManager.OnLogout();
-            ChatManager.OnLogout();
-            GlobalChatManager.Instance.LeaveDefaultChatChannels(this);
-        }
-
         /// <summary>
         /// Teleport <see cref="Player"/> to location defined in supplied <see cref="WorldLocation2Entry"/>.
         /// </summary>
@@ -1206,20 +1106,13 @@ namespace NexusForever.WorldServer.Game.Entity
                 return;
             }
 
-            // store vanity pet summoned before teleport so it can be summoned again after being added to the new map
-            uint? vanityPetId = null;
-            if (VanityPetGuid != null)
-            {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
-                vanityPetId = pet?.Creature.Id;
-            }
-
             pendingTeleport = new PendingTeleport
             {
                 Reason      = reason,
-                MapPosition = mapPosition,
-                VanityPetId = vanityPetId
+                MapPosition = mapPosition
             };
+
+            PetManager.OnTeleport(pendingTeleport);
 
             MapManager.Instance.AddToMap(this, mapPosition);
             log.Trace($"Teleporting {Name}({CharacterId}) to map: {mapPosition.Info.Entry.Id}, instance: {mapPosition.Info.InstanceId ?? 0ul}.");
@@ -1380,22 +1273,159 @@ namespace NexusForever.WorldServer.Game.Entity
         }
 
         /// <summary>
+        /// Modifies the appearance customisation of this <see cref="Player"/>. Called directly by a packet handler.
+        /// </summary>
+        public void SetCharacterCustomisation(Dictionary<uint, uint> customisations, List<float> bones, Race newRace, Sex newSex, bool usingServiceTokens)
+        {
+            // Set Sex and Race
+            Sex = newSex;
+            Race = newRace; // TODO: Ensure new Race is on the same faction
+
+            List<ItemSlot> itemSlotsModified = new List<ItemSlot>();
+            // Build models for all new customisations and store in customisations caches. The client sends through everything needed on every change.
+            foreach ((uint label, uint value) in customisations)
+            {
+                if (characterCustomisations.TryGetValue(label, out Customisation customisation))
+                    customisation.Value = value;
+                else
+                    characterCustomisations.TryAdd(label, new Customisation(CharacterId, label, value));
+
+                foreach(CharacterCustomizationEntry entry in AssetManager.Instance.GetCharacterCustomisation(customisations, (uint)newRace, (uint)newSex, label, value))
+                {
+                    if (characterAppearances.TryGetValue((ItemSlot)entry.ItemSlotId, out Appearance appearance))
+                        appearance.DisplayId = (ushort)entry.ItemDisplayId;
+                    else
+                        characterAppearances.TryAdd((ItemSlot)entry.ItemSlotId, new Appearance(CharacterId, (ItemSlot)entry.ItemSlotId, (ushort)entry.ItemDisplayId));
+
+                    // This is to track slots which are modified
+                    itemSlotsModified.Add((ItemSlot)entry.ItemSlotId);
+                }
+            }
+
+            for (int i = 0; i < bones.Count; i++)
+            {
+                if (i > characterBones.Count - 1)
+                    characterBones.Add(new Bone(CharacterId, (byte)i, bones[i]));
+                else
+                {
+                    var bone = characterBones.FirstOrDefault(x => x.BoneIndex == i);
+                    if (bone != null)
+                        bone.BoneValue = bones[i];
+                }
+            }
+
+            // Cleanup the unused customisations
+            foreach (ItemSlot slot in characterAppearances.Keys.Except(itemSlotsModified).ToList())
+            {
+                if (characterAppearances.TryGetValue(slot, out Appearance appearance))
+                {
+                    characterAppearances.Remove(slot);
+                    appearance.Delete();
+                    deletedCharacterAppearances.Add(appearance);
+                }
+            }
+            foreach (uint key in characterCustomisations.Keys.Except(customisations.Keys).ToList())
+            {
+                if (characterCustomisations.TryGetValue(key, out Customisation customisation))
+                {
+                    characterCustomisations.Remove(key);
+                    customisation.Delete();
+                    deletedCharacterCustomisations.Add(customisation);
+                }
+            }
+            if (Bones.Count > bones.Count)
+            {
+                for (int i = Bones.Count; i >= bones.Count; i--)
+                {
+                    Bone bone = characterBones[i - 1];
+
+                    if (bone != null)
+                    {
+                        characterBones.RemoveAt(i - 1);
+                        bone.Delete();
+                        deletedCharacterBones.Add(bone);
+                    }
+                }
+            }
+
+            // Update Player appearance values
+            SetAppearance(characterAppearances.Values
+                .Select(a => new ItemVisual
+                {
+                    Slot = a.ItemSlot,
+                    DisplayId = a.DisplayId
+                }));
+
+            Bones.Clear();
+            foreach (Bone bone in characterBones.OrderBy(bone => bone.BoneIndex))
+                Bones.Add(bone.BoneValue);
+
+            // Update surrounding entities, including the player, with new appearance
+            EmitVisualUpdate();
+
+            // TODO: Charge the player for service
+
+            // Enqueue the appearance changes to be saved to the DB.
+            saveMask |= PlayerSaveMask.Appearance;
+        }
+
+        /// <summary>
+        /// Update surrounding <see cref="WorldEntity"/>, including the <see cref="Player"/>, with a fresh appearance dataset.
+        /// </summary>
+        public void EmitVisualUpdate()
+        {
+            Costume costume = null;
+            if (CostumeIndex >= 0)
+                costume = CostumeManager.GetCostume((byte)CostumeIndex);
+
+            var entityVisualUpdate = new ServerEntityVisualUpdate
+            {
+                UnitId = Guid,
+                Sex = (byte)Sex,
+                Race = (byte)Race
+            };
+
+            foreach (Appearance characterAppearance in characterAppearances.Values)
+                entityVisualUpdate.ItemVisuals.Add(new ItemVisual
+                {
+                    Slot = characterAppearance.ItemSlot,
+                    DisplayId = characterAppearance.DisplayId
+                });
+
+            foreach (var itemVisual in Inventory.GetItemVisuals(costume))
+                entityVisualUpdate.ItemVisuals.Add(itemVisual);
+
+            EnqueueToVisible(entityVisualUpdate, true);
+
+            EnqueueToVisible(new ServerEntityBoneUpdate
+            {
+                UnitId = Guid,
+                Bones = Bones.ToList()
+            }, true);
+        }
+
+        public bool GetVehicle(out Vehicle vehicle)
+        {
+            vehicle = null;
+
+            if (VehicleGuid == 0u)
+                return false;
+
+            WorldEntity platform = GetVisible<WorldEntity>(VehicleGuid);
+            if (platform is not Vehicle)
+                return false;
+
+            vehicle = (platform as Vehicle);
+            return true;
+        }
+
+        /// <summary>
         /// Dismounts this <see cref="Player"/> from a vehicle that it's attached to
         /// </summary>
         public void Dismount()
         {
-            if (VehicleGuid != 0u)
-            {
-                Vehicle vehicle = GetVisible<Vehicle>(VehicleGuid);
+            if (GetVehicle(out Vehicle vehicle))
                 vehicle.PassengerRemove(this);
-                if (vehicle is Mount mount)
-                {
-                    if(mount.castingId != 0)
-                    {
-                        CancelEffect(mount.castingId);
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -1407,11 +1437,13 @@ namespace NexusForever.WorldServer.Game.Entity
             if (VehicleGuid != 0u)
                 Dismount();
 
-            if (VanityPetGuid != null)
+            PetManager.OnRemoveFromMap();
+
+            if (GhostGuid != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
-                pet?.RemoveFromMap();
-                VanityPetGuid = null;
+                Ghost ghost = GetVisible<Ghost>(GhostGuid.Value);
+                ghost?.RemoveFromMap();
+                GhostGuid = null;
             }
 
             // TODO: Remove pets, scanbots
@@ -1419,63 +1451,57 @@ namespace NexusForever.WorldServer.Game.Entity
 
         public void DestroyPet()
         {
+            VanityPet pet = PetManager.GetVanityPet();
             // enqueue removal of existing vanity pet if summoned
-            if (VanityPetGuid != null)
+            if (pet != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
-                pet?.RemoveFromMap();
-                VanityPetGuid = null;
+                PetManager.RemovePetGuid(PetType.VanityPet, pet);
+                pet.RemoveFromMap();
             }
         }
 
         public void SetPetFollowing(bool isPetFollowing)
         {
-            if (VanityPetGuid != null)
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
                 pet?.SetIsFollowingPlayer(isPetFollowing);
             }
         }
 
         public void SetPetFacingPlayer(bool isPetFacingPlayer)
         {
-            if (VanityPetGuid != null)
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
                 pet?.SetIsFacingPlayer(isPetFacingPlayer);
             }
         }
 
         public void SetPetFollowingOnSide(bool isPetFollowingOnSide)
         {
-            if (VanityPetGuid != null)
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
                 pet?.SetFollowingOnSide(isPetFollowingOnSide);
             }
         }
 
         public void SetPetFollowDistance(float dist)
         {
-            if (VanityPetGuid != null)
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
                 pet?.SetFollowDistance(dist);
             }
         }
         public void SetPetFollowRecalculateDistance(float dist)
         {
-            if (VanityPetGuid != null)
+            VanityPet pet = PetManager.GetVanityPet();
+            if (pet != null)
             {
-                VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
                 pet?.SetFollowFollowMinRecalculateDistance(dist);
             }
-        }
-
-        public Creature2Entry VanityPetCreatureEntry()
-        {
-            VanityPet pet = GetVisible<VanityPet>(VanityPetGuid.Value);
-            return pet?.Creature;
         }
 
         /// <summary>
@@ -1552,6 +1578,222 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 Flags = flags
             });
+        }
+
+        /// <summary>
+        /// Consumes Dash resource when called. Should be called directly by handler.
+        /// </summary>
+        public void HandleDash(DashDirection direction)
+        {
+            uint dashSpellId = AssetManager.Instance.GetDashSpell(direction);
+            CastSpell(dashSpellId, new Spell.SpellParameters
+            {
+                UserInitiatedSpellCast = false
+            });
+        }
+
+        /// <summary>
+        /// Used to create a <see cref="Ghost"/> for this <see cref="Player"/> to control.
+        /// </summary>
+        private void CreateGhost()
+        {
+            Ghost ghost = new Ghost(this);
+            var position = new MapPosition
+            {
+                Position = Position
+            };
+
+            if (Map.CanEnter(ghost, position))
+                Session.Events.EnqueueEvent(new DelayEvent(TimeSpan.FromSeconds(2d), () =>
+                {
+                    Map.EnqueueAdd(ghost, position);
+                }));
+        }
+
+        /// <summary>
+        /// Applies resurrection mechanics based on client selection.
+        /// </summary>
+        public void DoResurrect(RezType rezType)
+        {
+            WorldEntity controlEntity = GetVisible<WorldEntity>(ControlGuid);
+            if (controlEntity is not Ghost ghost)
+                throw new InvalidOperationException($"Control Entity is not of type Ghost");
+
+            switch (rezType)
+            {
+                case RezType.WakeHere:
+                    uint cost = ghost.GetCostForRez();
+                    if (cost > 0u && CurrencyManager.CanAfford(CurrencyType.Credits, cost))
+                        CurrencyManager.CurrencySubtractAmount(CurrencyType.Credits, cost);
+                    break;
+                default:
+                    break;
+            }
+
+            ModifyHealth((uint)(MaxHealth * 0.5f));
+            Shield = 0;
+            SetControl(this);
+            Map.EnqueueRemove(ghost);
+
+            SetDeathState(DeathState.JustSpawned);
+            HandleMovementSpeedApply(movementSpeed);
+        }
+
+        protected override void OnDeathStateChange(DeathState newState)
+        {
+            switch (newState)
+            {
+                case DeathState.JustDied:
+                    CreateGhost();
+                    break;
+                default:
+                    break;
+            }
+
+            base.OnDeathStateChange(newState);
+        }
+
+        /// <summary>
+        /// Applies Sprint Effects as necessary based on Combat and Mounted states.
+        /// </summary>
+        public void HandleMovementSpeedApply(MovementSpeed newSpeed = (MovementSpeed)(-1))
+        {
+            uint sprintSpellId = 80529; // TODO: Magic Number needs to move
+
+            if (newSpeed == (MovementSpeed)(-1))
+                newSpeed = movementSpeed;
+            else
+                movementSpeed = newSpeed;
+
+            switch (newSpeed)
+            {
+                case MovementSpeed.Walk:
+                case MovementSpeed.Run:
+                    FinishSpells(sprintSpellId);
+                    break;
+                case MovementSpeed.Sprint:
+                    if (InCombat)
+                        FinishSpells(sprintSpellId);
+                    else
+                    {
+                        CastSpell(sprintSpellId, new SpellParameters
+                        {
+                            UserInitiatedSpellCast = false,
+                            IsProxy = true
+                        });
+                        HandleMovementSprintRequest(false);
+                    }
+                    break;
+                default:
+                    log.Warn($"Unhandled Movement Speed {newSpeed}.");
+                    break;
+            }
+
+            HandleMountSprint(newSpeed);
+        }
+
+        private void HandleMountSprint(MovementSpeed newSpeed)
+        {
+            if (!GetVehicle(out Vehicle vehicle) || vehicle is not Mount mount || newSpeed < MovementSpeed.Sprint || InCombat)
+            {
+                FinishSpells(80530);
+                FinishSpells(80531);
+                return;
+            }
+
+            uint mountSpeedSpell4Id = 0;
+            switch (mount.MountType)
+            {
+                case PetType.GroundMount: // Cast 80530, Mount Sprint  - Tier 2, 36122
+                    mountSpeedSpell4Id = 80530;
+                    break;
+                case PetType.HoverBoard: // Cast 80531, Hoverboard Sprint  - Tier 2, 36122
+                    mountSpeedSpell4Id = 80531;
+                    break;
+                default:
+                    mountSpeedSpell4Id = 80530;
+                    break;
+
+            }
+            CastSpell(mountSpeedSpell4Id, new SpellParameters
+            {
+                UserInitiatedSpellCast = false,
+                IsProxy = true
+            });
+        }
+
+        public void HandleMovementSprintRequest(bool sprint)
+        {
+            uint nonMountSprintId = 1316;
+            uint mountSprintId = 56476;
+            uint hoverboardSprintId = 56621;
+
+            switch (sprint)
+            {
+                case true:
+                    if (GetVehicle(out Vehicle vehicle) && vehicle is Mount mount)
+                    {
+                        if (mount.MountType == PetType.GroundMount)
+                            CastSpell(mountSprintId, new SpellParameters
+                            {
+                                IsProxy = true,
+                                UserInitiatedSpellCast = false
+                            });
+                        else if (mount.MountType == PetType.HoverBoard)
+                            CastSpell(hoverboardSprintId, new SpellParameters
+                            {
+                                IsProxy = true,
+                                UserInitiatedSpellCast = false
+                            });
+                    }
+                    CastSpell(nonMountSprintId, new SpellParameters
+                    {
+                        IsProxy = true,
+                        UserInitiatedSpellCast = false
+                    });
+                    break;
+                case false:
+                    if (GetVehicle(out Vehicle cancelVehicle) && cancelVehicle is Mount)
+                    {
+                        FinishSpells(56476);
+                        FinishSpells(56621);
+                    }
+                    FinishSpells(nonMountSprintId);
+                    break;
+            }
+        }
+
+        public override bool CanSeeEntity(GridEntity entity)
+        {
+            if (Map != null && Map.Entry.Id == 1229)
+            {
+                if (entity is UnitEntity unit && entity is not Player)
+                {
+                    if (unit.CreatureId > 0)
+                    {
+                        Creature2Entry creatureEntry = GameTableManager.Instance.Creature2.GetEntry(unit.CreatureId);
+                        if (creatureEntry != null && creatureEntry.PrerequisiteIdVisibility > 0u)
+                            if (!PrerequisiteManager.Instance.Meets(this, creatureEntry.PrerequisiteIdVisibility))
+                                return false;
+                    }
+                }
+            }
+
+            return base.CanSeeEntity(entity);
+        }
+
+        public void SetPvpMode(bool pvpMode)
+        {
+            if (pvpMode)
+                PvPFlags = PvPFlag.Enabled;
+            else
+                PvPFlags = PvPFlag.Disabled;
+
+            EnqueueToVisible(new ServerUnitSetPvpFlags
+            {
+                UnitId = Guid,
+                PvpFlags = PvPFlags
+            }, true);
         }
     }
 }

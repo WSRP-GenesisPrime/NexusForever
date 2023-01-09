@@ -27,18 +27,16 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Amount of charges to add to the item.")]
             uint? charges)
         {
-            try
+            ItemInfo info = ItemManager.Instance.GetItemInfo(itemId);
+            if (info == null)
             {
-                quantity ??= 1u;
-                charges ??= 1u;
-                log.Info($"{context.InvokingPlayer.Name} requesting to add item ID {itemId} (x{quantity}, {charges} charges).");
-                context.InvokingPlayer.Inventory.ItemCreate(InventoryLocation.Inventory, itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
+                context.SendMessage("Unrecognised Item ID. Please try again.");
+                return;
             }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in ItemCommandCategory.HandleItemAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+
+            quantity ??= 1u;
+            charges ??= info.Entry.MaxCharges;
+            context.InvokingPlayer.Inventory.ItemCreate(InventoryLocation.Inventory, itemId, quantity.Value, ItemUpdateReason.Cheat, charges.Value);
         }
 
         [Command(Permission.ItemLookup, "Lookup an item by partial name.", "lookup")]
@@ -61,10 +59,10 @@ namespace NexusForever.WorldServer.Command.Handler
                     return;
                 }
 
-                context.SendMessage($"Item lookup results for '{name}' ({searchResults.Count}):");
-
-                var target = context.InvokingPlayer;
-                foreach (Item2Entry itemEntry in searchResults)
+            var target = context.InvokingPlayer;
+            foreach (Item2Entry itemEntry in searchResults)
+            {
+                var builder = new ChatMessageBuilder
                 {
                     var builder = new ChatMessageBuilder
                     {

@@ -2,6 +2,7 @@
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Static;
+using System.Threading.Tasks;
 using NLog;
 
 namespace NexusForever.WorldServer.Game.Map

@@ -22,7 +22,7 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Message to broadcast.")]
             string message)
         {
-            try
+            foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
             {
                 foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
                 {

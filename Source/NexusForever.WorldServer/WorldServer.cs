@@ -41,9 +41,8 @@ namespace NexusForever.WorldServer
         /// </summary>
         public static string RealmMotd { get; set; }
 
-        private static TimeSpan serverTimeOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
-
         private static readonly CancellationTokenSource cancellationToken = new();
+        private static TimeSpan serverTimeOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
 
         private static async Task Main()
         {

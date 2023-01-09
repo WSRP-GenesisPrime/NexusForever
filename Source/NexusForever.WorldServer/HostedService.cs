@@ -9,27 +9,34 @@ using NexusForever.Shared.GameTable;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Command;
+using NexusForever.WorldServer.Command.Context;
+using NexusForever.WorldServer.Game.RBAC;
 using NexusForever.WorldServer.Game;
 using NexusForever.WorldServer.Game.Achievement;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Cinematic;
+using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Contact;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Movement;
 using NexusForever.WorldServer.Game.Entity.Network;
 using NexusForever.WorldServer.Game.Guild;
 using NexusForever.WorldServer.Game.Housing;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Quest;
-using NexusForever.WorldServer.Game.RBAC;
 using NexusForever.WorldServer.Game.Reputation;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Storefront;
 using NexusForever.WorldServer.Game.TextFilter;
 using NexusForever.WorldServer.Network;
+using NexusForever.WorldServer.Script;
 using NLog;
+using Microsoft.Extensions.Hosting.WindowsServices;
+using Microsoft.Extensions.Hosting.Systemd;
+using System;
 
 namespace NexusForever.WorldServer
 {
@@ -37,19 +44,33 @@ namespace NexusForever.WorldServer
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
 
+#if DEBUG
+        private const string Title = "NexusForever: World Server (DEBUG)";
+#else
+        private const string Title = "NexusForever: World Server (RELEASE)";
+#endif
+
+        private UpdateTimer titleUpdate = new(TimeSpan.FromSeconds(1));
+        private double tickCount = 0u;
+        private bool isService = false;
+
+        public HostedService()
+        {
+            isService = WindowsServiceHelpers.IsWindowsService() || SystemdHelpers.IsSystemdService();
+        }
+
         /// <summary>
         /// Start <see cref="WorldServer"/> and any related resources.
         /// </summary>
         public Task StartAsync(CancellationToken cancellationToken)
         {
             log.Info("Starting...");
-            
+
             DatabaseManager.Instance.Initialise(ConfigurationManager<WorldServerConfiguration>.Instance.Config.Database);
             DatabaseManager.Instance.Migrate();
 
             // RBACManager must be initialised before CommandManager
             RBACManager.Instance.Initialise();
-
             DisableManager.Instance.Initialise();
 
             GameTableManager.Instance.Initialise();
@@ -61,22 +82,27 @@ namespace NexusForever.WorldServer
             FactionManager.Instance.Initialise();
             GlobalMovementManager.Instance.Initialise();
 
-            GlobalCinematicManager.Instance.Initialise();
+            CharacterManager.Instance.Initialise(); // must be initialised before residences
             GlobalChatManager.Instance.Initialise(); // must be initialised before guilds
             GlobalAchievementManager.Instance.Initialise(); // must be initialised before guilds
             GlobalGuildManager.Instance.Initialise(); // must be initialised before residences
-            CharacterManager.Instance.Initialise(); // must be initialised before residences
+            GlobalContactManager.Instance.Initialise();
             GlobalResidenceManager.Instance.Initialise();
             GlobalGuildManager.Instance.ValidateCommunityResidences();
-            GlobalContactManager.Instance.Initialise();
 
             AssetManager.Instance.Initialise();
             ItemManager.Instance.Initialise();
             PrerequisiteManager.Instance.Initialise();
             GlobalSpellManager.Instance.Initialise();
             GlobalQuestManager.Instance.Initialise();
+            GlobalLootManager.Instance.Initialise();
 
             GlobalStorefrontManager.Instance.Initialise();
+            GlobalCinematicManager.Instance.Initialise();
+
+            ScriptManager.Instance.Initialise();
+            DamageCalculator.Instance.Initialise();
+            
             ServerManager.Instance.Initialise(ConfigurationManager<WorldServerConfiguration>.Instance.Config.RealmId);
 
             TextFilterManager.Instance.Initialise();
@@ -84,20 +110,34 @@ namespace NexusForever.WorldServer
             // initialise world after all assets have loaded but before any network or command handlers might be invoked
             WorldManager.Instance.Initialise(lastTick =>
             {
+                tickCount += lastTick;
+
                 // NetworkManager must be first and MapManager must come before everything else
                 NetworkManager<WorldSession>.Instance.Update(lastTick);
                 MapManager.Instance.Update(lastTick);
 
                 BuybackManager.Instance.Update(lastTick);
                 GlobalQuestManager.Instance.Update(lastTick);
+                GlobalLootManager.Instance.Update(lastTick);
                 GlobalGuildManager.Instance.Update(lastTick);
                 GlobalResidenceManager.Instance.Update(lastTick); // must be after guild update
                 GlobalChatManager.Instance.Update(lastTick);
+                GlobalContactManager.Instance.Update(lastTick);
                 LoginQueueManager.Instance.Update(lastTick);
                 ShutdownManager.Instance.Update(lastTick);
 
                 // process commands after everything else in the tick has processed
                 CommandManager.Instance.Update(lastTick);
+
+                if (isService)
+                    return;
+
+                titleUpdate.Update(lastTick);
+                if (titleUpdate.HasElapsed)
+                {
+                    Console.Title = $"{Title} | Users: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.Account != null)} (Queued: {NetworkManager<WorldSession>.Instance.GetSessionsCount(x => x.IsQueued != false)}) | Uptime {TimeSpan.FromSeconds(tickCount).ToString(@"dd\:hh\:mm\:ss")}";
+                    titleUpdate.Reset();
+                }
             });
 
             // initialise network and command managers last to make sure the rest of the server is ready for invoked handlers

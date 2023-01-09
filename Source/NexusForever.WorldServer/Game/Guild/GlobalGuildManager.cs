@@ -201,7 +201,7 @@ namespace NexusForever.WorldServer.Game.Guild
                 if (guild.PendingDelete)
                 {
                     guilds.Remove(guild.Id);
-                    guildNameCache.Remove((guild.Type, guild.Name));
+                    guildNameCache.Remove(guild.Name);
 
                     if (guild.PendingCreate)
                         continue;

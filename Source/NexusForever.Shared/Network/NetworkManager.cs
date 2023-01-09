@@ -130,6 +130,24 @@ namespace NexusForever.Shared.Network
             return sessions.Values.SingleOrDefault(func);
         }
 
+        /// <summary>
+        /// Return sessions that meet supplied predicate.
+        /// </summary>
+        public int GetSessionsCount(Func<T, bool> func)
+        {
+            return sessions.Values.Where(func).Count();
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return sessions.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             return sessions.Values.GetEnumerator();

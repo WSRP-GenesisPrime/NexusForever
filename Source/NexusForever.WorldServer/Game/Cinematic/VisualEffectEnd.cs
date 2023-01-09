@@ -1,5 +1,9 @@
-﻿using NexusForever.WorldServer.Network;
+﻿using NexusForever.WorldServer.Game.Cinematic.Static;
+using NexusForever.WorldServer.Network;
 using NexusForever.WorldServer.Network.Message.Model;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace NexusForever.WorldServer.Game.Cinematic
 {
@@ -10,7 +14,7 @@ namespace NexusForever.WorldServer.Game.Cinematic
 
         public VisualEffectEnd(uint delay, uint visualEffectId)
         {
-            Delay          = delay;
+            Delay = delay;
             VisualEffectId = visualEffectId;
         }
 
@@ -18,7 +22,7 @@ namespace NexusForever.WorldServer.Game.Cinematic
         {
             session.EnqueueMessageEncrypted(new ServerCinematicVisualEffectEnd
             {
-                Delay        = Delay,
+                Delay = Delay,
                 VisualHandle = VisualEffectId
             });
         }

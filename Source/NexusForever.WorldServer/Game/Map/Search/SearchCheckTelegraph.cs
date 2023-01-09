@@ -1,5 +1,6 @@
 ﻿using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Spell;
+using NexusForever.WorldServer.Game.Spell.Static;
 
 namespace NexusForever.WorldServer.Game.Map.Search
 {
@@ -16,16 +17,20 @@ namespace NexusForever.WorldServer.Game.Map.Search
 
         public bool CheckEntity(GridEntity entity)
         {
-            if (entity is not UnitEntity unit)
+            if (telegraph.TelegraphTargetTypeFlags.HasFlag(TelegraphTargetTypeFlags.Self) && entity != caster)
                 return false;
 
-            if (entity == caster)
+            if (telegraph.TelegraphTargetTypeFlags.HasFlag(TelegraphTargetTypeFlags.Other) && entity == caster)
+                return false;
+
+            if (entity is not UnitEntity unit)
                 return false;
 
             if (!unit.IsAlive)
                 return false;
 
-            return telegraph.InsideTelegraph(entity.Position, unit.HitRadius);
+            bool inTelegraph = telegraph.InsideTelegraph(entity.Position, unit.HitRadius);
+            return inTelegraph;
         }
     }
 }

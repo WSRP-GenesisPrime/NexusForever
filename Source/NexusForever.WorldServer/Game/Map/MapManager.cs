@@ -8,6 +8,7 @@ using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.WorldServer.Game.Entity;
+using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map.Static;
 using NexusForever.WorldServer.Game.Static;
 using NLog;
@@ -98,7 +99,12 @@ namespace NexusForever.WorldServer.Game.Map
                 {
                     var tasks = new List<Task>();
                     foreach (IMap map in maps.Values)
+                    {
+                        if (map is not IInstancedMap && !map.HasLoaded)
+                            continue;
+
                         tasks.Add(Task.Run(() => { map.Update(lastTick); }));
+                    }
 
                     Task.WaitAll(tasks.ToArray());
                 }
@@ -153,7 +159,7 @@ namespace NexusForever.WorldServer.Game.Map
                     break;
             }
 
-            map.Initialise(entry);
+            Task.Run(() => { map.Initialise(entry); });
             maps.Add((ushort)entry.Id, map);
 
             log.Trace($"Created new base map for world {entry.Id}.");
@@ -183,6 +189,40 @@ namespace NexusForever.WorldServer.Game.Map
                 return;
 
             instanceCounts.AddOrUpdate(player.CharacterId, 1, (k, v) => v + 1);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="RezType"/> mask allowed for the <see cref="Player"/>'s Map.
+        /// </summary>
+        public RezType GetRezTypeForMap(Player player)
+        {
+            if (player.Map == null)
+                return RezType.None;
+
+            switch ((MapType)player.Map.Entry.Type)
+            {
+                case MapType.Residence:
+                case MapType.Community:
+                    return RezType.OpenWorld;
+                default:
+                    return RezType.OpenWorld;
+            }
+        }
+
+        /// <summary>
+        /// Returns a <see cref="ResidenceMapInstance"/>, if active, corresponding to the given residence ID.
+        /// </summary>
+        public ResidenceMapInstance GetResidenceMapInstance(ulong residenceId)
+        {
+            foreach (var map in maps.Values)
+            {
+                if (map is not ResidenceInstancedMap residenceMapContainer)
+                    continue;
+
+                return residenceMapContainer.GetInstance(residenceId);
+            }
+
+            return null;
         }
     }
 }

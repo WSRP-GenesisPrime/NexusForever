@@ -14,6 +14,7 @@ namespace NexusForever.WorldServer.Game.CharacterCache
 
         private readonly Dictionary<ulong, ICharacter> characters = new();
         private readonly Dictionary<string, ulong> characterNameToId = new(StringComparer.OrdinalIgnoreCase);
+        private readonly List<ulong> onlinePlayers = new();
 
         private CharacterManager()
         {
@@ -58,6 +59,8 @@ namespace NexusForever.WorldServer.Game.CharacterCache
             else
                 AddPlayer(player.CharacterId, player);
 
+            onlinePlayers.Add(player.CharacterId);
+
             log.Trace($"{player.Name} (ID: {player.CharacterId}) logged in.");
         }
 
@@ -70,6 +73,8 @@ namespace NexusForever.WorldServer.Game.CharacterCache
                 throw new Exception($"{player.CharacterId} should exist in characters dictionary.");
 
             characters[player.CharacterId] = new CharacterInfo(player);
+
+            onlinePlayers.Remove(player.CharacterId);
 
             log.Trace($"{player.Name} (ID: {player.CharacterId}) logged out.");
         }
@@ -141,6 +146,15 @@ namespace NexusForever.WorldServer.Game.CharacterCache
                 return player;
 
             return null;
+        }
+
+        /// <summary>
+        /// Return a collection of <see cref="Player"/> that are currently online.
+        /// </summary>
+        public IEnumerable<Player> GetOnlinePlayers()
+        {
+            foreach (ulong characterId in onlinePlayers)
+                yield return GetPlayer(characterId);
         }
     }
 }

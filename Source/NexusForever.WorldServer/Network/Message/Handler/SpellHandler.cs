@@ -161,5 +161,11 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             else
                 actionSet.AddShortcut(requestActionSetChanges.ActionBarIndex, requestActionSetChanges.ShortcutType, requestActionSetChanges.ObjectId, 0);
         }
+
+        [MessageHandler(GameMessageOpcode.ClientCastActionBarSpell)]
+        public static void HandleClientCastActionBarSpell(WorldSession session, ClientCastActionBarSpell goTo)
+        {
+            // TODO: Have ActionBar Manager handle this
+        }
     }
 }

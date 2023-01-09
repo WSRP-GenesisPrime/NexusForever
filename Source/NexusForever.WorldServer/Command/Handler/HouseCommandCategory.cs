@@ -28,7 +28,19 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Quantity of decor to add to the crate.")]
             uint? quantity)
         {
-            try
+            [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "add")]
+            public void HandleHouseDecorAdd(ICommandContext context,
+                [Parameter("Decor info id entry to add to the crate.")]
+                uint decorInfoId,
+                [Parameter("Quantity of decor to add to the crate.")]
+                uint? quantity,
+                [Parameter("Color of the decor to add to the crate.")]
+                ushort? color)
+            {
+                DecorAdd_impl(context, decorInfoId, quantity, color);
+            }
+
+            public static void DecorAdd_impl(ICommandContext context, uint decorInfoId, uint? quantity, ushort? color = null)
             {
                 quantity ??= 1u;
 
@@ -38,26 +50,8 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendMessage($"Invalid decor info id {decorInfoId}!");
                     return;
                 }
-                log.Info($"{context.InvokingPlayer.Name} requesting to add decor ID {decorInfoId} (x{quantity}).");
-                Residence res = context.InvokingPlayer?.CurrentResidence;
-                if (res == null || !res.CanModifyResidence(context.InvokingPlayer))
-                {
-                    res = context.InvokingPlayer?.ResidenceManager?.Residence;
-                }
-                if (res != null)
-                {
-                    if (res.Map != null)
-                    {
-                        res.Map.DecorCreate(res, entry, (uint)quantity);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < quantity.Value; ++i)
-                        {
-                            res.DecorCreate(entry);
-                        }
-                    }
-                }
+
+                context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value, color);
             }
             catch (Exception e)
             {
@@ -91,6 +85,18 @@ namespace NexusForever.WorldServer.Command.Handler
                 log.Error($"Exception caught in HouseCommandCategory.HandleHouseDecorLookup!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
+        }
+
+        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
+        public void HandleHouseDecorAddDummy(ICommandContext context,
+            [Parameter("Decor info id entry to add to the crate.")]
+            uint decorInfoId,
+            [Parameter("Quantity of decor to add to the crate.")]
+            uint? quantity,
+            [Parameter("Color of the decor to add to the crate.")]
+            ushort? color)
+        {
+            HouseDecorCommandCategory.DecorAdd_impl(context, decorInfoId, quantity, color);
         }
 
         [Command(Permission.HouseTeleport, "Teleport to a residence, optionally specifying a character.", "teleport")]

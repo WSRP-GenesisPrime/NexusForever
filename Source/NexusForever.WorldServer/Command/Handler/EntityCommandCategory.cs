@@ -1,9 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.GameTable.Static;
 using NexusForever.WorldServer.Command.Context;
+using NexusForever.WorldServer.Command.Shared;
+using NexusForever.WorldServer.Game.Combat;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.RBAC.Static;
@@ -39,13 +42,14 @@ namespace NexusForever.WorldServer.Command.Handler
             WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
 
             var builder = new StringBuilder();
-            BuildHeader(context, builder, entity);
+            EntityUtility.BuildHeader(builder, entity, context.Language);
 
             builder.AppendLine($"XYZ: {entity.Position.X}, {entity.Position.Y}, {entity.Position.Z}");
+            builder.AppendLine($"Rotation: {entity.Rotation.X}, {entity.Rotation.Y}, {entity.Rotation.Z}");
             builder.AppendLine($"HP: {entity.Health}/(MAX) | Shield: {entity.Shield}/(MAX)");
 
             Disposition faction1Disposition = context.Invoker.GetDispositionTo(entity.Faction1);
-            Disposition faction2Disposition = context.Invoker.GetDispositionTo(entity.Faction1);
+            Disposition faction2Disposition = context.Invoker.GetDispositionTo(entity.Faction2);
             builder.AppendLine($"Disposition To Me: {entity.Faction1},{faction1Disposition}, {entity.Faction2},{faction2Disposition}");
 
             context.SendMessage(builder.ToString());
@@ -57,7 +61,7 @@ namespace NexusForever.WorldServer.Command.Handler
             WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
 
             var builder = new StringBuilder();
-            BuildHeader(context, builder, entity);
+            EntityUtility.BuildHeader(builder, entity, context.Language);
 
             if (entity.Properties.Count == 0)
                 builder.AppendLine("No properties found!");
@@ -70,19 +74,113 @@ namespace NexusForever.WorldServer.Command.Handler
             context.SendMessage(builder.ToString());
         }
 
-        private void BuildHeader(ICommandContext context, StringBuilder builder, WorldEntity target)
+        [Command(Permission.EntityProperties, "Get information about the vitals for the target entity.", "v", "vitals")]
+        public void HandleEntityVitals(ICommandContext context)
         {
-            builder.AppendLine("=============================");
-            builder.AppendLine($"UnitId: {target.Guid} | DB ID: {target.EntityId} | Type: {target.Type} | CreatureID: {target.CreatureId} | Name: {GetName(target, context.Language)}");
+            WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
+
+            var builder = new StringBuilder();
+            EntityUtility.BuildHeader(builder, entity, context.Language);
+
+            foreach (VitalEntry vital in GameTableManager.Instance.Vital.Entries)
+                builder.AppendLine($"{(Vital)vital.Id} - {entity.GetVitalValue((Vital)vital.Id)}");
+
+            context.SendMessage(builder.ToString());
         }
 
-        private string GetName(WorldEntity target, Language language)
+        [Command(Permission.EntityThreat, "A collection of commands to modify threat for this entity.", "threat")]
+        public class EntityThreatCommandCategory : EntityCommandCategory
         {
-            if (target is Player player)
-                return player.Name;
+            [Command(Permission.EntityThreatAdjust, "Adjust threat between the target and yourself.", "a", "adjust")]
+            public void HandleEntityThreatAdjust(ICommandContext context,
+                [Parameter("Amount to adjust by. This can be a negative or positive number.")]
+                int threat)
+            {
+                WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
+                if (entity == context.Invoker)
+                {
+                    context.SendMessage($"You must have a target other than yourself.");
+                    return;
+                }
 
-            Creature2Entry entry = GameTableManager.Instance.Creature2.GetEntry(target.CreatureId);
-            return GameTableManager.Instance.GetTextTable(language).GetEntry(entry.LocalizedTextIdName);
+                if (!(entity is UnitEntity unit))
+                {
+                    context.SendMessage($"Only entities of a Unit type can have threat.");
+                    return;
+                }
+
+                unit.ThreatManager.AddThreat(context.Invoker as UnitEntity, threat);
+            }
+
+            [Command(Permission.EntityThreatList, "Prints the target's threat list.", "l", "list")]
+            public void HandleEntityThreatList(ICommandContext context)
+            {
+                WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
+
+                if (!(entity is UnitEntity unit))
+                {
+                    context.SendMessage($"Only entities of a Unit type can have threat.");
+                    return;
+                }
+
+                var builder = new StringBuilder();
+                EntityUtility.BuildHeader(builder, unit, context.Language);
+                builder.AppendLine("=============================");
+                builder.AppendLine("# | GUID | Name | Threat");
+                builder.AppendLine("-----------------------------");
+
+                int i = 1;
+                List<HostileEntity> hostiles = unit.ThreatManager.ToList();
+                if (hostiles.Count == 0u)
+                    builder.AppendLine("No threat targets.");
+
+                foreach (HostileEntity hostile in hostiles)
+                    builder.AppendLine($"{i++} | ({hostile.GetEntity(context.Invoker).Guid}) | {EntityUtility.GetName(hostile.GetEntity(context.Invoker), Language.English)} | {hostile.Threat}");
+
+                context.SendMessage(builder.ToString());
+            }
+
+            [Command(Permission.EntityThreatClear, "Clears the target's threat list.", "c", "clear")]
+            public void HandleEntityThreatClear(ICommandContext context)
+            {
+                WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
+
+                if (!(entity is UnitEntity unit))
+                {
+                    context.SendMessage($"Only entities of a Unit type can have threat.");
+                    return;
+                }
+
+                unit.ThreatManager.ClearThreatList();
+            }
+
+            [Command(Permission.EntityThreatRemove, "Remove an entity from the target's threat list.", "r", "remove")]
+            public void HandleEntityThreatRemove(ICommandContext context,
+                [Parameter("UnitId of the Entity to remove from the Target. Ommitting this defaults to you being the target.")]
+                uint? unitId
+                )
+            {
+                WorldEntity entity = context.GetTargetOrInvoker<WorldEntity>();
+
+                if (!(entity is UnitEntity unit))
+                {
+                    context.SendMessage($"Only entities of a Unit type can have threat.");
+                    return;
+                }
+
+                unitId ??= context.Invoker.Guid;
+
+                if (unit.Guid == unitId)
+                {
+                    if (unit.Guid == context.Invoker.Guid)
+                        context.SendMessage($"You must have a target other than yourself.");
+                    else
+                        context.SendMessage($"You cannot remove a target from its own threat list.");
+                    return;
+                }
+
+                unit.ThreatManager.RemoveTarget((uint)unitId);
+            }
         }
     }
 }

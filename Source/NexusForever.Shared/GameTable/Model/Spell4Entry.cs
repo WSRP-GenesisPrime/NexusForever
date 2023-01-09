@@ -13,21 +13,21 @@ namespace NexusForever.Shared.GameTable.Model
         public float TargetMinRange;
         public float TargetMaxRange;
         public float TargetVerticalRange;
-        public uint CasterInnateRequirement0;
-        public uint CasterInnateRequirement1;
-        public uint CasterInnateRequirementValue0;
-        public uint CasterInnateRequirementValue1;
-        public uint CasterInnateRequirementEval0;
-        public uint CasterInnateRequirementEval1;
+        [GameTableFieldArray(2u)]
+        public uint[] CasterInnateRequirements;
+        [GameTableFieldArray(2u)]
+        public uint[] CasterInnateRequirementValues;
+        [GameTableFieldArray(2u)]
+        public uint[] CasterInnateRequirementEval;
         public uint TargetBeginInnateRequirement;
         public uint TargetBeginInnateRequirementValue;
         public uint TargetBeginInnateRequirementEval;
-        public uint InnateCostType0;
-        public uint InnateCostType1;
-        public uint InnateCost0;
-        public uint InnateCost1;
-        public uint InnateCostEMMId0;
-        public uint InnateCostEMMId1;
+        [GameTableFieldArray(2u)]
+        public uint[] InnateCostTypes;
+        [GameTableFieldArray(2u)]
+        public uint[] InnateCosts;
+        [GameTableFieldArray(2u)]
+        public uint[] InnateCostEMMIds;
         public uint ChannelInitialDelay;
         public uint ChannelMaxTime;
         public uint ChannelPulseTime;
@@ -75,9 +75,8 @@ namespace NexusForever.Shared.GameTable.Model
         public uint Spell4CCConditionsIdCaster;
         public uint Spell4CCConditionsIdTarget;
         public uint SpellCoolDownIdGlobal;
-        public uint SpellCoolDownId00;
-        public uint SpellCoolDownId01;
-        public uint SpellCoolDownId02;
+        [GameTableFieldArray(3u)]
+        public uint[] SpellCoolDownIds;
         public uint Spell4GroupListId;
         public uint MissileSpeed;
         public uint MinMissileSpeed;

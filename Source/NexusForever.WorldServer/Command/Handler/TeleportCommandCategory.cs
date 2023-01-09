@@ -29,7 +29,12 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Optional world id for target teleport position.")]
             ushort? worldId)
         {
-            try
+            Player target = context.GetTargetOrInvoker<Player>();
+            if (target != context.Invoker)
+                if (!(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
+                    target = (context.Invoker as Player);
+
+            if (!target.CanTeleport())
             {
                 Player target = context.InvokingPlayer;
                 if (!target.CanTeleport())
@@ -83,9 +88,12 @@ namespace NexusForever.WorldServer.Command.Handler
             }
         }
 
-        public static void teleportByName(ICommandContext context, string name)
-        {
-            try
+            Player target = context.GetTargetOrInvoker<Player>();
+            if (target != context.Invoker)
+                if (!(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
+                    target = (context.Invoker as Player);
+
+            if (!target.CanTeleport())
             {
                 Player target = context.InvokingPlayer;
                 if (!target.CanTeleport())
@@ -107,10 +115,33 @@ namespace NexusForever.WorldServer.Command.Handler
                     context.SendMessage($"{name}: {zone.WorldId} {zone.Position0} {zone.Position1} {zone.Position2}");
                 }
             }
-            catch (Exception e)
+
+            var rotation = new Quaternion(entry.Facing0, entry.Facing1, entry.Facing2, entry.Facing3);
+            target.Rotation = rotation.ToEulerRadians();
+            target.TeleportTo((ushort)entry.WorldId, entry.Position0, entry.Position1, entry.Position2);
+        }
+
+        public static void teleportByName(ICommandContext context, string name)
+        {
+            Player target = context.GetTargetOrInvoker<Player>();
+            if (target != context.Invoker)
+                if (!(context.Invoker as Player).Session.AccountRbacManager.HasPermission(Permission.GMFlag))
+                    target = (context.Invoker as Player);
+
+            if (!target.CanTeleport())
             {
-                log.Error($"Exception caught in TeleportCommandCategory.teleportByName!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
+                context.SendMessage("You have a pending teleport! Please wait to use this command.");
+                return;
+            }
+
+            WorldLocation2Entry zone = SearchManager.Instance.Search<WorldLocation2Entry>(name, context.Language, GetTextIds)
+                .FirstOrDefault();
+            if (zone == null)
+                context.SendMessage($"Unknown zone: {name}");
+            else
+            {
+                target.TeleportTo((ushort)zone.WorldId, zone.Position0, zone.Position1, zone.Position2);
+                context.SendMessage($"{name}: {zone.WorldId} {zone.Position0} {zone.Position1} {zone.Position2}");
             }
         }
 

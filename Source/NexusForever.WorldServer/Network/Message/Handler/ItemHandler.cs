@@ -1,13 +1,15 @@
-﻿using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Loot;
 using NexusForever.WorldServer.Game.Prerequisite;
 using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Static;
 using NexusForever.WorldServer.Network.Message.Model;
+using System;
 
 namespace NexusForever.WorldServer.Network.Message.Handler
 {
@@ -70,7 +72,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                     session.Player.CastSpell(itemSpecial.Spell4IdOnActivate, new SpellParameters
                     {
                         PrimaryTargetId = itemUse.TargetUnitId,
-                        Position        = itemUse.Position
+                        TargetPosition  = itemUse.Position
                     });
                 }
             }
@@ -124,6 +126,47 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         public static void HandleClientItemMoveFromSupplySatchel(WorldSession session, ClientItemMoveFromSupplySatchel request)
         {
             session.Player.SupplySatchelManager.MoveToInventory(request.MaterialId, request.Amount);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientItemUseLootBag)]
+        public static void HandleClientItemUseLootBag(WorldSession session, ClientItemUseLootBag useLootBag)
+        {
+            Item item = session.Player.Inventory.GetItem(useLootBag.ItemLocation);
+            if (item == null)
+                throw new ArgumentException($"Item missing at Inventory Location {useLootBag.ItemLocation.Location} and Index {useLootBag.ItemLocation.BagIndex}.");
+
+            if (useLootBag.Guid != item.Guid)
+                throw new InvalidOperationException($"Guid {useLootBag.Guid} received does not match the Item found at Inventory Location {useLootBag.ItemLocation.Location} and Index {useLootBag.ItemLocation.BagIndex}.");
+
+            if (item.Info.Entry.Item2CategoryId != 138)
+                throw new NotImplementedException();
+
+            if (session.Player.Inventory.ItemUse(item))
+                GlobalLootManager.Instance.DropLoot(session, item);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientItemRuneSocketUnlock)]
+        public static void HandleClientItemUnlockRuneSocket(WorldSession session, ClientItemRuneSocketUnlock unlockRuneSocket)
+        {
+            session.Player.Inventory.RuneSlotUnlock(unlockRuneSocket.Guid, unlockRuneSocket.RuneType, unlockRuneSocket.UseServiceTokens);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientItemRuneSocketReroll)]
+        public static void HandleClientItemRuneSocketReroll(WorldSession session, ClientItemRuneSocketReroll runeSocketReroll)
+        {
+            session.Player.Inventory.RuneSlotReroll(runeSocketReroll.Guid, runeSocketReroll.SocketIndex, runeSocketReroll.RuneType);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientItemRuneInsert)]
+        public static void HandleClickItemRuneInsert(WorldSession session, ClientItemRuneInsert runeInsert)
+        {
+            session.Player.Inventory.RuneInsert(runeInsert.Guid, runeInsert.Glyphs.ToArray());
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientItemRuneRemove)]
+        public static void HandleClientItemRuneRemove(WorldSession session, ClientItemRuneRemove runeRemove)
+        {
+            session.Player.Inventory.RuneRemove(runeRemove.Guid, runeRemove.SocketIndex, runeRemove.Recover, runeRemove.UseServiceTokens);
         }
     }
 }

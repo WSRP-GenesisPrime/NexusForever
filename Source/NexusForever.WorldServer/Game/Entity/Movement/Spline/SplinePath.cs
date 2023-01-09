@@ -35,7 +35,7 @@ namespace NexusForever.WorldServer.Game.Entity.Movement.Spline
 
             ISplineMode splineMode = GlobalMovementManager.Instance.NewSplineMode(mode);
             if (splineMode == null)
-                throw new ArgumentOutOfRangeException();
+                return;
 
             spline = new Spline();
             spline.Initialise(splineId, splineType, splineMode);
@@ -115,6 +115,18 @@ namespace NexusForever.WorldServer.Game.Entity.Movement.Spline
 
             float p = Position % spline.Length;
             return spline.GetPosition(direction, p);
+        }
+
+        /// <summary>
+        /// Get previous <see cref="Vector3"/> position on spline.
+        /// </summary>
+        public Vector3 GetPreviousPosition()
+        {
+            if (IsFinialised)
+                return spline.GetPosition(direction, spline.Length - 1);
+
+            float p = Position % spline.Length;
+            return spline.GetPosition(direction, p - 1);
         }
 
         /// <summary>

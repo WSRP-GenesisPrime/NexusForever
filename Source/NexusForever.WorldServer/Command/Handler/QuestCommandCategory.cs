@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
+using NexusForever.Shared.GameTable;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Command.Convert;
 using NexusForever.WorldServer.Command.Static;
@@ -108,14 +109,31 @@ namespace NexusForever.WorldServer.Command.Handler
             var target = context.InvokingPlayer;
             target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillCreature, creatureId, quantity.Value);
             target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillCreature2, creatureId, quantity.Value);
-
-            foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(creatureId) ?? Enumerable.Empty<uint>())
-            {
-                target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillTargetGroup, targetGroupId, quantity.Value);
-                target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillTargetGroups, targetGroupId, quantity.Value);
-            }
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillCreature, creatureId, quantity.Value);
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillCreature2, creatureId, quantity.Value);
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillTargetGroup, creatureId, quantity.Value);
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.KillTargetGroups, creatureId, quantity.Value);
 
             context.SendMessage($"Success! You've killed {quantity} of Creature ID: {creatureId}");
+        }
+
+        [Command(Permission.QuestActivate, "Update all quest objectives that require activating a given creature id.", "activate")]
+        public void HandleQuestActivate(ICommandContext context,
+            [Parameter("Creature id to match quest objectives against.")]
+            uint creatureId,
+            [Parameter("Quantity to update quest objectives by.")]
+            uint? quantity)
+        {
+            quantity ??= 1u;
+
+            var target = context.GetTargetOrInvoker<Player>();
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, creatureId, quantity.Value);
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity2, creatureId, quantity.Value);
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroup, creatureId, quantity.Value);
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroupChecklist, creatureId, quantity.Value); // quantity.Value should be the QuestChecklistIdx of the entity
+            target.QuestManager.ObjectiveUpdate(QuestObjectiveType.SucceedCSI, creatureId, quantity.Value);
+
+            context.SendMessage($"Success! You've activated {quantity} of Creature ID: {creatureId}");
         }
     }
 }

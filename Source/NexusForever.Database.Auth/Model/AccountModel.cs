@@ -17,8 +17,12 @@ namespace NexusForever.Database.Auth.Model
         public ICollection<AccountCurrencyModel> AccountCurrency { get; set; } = new HashSet<AccountCurrencyModel>();
         public ICollection<AccountEntitlementModel> AccountEntitlement { get; set; } = new HashSet<AccountEntitlementModel>();
         public ICollection<AccountGenericUnlockModel> AccountGenericUnlock { get; set; } = new HashSet<AccountGenericUnlockModel>();
+        public ICollection<AccountItemModel> AccountItem { get; set; } = new HashSet<AccountItemModel>();
+        public ICollection<AccountItemCooldownModel> AccountItemCooldown { get; set; } = new HashSet<AccountItemCooldownModel>();
         public ICollection<AccountKeybindingModel> AccountKeybinding { get; set; } = new HashSet<AccountKeybindingModel>();
         public ICollection<AccountPermissionModel> AccountPermission { get; set; } = new HashSet<AccountPermissionModel>();
         public ICollection<AccountRoleModel> AccountRole { get; set; } = new HashSet<AccountRoleModel>();
+        public ICollection<AccountRewardTrackModel> AccountRewardTrack { get; set; } = new HashSet<AccountRewardTrackModel>();
+        public ICollection<AccountStoreTransactionModel> AccountStoreTransaction { get; set; } = new HashSet<AccountStoreTransactionModel>();
     }
 }

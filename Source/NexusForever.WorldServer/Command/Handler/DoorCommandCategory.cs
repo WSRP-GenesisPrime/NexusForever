@@ -22,13 +22,13 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 searchRange ??= 10f;
 
-                Player player = context.InvokingPlayer;
-                player.Map.Search(
-                    player.Position,
-                    searchRange.Value,
-                    new SearchCheckRangeDoorOnly(player.Position, searchRange.Value, player),
-                    out List<GridEntity> intersectedEntities
-                );
+            Player player = context.InvokingPlayer;
+            player.Map.Search(
+                player.Position,
+                searchRange.Value,
+                new SearchCheckRangeDoorOnly(player.Position, searchRange.Value, player),
+                out List<GridEntity> intersectedEntities
+            );
 
                 // ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
                 foreach (Door door in intersectedEntities)
@@ -53,13 +53,13 @@ namespace NexusForever.WorldServer.Command.Handler
             {
                 searchRange ??= 10f;
 
-                Player player = context.InvokingPlayer;
-                player.Map.Search(
-                    player.Position,
-                    searchRange.Value,
-                    new SearchCheckRangeDoorOnly(player.Position, searchRange.Value, player),
-                    out List<GridEntity> intersectedEntities
-                );
+            Player player = context.InvokingPlayer;
+            player.Map.Search(
+                player.Position,
+                searchRange.Value,
+                new SearchCheckRangeDoorOnly(player.Position, searchRange.Value, player),
+                out List<GridEntity> intersectedEntities
+            );
 
                 // ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
                 foreach (Door door in intersectedEntities)

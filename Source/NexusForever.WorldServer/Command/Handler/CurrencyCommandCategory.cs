@@ -27,7 +27,8 @@ namespace NexusForever.WorldServer.Command.Handler
                 [Parameter("Amount of currency to grant.")]
                 uint amount)
             {
-                try
+                AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
+                if (entry == null)
                 {
                     AccountCurrencyTypeEntry entry = GameTableManager.Instance.AccountCurrencyType.GetEntry((uint)currencyId);
                     if (entry == null || currencyId == AccountCurrencyType.MaxLevelToken) // Disabled Character Token for now due to causing server errors if the player tries to use it. TODO: Fix level 50 creation
@@ -38,11 +39,8 @@ namespace NexusForever.WorldServer.Command.Handler
 
                     context.InvokingPlayer.Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
                 }
-                catch (Exception e)
-                {
-                    log.Error($"Exception caught in CurrencyAccountCommandCategory.HandleCurrencyAccountAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                    context.SendError("Oops! An error occurred. Please check your command input and try again.");
-                }
+
+                context.InvokingPlayer.Session.AccountCurrencyManager.CurrencyAddAmount(currencyId, amount);
             }
 
             [Command(Permission.CurrencyAccountList, "List all account currency types", "list")]
@@ -75,11 +73,8 @@ namespace NexusForever.WorldServer.Command.Handler
 
                     context.InvokingPlayer.CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
                 }
-                catch (Exception e)
-                {
-                    log.Error($"Exception caught in CurrencyAccountCommandCategory.HandleCurrencyCharacterAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                    context.SendError("Oops! An error occurred. Please check your command input and try again.");
-                }
+
+                context.InvokingPlayer.CurrencyManager.CurrencyAddAmount(currencyId, amount, true);
             }
 
             [Command(Permission.CurrencyCharacterList, "List all currency types.", "list")]

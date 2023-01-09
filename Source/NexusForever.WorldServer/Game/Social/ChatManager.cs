@@ -46,7 +46,6 @@ namespace NexusForever.WorldServer.Game.Social
         /// </summary>
         public ChatResult CanJoin(string name, string password)
         {
-            log.Info($"{owner.Name} trying to join chat channel: {name}, password= {password}");
             if (!TextFilterManager.Instance.IsTextValid(name)
                 || !TextFilterManager.Instance.IsTextValid(name, UserText.ChatCustomChannelName))
                 return ChatResult.InvalidPasswordText;

@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusForever.ClientConnecto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MainSite", "MainSite\MainSite.csproj", "{5AD77CF3-EC79-47F4-8984-06D5752312E6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MainSite", "MainSite\MainSite.csproj", "{5AD77CF3-EC79-47F4-8984-06D5752312E6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

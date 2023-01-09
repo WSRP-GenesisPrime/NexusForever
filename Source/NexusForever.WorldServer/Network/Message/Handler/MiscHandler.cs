@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using NexusForever.Database.Character;
-using NexusForever.Database.Character.Model;
+using NexusForever.Shared.GameTable;
+using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Contact.Static;
 using NexusForever.WorldServer.Game.Entity;
-using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map.Search;
+using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.WorldServer.Network.Message.Model.Shared;
 
@@ -34,8 +34,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         {
             ICharacter character = CharacterManager.Instance.GetCharacterInfo(request.Identity.CharacterId);
             if (character == null)
-                return;
-                //throw new InvalidPacketValueException();
+                throw new InvalidPacketValueException();
             
             float? onlineStatus = character.GetOnlineStatus();
             if (request.Type == ContactType.Ignore) // Ignored user data request
@@ -93,8 +92,8 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             // get players in local chat range
             session.Player.Map.Search(
                 session.Player.Position,
-                LocalChatDistance,
-                new SearchCheckRangePlayerOnly(session.Player.Position, LocalChatDistance, session.Player),
+                GlobalChatManager.LocalChatDistance,
+                new SearchCheckRangePlayerOnly(session.Player.Position, GlobalChatManager.LocalChatDistance, session.Player),
                 out List<GridEntity> intersectedEntities
             );
 
@@ -130,14 +129,23 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             if (!session.Player.IsLoading)
                 throw new InvalidPacketValueException();
 
-            session.EnqueueMessageEncrypted(new ServerPlayerEnteredWorld());
-            session.Player.IsLoading = false;
+            session.Player.OnEnterWorld();
         }
         
         [MessageHandler(GameMessageOpcode.ClientCinematicState)]
         public static void HandleCinematicState(WorldSession session, ClientCinematicState cinematicState)
         {
             session.Player.CinematicManager.HandleClientCinematicState(cinematicState.State);
+        }
+
+        [MessageHandler(GameMessageOpcode.ClientRewardTrackChoice)]
+        public static void HandleClickRewardTrachChoice(WorldSession session, ClientRewardTrackChoice rewardTrackChoice)
+        {
+            RewardTrackRewardsEntry rewardEntry = GameTableManager.Instance.RewardTrackRewards.GetEntry(rewardTrackChoice.RewardId);
+            if (rewardEntry == null)
+                throw new InvalidOperationException($"RewardTrackRewards entry with ID {rewardTrackChoice.RewardId} not found!");
+
+            session.RewardTrackManager.HandleChooseReward(rewardEntry, rewardTrackChoice.Index);
         }
     }
 }

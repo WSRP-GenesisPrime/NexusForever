@@ -28,6 +28,8 @@ namespace NexusForever.WorldServer.Game.Map
         private readonly ConcurrentQueue<PendingAdd> pendingAdds = new();
         private readonly Dictionary</*instanceId*/ ulong, T> instances = new();
 
+        public bool HasLoaded { get; private set; } = false;
+
         /// <summary>
         /// Initialise <see cref="InstancedMap{T}"/> with <see cref="WorldEntry"/>.
         /// </summary>
@@ -153,6 +155,9 @@ namespace NexusForever.WorldServer.Game.Map
             var unloadedInstances = new List<MapInstance>();
             foreach (T map in instances.Values)
             {
+                if (!map.HasLoaded)
+                    continue;
+
                 map.Update(lastTick);
 
                 if (map.UnloadStatus == MapUnloadStatus.Complete)

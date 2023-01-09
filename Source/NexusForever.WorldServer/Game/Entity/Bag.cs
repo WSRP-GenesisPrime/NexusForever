@@ -128,7 +128,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 throw new ArgumentException();
             if (items[item.BagIndex] == null)
                 throw new ArgumentException();
-            
+
             items[item.BagIndex] = null;
 
             log.Trace($"Removed item 0x{item.Guid:X16} from bag {Location} at index {item.BagIndex}.");

@@ -1,12 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using NexusForever.Shared.Network.Message;
+using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Network;
+using NexusForever.WorldServer.Network.Message.Model;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace NexusForever.WorldServer.Game.Cinematic
 {
     public class Camera
     {
         public Actor CameraActor { get; }
-        public List<IKeyframeAction> CameraActions { get; } = new();
+        public List<IKeyframeAction> CameraActions { get; } = new List<IKeyframeAction>();
 
         public Camera(Actor cameraActor, uint initialAttachId, uint initialAttachType, bool useRotationInitially, uint initialTransitionType, ushort initialTransitionStart = 1500, ushort initialTransitionMid = 0, ushort initialTransitionEnd = 1500)
         {

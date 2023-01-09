@@ -27,11 +27,8 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
             }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in TitleCommandCategory.HandleTitleAdd!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+
+            context.InvokingPlayer.TitleManager.AddTitle(characterTitleId);
         }
 
         [Command(Permission.TitleRevoke, "evoke a title from character.", "revoke")]
@@ -49,11 +46,8 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);
             }
-            catch (Exception e)
-            {
-                log.Error($"Exception caught in TitleCommandCategory.HandleTitleRemove!\nInvoked by {context.InvokingPlayer.Name}; {e.Message} :\n{e.StackTrace}");
-                context.SendError("Oops! An error occurred. Please check your command input and try again.");
-            }
+
+            context.InvokingPlayer.TitleManager.RevokeTitle(characterTitleId);
         }
 
         [Command(Permission.TitleAll, "Add all titles to character.", "all")]

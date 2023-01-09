@@ -135,7 +135,13 @@ namespace NexusForever.WorldServer.Game.Entity
             // Calculate Rest XP Bonus
             uint restXp = 0u;
             if (reason == ExpReason.KillCreature)
+            {
                 restXp = (uint)(earnedXp * 0.5f);
+                if (restXp > RestBonusXp)
+                    restXp = RestBonusXp;
+
+                RestBonusXp -= restXp;
+            }
 
             player.Session.EnqueueMessageEncrypted(new ServerExperienceGained
             {
@@ -193,11 +199,37 @@ namespace NexusForever.WorldServer.Game.Entity
 
             player.Level = newLevel;
 
+            player.BuildBaseProperties();
+
             // Grant Rewards for level up
             player.SpellManager.GrantSpells();
             // Unlock LAS slots
             // Unlock AMPs
             // Add feature access
+        }
+
+        public void GrantXpForCreatureKill(uint targetLevel, uint groupValue, float targetXpMultiplier = 1f)
+        {
+            if (targetXpMultiplier < float.Epsilon)
+                targetXpMultiplier = 1f;
+
+            uint baseXp = 0u;
+            switch (groupValue)
+            {
+                case 5:  // Group
+                case 20: // Raid (20)
+                case 40: // Raid (40)
+                    // TODO: Implement XP Rates for 5, 20, and 40 groupValue creatures
+                case 0:  // Solo
+                default:
+                    baseXp = (uint)MathF.Round((25 + targetLevel + MathF.Pow(targetLevel + 1, 2)) / 5) * 5;
+                    break;
+            }
+            baseXp = (uint)(baseXp * targetXpMultiplier);
+
+            GrantXp(baseXp, ExpReason.KillCreature);
+
+            // TODO: Handle Multi Kill & Killing Spree XP
         }
     }
 }

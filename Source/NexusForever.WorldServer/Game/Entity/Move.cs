@@ -5,9 +5,9 @@ namespace NexusForever.WorldServer.Game.Entity
 {
     public class Move : IReadable, IWritable
     {
-        ushort X { get; set; }
-        ushort Y { get; set; }
-        ushort Z { get; set; }
+        protected ushort X { get; set; }
+        protected ushort Y { get; set; }
+        protected ushort Z { get; set; }
         
         public void Read(GamePacketReader reader)
         {

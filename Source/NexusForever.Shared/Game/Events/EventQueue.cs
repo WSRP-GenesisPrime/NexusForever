@@ -74,5 +74,10 @@ namespace NexusForever.Shared.Game.Events
             foreach (PendingEvent @event in newEvents)
                 events.Enqueue(@event);
         }
+
+        public void Clear()
+        {
+            events.Clear();
+        }
     }
 }

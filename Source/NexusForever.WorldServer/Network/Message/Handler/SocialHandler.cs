@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.GameTable.Model;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
 using NexusForever.WorldServer.Command;
 using NexusForever.WorldServer.Command.Context;
+using NexusForever.WorldServer.Game.CharacterCache;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Social;
@@ -112,30 +114,19 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         {
             var players = new List<ServerWhoResponse.WhoPlayer>();
 
-            List<WorldSession> allSessions = NetworkManager<WorldSession>.Instance.ToList();
-            foreach (WorldSession whoSession in allSessions)
-            {
-                if (whoSession.Player == null)
-                    continue;
-
-                if (whoSession.Player.IsLoading)
-                    continue;
-
-                if (whoSession.Player.Zone == null)
-                    continue;
-
-                players.Add(new ServerWhoResponse.WhoPlayer
+            foreach (Player player in CharacterManager.Instance.GetOnlinePlayers())
+                players.Add(new()
                 {
-                    Name = whoSession.Player.Name,
-                    Level = whoSession.Player.Level,
-                    Race = whoSession.Player.Race,
-                    Class = whoSession.Player.Class,
-                    Path = whoSession.Player.Path,
-                    Faction = whoSession.Player.Faction,
-                    Sex = whoSession.Player.Sex,
-                    Zone = whoSession.Player.Zone.Id
+                    Name = player.Name,
+                    Level = player.Level,
+                    Race = player.Race,
+                    Class = player.Class,
+                    Path = player.Path,
+                    Faction = player.Faction1,
+                    Sex = player.Sex,
+                    Zone = player.Zone?.Id ?? player.PreviousZone?.Id ?? 0u,
+                    Realm = ServerManager.Instance.Servers.FirstOrDefault(s => s.Model.Id == WorldServer.RealmId).Model.Name
                 });
-            }
 
             session.EnqueueMessageEncrypted(new ServerWhoResponse
             {
