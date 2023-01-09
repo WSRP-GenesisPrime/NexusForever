@@ -15,6 +15,16 @@ namespace NexusForever.WorldServer.Command.Handler
     public class CostumeCommandCategory : CommandCategory
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
+
+        [Command(Permission.Costume, "Unlock a holo-wardrobe item by item2Id.", "unlockitem")]
+        public void HandleUnlockItem(ICommandContext context,
+            [Parameter("Item2Id of item to unlock.")]
+            uint item2Id)
+        {
+            string resultMsg = context.InvokingPlayer?.CostumeManager?.UnlockItemByItem2Id(item2Id);
+            context.SendMessage(resultMsg);
+        }
+
         [Command(Permission.CostumeOverrideId, "Override an item slot with a displayID.", "overrideid")]
         public void HandleCostumeOverrideID(ICommandContext context,
             [Parameter("Item slot.", ParameterFlags.None, typeof(EnumParameterConverter<ItemSlot>))]
