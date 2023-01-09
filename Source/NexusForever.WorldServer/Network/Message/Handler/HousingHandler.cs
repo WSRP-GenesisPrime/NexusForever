@@ -388,7 +388,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
 
             foreach (DecorInfo decorInfo in housingCommunityDonate.Decor)
             {
-                Decor decor = residence.GetDecor(decorInfo.DecorId);
+                Decor decor = residence.GetDecor((ulong)decorInfo.DecorId);
                 if (decor == null)
                     throw new InvalidPacketValueException();
 
