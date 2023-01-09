@@ -87,7 +87,10 @@ namespace NexusForever.WorldServer.Game.RewardTrack
                     if (eligibleReward.PrerequisiteId > 0 && !PrerequisiteManager.Instance.Meets(player, eligibleReward.PrerequisiteId))
                         eligibleRewardMilestones.Remove(eligibleReward);
 
-                actualRewardMilestones.Add(eligibleRewardMilestones[new Random().Next(eligibleRewardMilestones.Count)]);
+                if (eligibleRewardMilestones.Count > 0)
+                {
+                    actualRewardMilestones.Add(eligibleRewardMilestones[new Random().Next(eligibleRewardMilestones.Count - 1)]);
+                }
                 eligibleIndex++;
             }
 
