@@ -8,6 +8,8 @@ using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network;
 using System.Collections.Generic;
 using System.Linq;
+using NexusForever.Shared.Configuration;
+using NexusForever.Shared.Network.Message.Model.Shared;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -89,6 +91,74 @@ namespace NexusForever.WorldServer.Command.Handler
         public void HandleUptimeCheck(ICommandContext context)
         {
             context.SendMessage($"Currently up for {WorldServer.Uptime:%d}d {WorldServer.Uptime:%h}h {WorldServer.Uptime:%m}m {WorldServer.Uptime:%s}s");
+        }
+
+        [Command(Permission.Realm, "A collection of commands to manage the realm config.", "config")]
+        public class RealmConfigCommandCategory : CommandCategory
+        {
+            [Command(Permission.Realm, "Re-initialize WorldServer config values from the configuration file.", "reload")]
+            public void HandleWorldConfigReload(ICommandContext context)
+            {
+                ConfigurationManager<WorldServerConfiguration>.Instance.Initialise("WorldServer.json");
+                context.SendMessage($"WorldServer configuration re-initialized.");
+            }
+
+            [Command(Permission.Realm, "Dynamically update the WorldServer configuration. These changes will be lost on server restart.", "update")]
+            public void HandleWorldConfigUpdate(ICommandContext context,
+                [Parameter("Name of the configuration field.")]
+                string name,
+                [Parameter("New value for the configuration field.")]
+                string value)
+            {
+                WorldServerConfiguration worldServerConfiguration = ConfigurationManager<WorldServerConfiguration>.Instance.Config;
+                WorldServerConfiguration.MapConfig worldServerMapConfig = worldServerConfiguration.Map;
+                if ("GridActionThreshold" == name)
+                {
+                    worldServerMapConfig.GridActionThreshold = UInt32.Parse(value);
+                }
+                else if ("GridActionMaxRetry" == name)
+                {
+                    worldServerMapConfig.GridActionMaxRetry = UInt32.Parse(value);
+                }
+                else if ("GridUnloadTimer" == name)
+                {
+                    worldServerMapConfig.GridUnloadTimer = Double.Parse(value);
+                }
+                else if ("MaxInstances" == name)
+                {
+                    worldServerMapConfig.MaxInstances = UInt32.Parse(value);
+                }
+                else if ("MessageOfTheDay" == name || "motd" == name)
+                {
+                    worldServerConfiguration.MessageOfTheDay = value;
+                    WorldServer.RealmMotd = worldServerConfiguration.MessageOfTheDay;
+                    foreach (WorldSession session in NetworkManager<WorldSession>.Instance)
+                        GlobalChatManager.Instance.SendMessage(session, WorldServer.RealmMotd, "MOTD", ChatChannelType.Realm);
+                }
+                else if ("LengthOfInGameDay" == name)
+                {
+                    worldServerConfiguration.LengthOfInGameDay = UInt32.Parse(value);
+                }
+                else if ("CrossFactionChat" == name)
+                {
+                    worldServerConfiguration.CrossFactionChat = Boolean.Parse(value);
+                }
+                else if ("MaxPlayers" == name || "max" == name)
+                {
+                    worldServerConfiguration.MaxPlayers = UInt32.Parse(value);
+                    LoginQueueManager.Instance.SetMaxPlayers(worldServerConfiguration.MaxPlayers);
+                }
+                // (GENESIS PRIME) Aggro Switch enabled/disabled in WorldServer config
+                else if ("AggroSwitchEnabled" == name)
+                {
+                    worldServerConfiguration.AggroSwitchEnabled = Boolean.Parse(value);
+                }
+                else
+                {
+                    context.SendError($"Dynamic configuration update not supported for: {name}");
+                }
+                context.SendMessage($"WorldServer configuration updated: {name} = {value}");
+            }
         }
     }
 }
