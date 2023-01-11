@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexusForever.Database.Auth;
 
@@ -10,9 +11,11 @@ using NexusForever.Database.Auth;
 namespace NexusForever.Database.Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    partial class AuthContextModelSnapshot : ModelSnapshot
+    [Migration("20230111031842_AccountLinkModel")]
+    partial class AccountLinkModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -301,18 +304,6 @@ namespace NexusForever.Database.Auth.Migrations
                         .HasColumnType("varchar(20)")
                         .HasDefaultValue("0")
                         .HasColumnName("id");
-
-                    b.Property<DateTime>("CreateTime")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasColumnName("createTime")
-                        .HasDefaultValueSql("current_timestamp()");
-
-                    b.Property<string>("CreatedBy")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar(128)")
-                        .HasDefaultValue("")
-                        .HasColumnName("createdBy");
 
                     b.HasKey("Id")
                         .HasName("PRIMARY");

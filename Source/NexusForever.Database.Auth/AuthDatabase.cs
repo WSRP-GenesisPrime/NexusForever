@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +96,12 @@ namespace NexusForever.Database.Auth
             return context.Account.SingleOrDefault(a => a.Email == email) != null;
         }
 
+        public bool AccountLinkExists(string link)
+        {
+            using var context = new AuthContext(config);
+            return context.AccountLink.SingleOrDefault(a => a.Id == link) != null;
+        }
+
         /// <summary>
         /// Create a new account with the supplied email, salt and password verifier that is inserted into the database.
         /// </summary>
@@ -116,6 +123,27 @@ namespace NexusForever.Database.Auth
                 RoleId = role
             });
             context.Account.Add(model);
+
+            context.SaveChanges();
+        }
+
+        public void CreateAccountLink(string link, DateTime createTime)
+        {
+            CreateAccountLink(link, createTime, "");
+        }
+        public void CreateAccountLink(string link, DateTime createTime, string createdBy)
+        {
+            if (AccountLinkExists(link))
+                throw new InvalidOperationException($"That account link already exists. Please try again.");
+
+            using var context = new AuthContext(config);
+            var model = new AccountLinkModel
+            {
+                Id = link,
+                CreatedBy = createdBy,
+                CreateTime = createTime
+            };
+            context.AccountLink.Add(model);
 
             context.SaveChanges();
         }

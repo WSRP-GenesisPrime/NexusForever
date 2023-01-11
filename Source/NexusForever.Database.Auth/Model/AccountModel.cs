@@ -24,5 +24,6 @@ namespace NexusForever.Database.Auth.Model
         public ICollection<AccountRoleModel> AccountRole { get; set; } = new HashSet<AccountRoleModel>();
         public ICollection<AccountRewardTrackModel> AccountRewardTrack { get; set; } = new HashSet<AccountRewardTrackModel>();
         public ICollection<AccountStoreTransactionModel> AccountStoreTransaction { get; set; } = new HashSet<AccountStoreTransactionModel>();
+        public ICollection<AccountLinkEntryModel> AccountLinkEntry { get; set; } = new HashSet<AccountLinkEntryModel>();
     }
 }

@@ -10,6 +10,9 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
 using System;
+using System.Security.Cryptography;
+using System.Text;
+using static NexusForever.WorldServer.Network.Message.Model.ServerMailAvailable;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -48,6 +51,39 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             context.SendMessage($"Account {email} created successfully");
+        }
+
+        [Command(Permission.AccountCreate, "Generate a new account link.", "linkgen")]
+        public void HandleAccountLinkGenerate(ICommandContext context)
+        {
+            string newLink = GetUniqueKey(20);
+
+            if (context.InvokingPlayer != null)
+                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, context.InvokingPlayer.Session.Account.Email);
+            else
+                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now);
+                
+            context.SendMessage($"Account link {newLink} created successfully");
+        }
+
+        internal static readonly char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
+        public static string GetUniqueKey(int size)
+        {
+            byte[] data = new byte[4 * size];
+            using (var crypto = RandomNumberGenerator.Create())
+            {
+                crypto.GetBytes(data);
+            }
+            StringBuilder result = new StringBuilder(size);
+            for (int i = 0; i < size; i++)
+            {
+                var rnd = BitConverter.ToUInt32(data, i * 4);
+                var idx = rnd % chars.Length;
+
+                result.Append(chars[idx]);
+            }
+
+            return result.ToString();
         }
 
         [Command(Permission.Account, "Change the password of your account.", "changemypass")]
