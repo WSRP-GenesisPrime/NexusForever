@@ -20,6 +20,6 @@ namespace MainSite
         private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder()
             .UseStartup<Startup>()
-            .UseUrls("http://0.0.0.0:5000");
+            .UseUrls("http://localhost:5000");
     }
 }

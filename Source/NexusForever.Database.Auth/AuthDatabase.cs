@@ -107,6 +107,10 @@ namespace NexusForever.Database.Auth
         /// </summary>
         public void CreateAccount(string email, string s, string v, uint role)
         {
+            CreateAccount(email, s, v, role, null);
+        }
+        public void CreateAccount(string email, string s, string v, uint role, string link)
+        {
             email = email.ToLower();
             if (AccountExists(email))
                 throw new InvalidOperationException($"Account with that username already exists.");
@@ -122,6 +126,17 @@ namespace NexusForever.Database.Auth
             {
                 RoleId = role
             });
+
+            if (link != null && link.Length > 0)
+            {
+                if (!AccountLinkExists(link))
+                    throw new InvalidOperationException($"That account link does not exist.");
+                
+                model.AccountLinkEntry.Add(new AccountLinkEntryModel
+                {
+                    Id = link
+                });
+            }
             context.Account.Add(model);
 
             context.SaveChanges();

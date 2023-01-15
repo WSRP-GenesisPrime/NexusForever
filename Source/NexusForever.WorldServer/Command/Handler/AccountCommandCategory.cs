@@ -27,7 +27,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Password for the new account")]
             string password,
             [Parameter("Role", ParameterFlags.Optional)]
-            uint? role = null)
+            uint? role = null,
+            [Parameter("Link", ParameterFlags.Optional)]
+            string link = null)
         {
            
             if (DatabaseManager.Instance.AuthDatabase.AccountExists(email))
@@ -39,7 +41,7 @@ namespace NexusForever.WorldServer.Command.Handler
             role ??= (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? (uint)Role.Player);
                 
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
-            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role);
+            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role, link);
 
             if (context.InvokingPlayer != null)
             {
@@ -56,7 +58,7 @@ namespace NexusForever.WorldServer.Command.Handler
         [Command(Permission.AccountCreate, "Generate a new account link.", "linkgen")]
         public void HandleAccountLinkGenerate(ICommandContext context)
         {
-            string newLink = GetUniqueKey(20);
+            string newLink = GetUniqueKey(8);
 
             if (context.InvokingPlayer != null)
                 DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, context.InvokingPlayer.Session.Account.Email);

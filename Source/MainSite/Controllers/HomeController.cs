@@ -31,27 +31,32 @@ namespace MainSite.Controllers
         
         public IActionResult Register(AccountBaseModel newUser)
         {
-            string username = newUser.Email?.ToLower();
-            GetStatusImage();
-            if (username != null && newUser.Confirmation != null && newUser.Password != null)
-            {
-                if (newUser.Password.Equals(newUser.Confirmation))
+            string accountLink = newUser.AccountLink;
+            if (!string.IsNullOrEmpty(accountLink)) {
+                bool accountLinkExists = DatabaseManager.Instance.AuthDatabase.AccountLinkExists(accountLink);
+                if (accountLinkExists)
                 {
-                    try
+                    string username = newUser.Email?.ToLower();
+                    GetStatusImage();
+                    if (username != null && newUser.Confirmation != null && newUser.Password != null)
                     {
-                        (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(username, newUser.Password);
-                        DatabaseManager.Instance.AuthDatabase.CreateAccount(username, salt, verifier, 1);
-                        return View("RegisterSuccess");
-                    }
-                    catch (Exception)
-                    {
-                        return View("DBException");
+                        if (newUser.Password.Equals(newUser.Confirmation))
+                        {
+                            try
+                            {
+                                (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(username, newUser.Password);
+                                DatabaseManager.Instance.AuthDatabase.CreateAccount(username, salt, verifier, 1, accountLink);
+                                return View("RegisterSuccess");
+                            }
+                            catch (Exception)
+                            {
+                                return View("DBException");
+                            }
+                        }
                     }
                 }
-                return View("RegisterFailed");
-
             }
-            return View("Index");
+            return View("RegisterFailed");
         }
 
         private void GetStatusImage()
