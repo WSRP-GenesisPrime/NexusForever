@@ -56,14 +56,16 @@ namespace NexusForever.WorldServer.Command.Handler
         }
 
         [Command(Permission.AccountCreate, "Generate a new account link.", "linkgen")]
-        public void HandleAccountLinkGenerate(ICommandContext context)
+        public void HandleAccountLinkGenerate(ICommandContext context,
+            [Parameter("Comment to be stored with the account link.")]
+            string comment)
         {
             string newLink = GetUniqueKey(8);
 
             if (context.InvokingPlayer != null)
-                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, context.InvokingPlayer.Session.Account.Email);
+                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, comment, context.InvokingPlayer.Session.Account.Email);
             else
-                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now);
+                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, comment);
                 
             context.SendMessage($"Account link {newLink} created successfully");
         }

@@ -8,6 +8,7 @@ namespace NexusForever.Database.Auth.Model
         public string Id { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreateTime { get; set; }
+        public string Comment { get; set; }
 
         public ICollection<AccountLinkEntryModel> AccountLinkEntry { get; set; } = new HashSet<AccountLinkEntryModel>();
     }

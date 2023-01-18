@@ -142,11 +142,11 @@ namespace NexusForever.Database.Auth
             context.SaveChanges();
         }
 
-        public void CreateAccountLink(string link, DateTime createTime)
+        public void CreateAccountLink(string link, DateTime createTime, string comment)
         {
-            CreateAccountLink(link, createTime, "");
+            CreateAccountLink(link, createTime, comment, "");
         }
-        public void CreateAccountLink(string link, DateTime createTime, string createdBy)
+        public void CreateAccountLink(string link, DateTime createTime, string comment, string createdBy)
         {
             if (AccountLinkExists(link))
                 throw new InvalidOperationException($"That account link already exists. Please try again.");
@@ -156,7 +156,8 @@ namespace NexusForever.Database.Auth
             {
                 Id = link,
                 CreatedBy = createdBy,
-                CreateTime = createTime
+                CreateTime = createTime,
+                Comment = comment
             };
             context.AccountLink.Add(model);
 

@@ -428,6 +428,10 @@ namespace NexusForever.Database.Auth
                     .HasColumnName("createTime")
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("current_timestamp()");
+
+                entity.Property(e => e.Comment)
+                    .HasColumnName("comment")
+                    .HasColumnType("varchar(200)");
             });
 
             modelBuilder.Entity<AccountLinkEntryModel>(entity =>
