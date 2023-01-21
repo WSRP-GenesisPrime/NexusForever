@@ -16,6 +16,8 @@ namespace NexusForever.Database.Auth
         public DbSet<AccountKeybindingModel> AccountKeybinding { get; set; }
         public DbSet<AccountPermissionModel> AccountPermission { get; set; }
         public DbSet<AccountRoleModel> AccountRole { get; set; }
+        public DbSet<AccountLinkModel> AccountLink { get; set; }
+        public DbSet<AccountLinkEntryModel> AccountLinkEntry { get; set; }
         public DbSet<AccountStoreTransactionModel> AccountStoreTransaction { get; set; }
         public DbSet<PermissionModel> Permission { get; set; }
         public DbSet<RoleModel> Role { get; set; }
@@ -403,6 +405,60 @@ namespace NexusForever.Database.Auth
                     .WithMany(f => f.AccountRole)
                     .HasForeignKey(e => e.RoleId)
                     .HasConstraintName("FK__account_role_role_id__role_id");
+            });
+
+            modelBuilder.Entity<AccountLinkModel>(entity =>
+            {
+                entity.HasKey(e => new { e.Id })
+                    .HasName("PRIMARY");
+
+                entity.ToTable("account_link");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("varchar(20)")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.CreatedBy)
+                    .HasColumnName("createdBy")
+                    .HasColumnType("varchar(128)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.CreateTime)
+                    .HasColumnName("createTime")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.Property(e => e.Comment)
+                    .HasColumnName("comment")
+                    .HasColumnType("varchar(200)");
+            });
+
+            modelBuilder.Entity<AccountLinkEntryModel>(entity =>
+            {
+                entity.ToTable("account_link_entry");
+
+                entity.HasKey(i => new { i.Id, i.AccountId });
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("varchar(20)")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.AccountId)
+                    .HasColumnName("accountId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.HasOne(e => e.Link)
+                    .WithMany(f => f.AccountLinkEntry)
+                    .HasForeignKey(e => e.Id)
+                    .HasConstraintName("FK__account_link_id__link_id");
+
+                entity.HasOne(e => e.Account)
+                    .WithMany(f => f.AccountLinkEntry)
+                    .HasForeignKey(e => e.AccountId)
+                    .HasConstraintName("FK__account_link_account_id__account_id");
             });
 
             modelBuilder.Entity<PermissionModel>(entity =>
