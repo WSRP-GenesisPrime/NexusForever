@@ -8,6 +8,8 @@ using NexusForever.WorldServer.Game.Social.Static;
 using NexusForever.WorldServer.Network;
 using System.Collections.Generic;
 using System.Linq;
+using NexusForever.Shared.Configuration;
+using NexusForever.Shared.Network.Message.Model.Shared;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -89,6 +91,37 @@ namespace NexusForever.WorldServer.Command.Handler
         public void HandleUptimeCheck(ICommandContext context)
         {
             context.SendMessage($"Currently up for {WorldServer.Uptime:%d}d {WorldServer.Uptime:%h}h {WorldServer.Uptime:%m}m {WorldServer.Uptime:%s}s");
+        }
+
+        [Command(Permission.Realm, "Re-initialize WorldServer config values from the configuration file.", "reload")]
+        public void HandleWorldConfigReload(ICommandContext context)
+        {
+            ConfigurationManager<WorldServerConfiguration>.Instance.Initialise("WorldServer.json");
+            context.SendMessage($"WorldServer configuration re-initialized.");
+        }
+
+        // (GENESIS PRIME) Aggro Switch enabled/disabled in WorldServer config
+        [Command(Permission.Realm, "Change the aggro switch enablement status.", "aggro")]
+        public void HandleWorldConfigUpdate(ICommandContext context,
+            [Parameter("New value for the aggro switch.")]
+            string value)
+        {
+            WorldServerConfiguration worldServerConfiguration = ConfigurationManager<WorldServerConfiguration>.Instance.Config;
+            WorldServerConfiguration.MapConfig worldServerMapConfig = worldServerConfiguration.Map;
+
+            string newConfig = value.ToLower();
+            if (value.Equals("on"))
+                newConfig = "true";
+            else if (value.Equals("off"))
+                newConfig = "false";
+            else
+            {
+                context.SendError($"Invalid input value: {value}");
+                return;
+            }
+
+            worldServerConfiguration.AggroSwitchEnabled = Boolean.Parse(newConfig);
+            context.SendMessage($"AggroSwitch configuration updated: {newConfig}");
         }
     }
 }
