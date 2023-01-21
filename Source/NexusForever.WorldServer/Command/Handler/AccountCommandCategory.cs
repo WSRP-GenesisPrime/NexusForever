@@ -1,4 +1,5 @@
-﻿using NexusForever.Shared.Configuration;
+﻿using NexusForever.Database.Auth.Model;
+using NexusForever.Shared.Configuration;
 using NexusForever.Shared.Cryptography;
 using NexusForever.Shared.Database;
 using NexusForever.Shared.GameTable;
@@ -10,6 +11,10 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NLog;
 using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
+using static NexusForever.WorldServer.Network.Message.Model.ServerMailAvailable;
 
 namespace NexusForever.WorldServer.Command.Handler
 {
@@ -24,7 +29,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Password for the new account")]
             string password,
             [Parameter("Role", ParameterFlags.Optional)]
-            uint? role = null)
+            uint? role = null,
+            [Parameter("Link", ParameterFlags.Optional)]
+            string link = null)
         {
            
             if (DatabaseManager.Instance.AuthDatabase.AccountExists(email))
@@ -36,7 +43,7 @@ namespace NexusForever.WorldServer.Command.Handler
             role ??= (ConfigurationManager<WorldServerConfiguration>.Instance.Config.DefaultRole ?? (uint)Role.Player);
                 
             (string salt, string verifier) = PasswordProvider.GenerateSaltAndVerifier(email, password);
-            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role);
+            DatabaseManager.Instance.AuthDatabase.CreateAccount(email, salt, verifier, (uint)role, link);
 
             if (context.InvokingPlayer != null)
             {
@@ -48,6 +55,140 @@ namespace NexusForever.WorldServer.Command.Handler
             }
 
             context.SendMessage($"Account {email} created successfully");
+        }
+
+        [Command(Permission.AccountCreate, "Generate a new account link.", "linkgen")]
+        public void HandleAccountLinkGenerate(ICommandContext context,
+            [Parameter("Comment to be stored with the account link.")]
+            string comment)
+        {
+            string newLink = GetUniqueKey(8);
+
+            if (context.InvokingPlayer != null)
+                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, comment, context.InvokingPlayer.Session.Account.Email);
+            else
+                DatabaseManager.Instance.AuthDatabase.CreateAccountLink(newLink, DateTime.Now, comment);
+                
+            context.SendMessage($"Account link {newLink} created successfully");
+        }
+
+        internal static readonly char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
+        public static string GetUniqueKey(int size)
+        {
+            byte[] data = new byte[4 * size];
+            using (var crypto = RandomNumberGenerator.Create())
+            {
+                crypto.GetBytes(data);
+            }
+            StringBuilder result = new StringBuilder(size);
+            for (int i = 0; i < size; i++)
+            {
+                var rnd = BitConverter.ToUInt32(data, i * 4);
+                var idx = rnd % chars.Length;
+
+                result.Append(chars[idx]);
+            }
+
+            return result.ToString();
+        }
+
+        [Command(Permission.AccountCreate, "Add an account to an existing account link.", "link")]
+        public void HandleAccountLink(ICommandContext context,
+            [Parameter("Username of the account to be linked.", converter: typeof(StringLowerParameterConverter))]
+            string name,
+            [Parameter("The account link.")]
+            string link)
+        {
+            if (!DatabaseManager.Instance.AuthDatabase.AccountExists(name))
+            {
+                context.SendError("That account does not exist.");
+                return;
+            }
+            if (DatabaseManager.Instance.AuthDatabase.AccountIsLinked(name))
+            {
+                context.SendError("That account is already linked.");
+                return;
+            }
+            if (!DatabaseManager.Instance.AuthDatabase.AccountLinkExists(link))
+            {
+                context.SendError("That account link does not exist.");
+                return;
+            }
+
+            DatabaseManager.Instance.AuthDatabase.LinkAccount(name, link);
+            context.SendMessage($"Account {name} linked successfully.");
+        }
+        /*
+         * Needs work- keeps generating new links even if one of the accounts is already on a link
+         * 
+        [Command(Permission.AccountCreate, "Link two accounts. If neither account has a link associated with it, a new link will be created.", "linkto")]
+        public void HandleAccountLinkTo(ICommandContext context,
+            [Parameter("Username of the account to be linked.", converter: typeof(StringLowerParameterConverter))]
+            string firstAccount,
+            [Parameter("Username of the account being linked to.", converter: typeof(StringLowerParameterConverter))]
+            string secondAccount)
+        {
+            if (!DatabaseManager.Instance.AuthDatabase.AccountExists(firstAccount) || !DatabaseManager.Instance.AuthDatabase.AccountExists(secondAccount))
+            {
+                context.SendError("One or both of those accounts do not exist.");
+                return;
+            }
+            if (DatabaseManager.Instance.AuthDatabase.AccountIsLinked(firstAccount) && DatabaseManager.Instance.AuthDatabase.AccountIsLinked(secondAccount))
+            {
+                context.SendError("Both of those accounts have existing links.");
+                return;
+            }
+
+            string link = DatabaseManager.Instance.AuthDatabase.LinkAccounts(firstAccount, secondAccount);
+            context.SendMessage($"{firstAccount} was successfully linked to {secondAccount}. Link ID: {link}");
+        }
+        */
+        [Command(Permission.Account, "A collection of commands to pull account data from your other linked accounts.", "sync")]
+        public class AccountSyncCommandCategory : CommandCategory
+        {
+            [Command(Permission.Account, "Pull all account unlocks from your linked accounts.", "all")]
+            public void HandleAccountSyncAll(ICommandContext context)
+            {
+                AccountModel account = context.InvokingPlayer.Session.Account;
+                if (!DatabaseManager.Instance.AuthDatabase.AccountIsLinked(account.Email))
+                {
+                    context.SendError("This account is unlinked.");
+                    return;
+                }
+                context.SendMessage($"Full account sync initiated. Please wait.");
+
+                //Sync costume item unlocks
+                HandleAccountSyncCostumes(context);
+
+                //TODO: Sync entitlements
+                //TODO: Sync currencies
+                //TODO: Sync achievements
+                //TODO: Sync keybindings
+                
+                context.SendMessage($"Full account sync complete.");
+            }
+
+            [Command(Permission.Account, "Pull costume item unlocks from your linked accounts.", "costume")]
+            public void HandleAccountSyncCostumes(ICommandContext context)
+            {
+                AccountModel account = context.InvokingPlayer.Session.Account;
+                if (!DatabaseManager.Instance.AuthDatabase.AccountIsLinked(account.Email))
+                {
+                    context.SendError("This account is unlinked.");
+                    return;
+                }
+                context.SendMessage($"Beginning account costume item unlock sync.");
+                List<uint> linkedAccountsCostumeUnlockItemIds = DatabaseManager.Instance.AuthDatabase.GetAccountCostumeUnlockItemIdsForSync(account);
+                if (linkedAccountsCostumeUnlockItemIds != null)
+                {
+                    context.SendMessage($"Syncing {linkedAccountsCostumeUnlockItemIds.Count} costume unlocks to this account...");
+                    foreach (uint item2Id in linkedAccountsCostumeUnlockItemIds)
+                    {
+                        context.InvokingPlayer?.CostumeManager?.UnlockItemByItem2Id(item2Id);
+                    }
+                    context.SendMessage($"{linkedAccountsCostumeUnlockItemIds.Count} costume unlocks have been synced.");
+                }
+            }
         }
 
         [Command(Permission.Account, "Change the password of your account.", "changemypass")]

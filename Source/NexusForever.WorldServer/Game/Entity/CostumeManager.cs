@@ -230,7 +230,7 @@ namespace NexusForever.WorldServer.Game.Entity
             if (display == null)
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.InvalidItem);
-                return "Wardrobe unlock failed: Invalid item";
+                return "Wardrobe unlock failed: Invalid item display";
             }
 
             if (costumeUnlocks.TryGetValue(id, out CostumeUnlock costumeUnlock) && !costumeUnlock.PendingDelete)

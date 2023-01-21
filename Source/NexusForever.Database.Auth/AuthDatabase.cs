@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -83,6 +87,7 @@ namespace NexusForever.Database.Auth
                 .Include(a => a.AccountRewardTrack)
                     .ThenInclude(b => b.Milestone)
                 .Include(a => a.AccountStoreTransaction)
+                .Include(a => a.AccountLinkEntry)
                 .SingleOrDefaultAsync(a => a.Email == email && a.SessionKey == sessionKey);
         }
 
@@ -95,10 +100,71 @@ namespace NexusForever.Database.Auth
             return context.Account.SingleOrDefault(a => a.Email == email) != null;
         }
 
+        public bool AccountIsLinked(string email)
+        {
+            using var context = new AuthContext(config);
+
+            AccountModel account = context.Account.SingleOrDefault(a => a.Email == email);
+            return context.AccountLinkEntry.Any(a => a.AccountId == account.Id);
+        }
+
+        public bool AccountLinkExists(string link)
+        {
+            using var context = new AuthContext(config);
+            return context.AccountLink.SingleOrDefault(a => a.Id == link) != null;
+        }
+
+        public List<uint> GetAccountCostumeUnlockItemIdsForSync(AccountModel account)
+        {
+            using var context = new AuthContext(config);
+
+            List<uint> costumeItemIds = null;
+
+            string accountLink = account.AccountLinkEntry.ToList().First().Id;
+            List<AccountLinkEntryModel> accountLinkEntries = context.AccountLinkEntry
+                .Include(a => a.Link)
+                .Include(a => a.Account)
+                //filter out the account that's initiating the sync
+                .Where(a => a.Link.Id == accountLink && a.Account.Email != account.Email).AsSplitQuery()
+                .ToList();
+
+            if (accountLinkEntries != null)
+            {
+                costumeItemIds = new List<uint>();
+                foreach (var accountLinkEntry in accountLinkEntries)
+                {
+                    List<AccountCostumeUnlockModel> costumeUnlocks = GetAccountCostumeUnlocks(accountLinkEntry.AccountId);
+                    if (costumeUnlocks != null)
+                    {
+                        foreach (var costumeUnlock in costumeUnlocks)
+                        {
+                            if (costumeItemIds.Contains(costumeUnlock.Id))
+                                continue;
+                            costumeItemIds.Add(costumeUnlock.ItemId);
+                        }
+                    }
+                }
+            }
+
+            return costumeItemIds;
+        }
+        public List<AccountCostumeUnlockModel> GetAccountCostumeUnlocks(uint accountId)
+        {
+            using var context = new AuthContext(config);
+            return context.AccountCostumeUnlock
+                .Include(a => a.Account)
+                .Where(a => a.Account.Id == accountId).AsSplitQuery()
+                .ToList();
+        }
+
         /// <summary>
         /// Create a new account with the supplied email, salt and password verifier that is inserted into the database.
         /// </summary>
         public void CreateAccount(string email, string s, string v, uint role)
+        {
+            CreateAccount(email, s, v, role, null);
+        }
+        public void CreateAccount(string email, string s, string v, uint role, string link)
         {
             email = email.ToLower();
             if (AccountExists(email))
@@ -115,9 +181,124 @@ namespace NexusForever.Database.Auth
             {
                 RoleId = role
             });
+
+            if (link != null && link.Length > 0)
+            {
+                if (!AccountLinkExists(link))
+                    throw new InvalidOperationException($"That account link does not exist.");
+                
+                model.AccountLinkEntry.Add(new AccountLinkEntryModel
+                {
+                    Id = link
+                });
+            }
             context.Account.Add(model);
 
             context.SaveChanges();
+        }
+
+        public void LinkAccount(string name, string link)
+        {
+            using var context = new AuthContext(config);
+            var model = context.Account.SingleOrDefault(a => a.Email == name);
+            if (model == null)
+                throw new InvalidOperationException($"That account does not exist.");
+
+
+            if (link != null && link.Length > 0)
+            {
+                if (!AccountLinkExists(link))
+                    throw new InvalidOperationException($"That account link does not exist.");
+
+                model.AccountLinkEntry.Add(new AccountLinkEntryModel
+                {
+                    Id = link
+                });
+            }
+            context.Account.Update(model);
+
+            context.SaveChanges();
+        }
+
+        public string LinkAccounts(string firstAccount, string secondAccount)
+        {
+            using var context = new AuthContext(config);
+
+            AccountModel modelOne = context.Account.SingleOrDefault(a => a.Email == firstAccount);
+            if (modelOne == null)
+                throw new InvalidOperationException($"The first account does not exist.");
+
+            AccountModel modelTwo = context.Account.SingleOrDefault(a => a.Email == secondAccount);
+            if (modelTwo == null)
+                throw new InvalidOperationException($"The second account does not exist.");
+
+            AccountLinkModel accountLink = null;
+            //Try to get the existing account link
+            if (modelOne.AccountLinkEntry.ToList().Count > 0)
+                accountLink = modelOne.AccountLinkEntry.ToList().First().Link;
+            else if (modelTwo.AccountLinkEntry.ToList().Count > 0)
+                accountLink = modelTwo.AccountLinkEntry.ToList().First().Link;
+
+            log.Info($"accountLink= {accountLink}");
+            //If no existing account link, create a new one
+            if (accountLink == null)
+            {
+                char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
+                byte[] data = new byte[4 * 8];
+                using (var crypto = RandomNumberGenerator.Create())
+                {
+                    crypto.GetBytes(data);
+                }
+                StringBuilder result = new StringBuilder(8);
+                for (int i = 0; i < 8; i++)
+                {
+                    var rnd = BitConverter.ToUInt32(data, i * 4);
+                    var idx = rnd % chars.Length;
+
+                    result.Append(chars[idx]);
+                }
+                string link = result.ToString();
+                accountLink = CreateAccountLink(link, DateTime.Now, "Auto-generated by LinkTo", "AccountCommand");
+            }
+
+            modelOne.AccountLinkEntry.Add(new AccountLinkEntryModel
+            {
+                Id = accountLink.Id
+            });
+            context.Account.Update(modelOne);
+
+            modelTwo.AccountLinkEntry.Add(new AccountLinkEntryModel
+            {
+                Id = accountLink.Id
+            });
+            context.Account.Update(modelTwo);
+
+            context.SaveChanges();
+
+            return accountLink.Id;
+        }
+        public AccountLinkModel CreateAccountLink(string link, DateTime createTime, string comment)
+        {
+            return CreateAccountLink(link, createTime, comment, "");
+        }
+        public AccountLinkModel CreateAccountLink(string link, DateTime createTime, string comment, string createdBy)
+        {
+            if (AccountLinkExists(link))
+                throw new InvalidOperationException($"That account link already exists. Please try again.");
+
+            using var context = new AuthContext(config);
+            var model = new AccountLinkModel
+            {
+                Id = link,
+                CreatedBy = createdBy,
+                CreateTime = createTime,
+                Comment = comment
+            };
+            context.AccountLink.Add(model);
+
+            context.SaveChanges();
+
+            return model;
         }
 
         /// <summary>
