@@ -14,7 +14,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
     public sealed partial class PrerequisiteManager
     {
         [PrerequisiteCheck(PrerequisiteType.Level)]
-        private bool PrerequisiteCheckLevel(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckLevel(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -37,7 +37,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Race)]
-        private bool PrerequisiteCheckRace(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckRace(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -52,7 +52,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Class)]
-        private bool PrerequisiteCheckClass(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckClass(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -67,7 +67,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Quest)]
-        private bool PrerequisiteCheckQuest(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckQuest(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -82,7 +82,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Gender)]
-        private bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Check whether we have the right gender.
             switch (comparison)
@@ -96,7 +96,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Zone)]
-        private bool PrerequisiteCheckZone(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckZone(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -112,7 +112,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Path)]
-        private bool PrerequisiteCheckPath(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckPath(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -125,7 +125,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Achievement)]
-        private bool PrerequisiteCheckAchievement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckAchievement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -151,22 +151,8 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             }
         }
 
-        [PrerequisiteCheck(PrerequisiteType.Gender)]
-        private bool PrerequisiteCheckGender(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
-        {
-            // Check whether we have the right gender.
-            switch(comparison)
-            {
-                case PrerequisiteComparison.Equal:
-                    return (uint)player.Sex == value;
-                case PrerequisiteComparison.NotEqual:
-                    return (uint)player.Sex != value;
-            }
-            return false;
-        }
-
         [PrerequisiteCheck(PrerequisiteType.SpellBaseId)]
-        private bool PrerequisiteCheckSpellBaseId(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckSpellBaseId(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -181,7 +167,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Spell)]
-        private bool PrerequisiteCheckSpell(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckSpell(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             if (value == 0 && objectId == 0)
                 return false;
@@ -199,7 +185,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.InCombat)]
-        private bool PrerequisiteCheckInCombat(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckInCombat(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -213,7 +199,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.HasBuff)]
-        private bool PrerequisiteCheckHasBuff(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckHasBuff(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             if (value == 0 && objectId == 0)
                 return false;
@@ -236,7 +222,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.WorldReq)]
-        private bool PrerequisiteCheckWorldReq(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckWorldReq(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // TODO: Figure out what the objectId is. Is it a specific world? A world state? Player state?
             // Needs research.
@@ -247,7 +233,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Faction2)]
-        private bool PrerequisiteCheckFaction2(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckFaction2(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -262,7 +248,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.AccountItemClaimed)]
-        private bool PrerequisiteCheckAccountItemClaimed(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckAccountItemClaimed(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -277,7 +263,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.BaseFaction)]
-        private bool PrerequisiteCheckBaseFaction(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckBaseFaction(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -292,7 +278,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.CosmicRewards)]
-        private bool PrerequisiteCheckCosmicRewards(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckCosmicRewards(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -301,7 +287,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
                 case PrerequisiteComparison.Equal:
                     return player.Session.AccountCurrencyManager.GetAmount(Account.Static.AccountCurrencyType.CosmicReward) == value;
                 case PrerequisiteComparison.GreaterThan:
-                case PrerequisiteComparison.LessThanOrEqual: 
+                case PrerequisiteComparison.LessThanOrEqual:
                     // The conditional below is intentionally "incorrect". It's possible PrerequisiteComparison 4 is actually GreaterThanOrEqual
                     return player.Session.AccountCurrencyManager.GetAmount(Account.Static.AccountCurrencyType.CosmicReward) >= value;
                 default:
@@ -311,7 +297,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.HoverboardFlair)]
-        private bool PrerequestCheckHoverboardFlair(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequestCheckHoverboardFlair(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -326,7 +312,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Plane)]
-        private bool PrerequisiteCheckPlane(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckPlane(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Unknown how this works at this time, but there is a Spell Effect called "ChangePlane". Could be related.
             // TODO: Investigate further.
@@ -336,7 +322,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Prerequisite)]
-        private bool PrerequisiteCheckPrerequisite(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckPrerequisite(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -351,7 +337,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Stealth)]
-        private bool PrerequisiteCheckStealth(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckStealth(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // TODO: Add value to the check. It's a spell4 Id.
 
@@ -367,7 +353,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.SpellObj)]
-        private bool PrerequisiteCheckSpellObj(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckSpellObj(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // TODO: Confirm how the objectId is calculated. It seems like this check always checks for a Spell that is determined by an objectId.
 
@@ -386,7 +372,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.TargetIsPlayer)]
-        private bool PrerequisiteCheckTargetIsPlayer(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckTargetIsPlayer(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // TODO: Currently this is a wasted effort. We only evaluate prereq's against Players. This suggests we may need to start evaluating against all entities.
 
@@ -403,7 +389,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Unhealthy)]
-        private bool PrerequesiteCheckUnhealthy(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequesiteCheckUnhealthy(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // TODO: Investigate further. Unknown what the value and objectId refers to at this time.
 
@@ -419,7 +405,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.GroundMountArea)]
-        private bool PrerequisiteCheckGroundMountArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckGroundMountArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Check whether this is a valid area for a ground mount.
 
@@ -427,7 +413,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.HoverboardArea)]
-        private bool PrerequisiteCheckHoverboardArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckHoverboardArea(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             // Check whether this is a valid area for a hoverboard.
 
@@ -435,7 +421,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Vital)]
-        private bool PrerequisiteCheckVital(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckVital(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -458,7 +444,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.VitalPercent)]
-        private bool PrerequisiteCheckVitalPercent(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckVitalPercent(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             float max = 0;
             switch (objectId)
@@ -505,7 +491,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Disguise)]
-        private bool PrerequisiteCheckDisguise(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckDisguise(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             { // Dummy!
@@ -521,7 +507,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.ActiveSpellCount)]
-        private bool PrerequisiteCheckSpellActiveSpellCount(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckSpellActiveSpellCount(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -536,7 +522,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.SpellMechanic)]
-        private bool PrerequisiteCheckSpellMechanic(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckSpellMechanic(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             uint resource = 0;
             switch (objectId)
@@ -560,7 +546,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.PositionalRequirement)]
-        private bool PrerequisiteCheckPositionalRequirement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckPositionalRequirement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             if (target == null || objectId == 0)
                 return false;
@@ -571,7 +557,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             float minBounds = entry.AngleCenter - entry.AngleRange / 2f;
             float maxBounds = entry.AngleCenter + entry.AngleRange / 2f;
             bool isAllowed = angle >= minBounds && angle <= maxBounds;
-                 
+
             switch (comparison)
             {
                 case PrerequisiteComparison.Equal:
@@ -585,7 +571,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.Entitlement)]
-        private bool PrerequisiteCheckEntitlement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckEntitlement(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             EntitlementEntry entry = GameTableManager.Instance.Entitlement.GetEntry(objectId);
             if (entry == null)
@@ -619,7 +605,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.CostumeUnlocked)]
-        private bool PrerequisiteCheckCostumeUnlocked(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckCostumeUnlocked(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
@@ -634,7 +620,7 @@ namespace NexusForever.WorldServer.Game.Prerequisite
         }
 
         [PrerequisiteCheck(PrerequisiteType.PurchasedTitle)]
-        private bool PrerequisiteCheckPurchasedTitle(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
+        private static bool PrerequisiteCheckPurchasedTitle(Player player, PrerequisiteComparison comparison, uint value, uint objectId, UnitEntity target)
         {
             switch (comparison)
             {
