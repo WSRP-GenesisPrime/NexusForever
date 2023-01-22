@@ -200,11 +200,11 @@ namespace NexusForever.WorldServer.Command
             {
                 if (context.InvokingPlayer == null)
                 {
-                    log.Error($"Exception caught in CommandHandler.Invoke!\n{exception.Message} : {exception.StackTrace}");
+                    log.Error($"Exception caught in CommandHandler.Invoke!\n{exception.Message}\nInnerException: {exception.InnerException} : {exception.StackTrace}");
                 }
                 else
                 {
-                    log.Error($"Exception caught in CommandHandler.Invoke!\nInvoked by {context.InvokingPlayer.Name}; {exception.Message} :\n{exception.StackTrace}");
+                    log.Error($"Exception caught in CommandHandler.Invoke!\nInvoked by {context.InvokingPlayer.Name}; {exception.Message}\nInnerException: {exception.InnerException} :\n{exception.StackTrace}");
                 }
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }

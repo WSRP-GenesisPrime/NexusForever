@@ -36,8 +36,11 @@ namespace NexusForever.WorldServer.Game
 
         private ImmutableDictionary<(Race, Faction, CharacterCreationStart), Location> characterCreationData;
         private ImmutableDictionary<uint, ImmutableList<CharacterCustomizationEntry>> characterCustomisations;
+        private ImmutableList<PropertyValue> characterBaseProperties;
+        private ImmutableDictionary<Class, ImmutableList<PropertyValue>> characterClassBaseProperties;
 
         private ImmutableDictionary<uint, ImmutableList<ItemDisplaySourceEntryEntry>> itemDisplaySourcesEntry;
+        private ImmutableDictionary<uint /*item2CategoryId*/, float /*modifier*/> itemArmorModifiers;
 
         private ImmutableDictionary</*zoneId*/uint, /*tutorialId*/uint> zoneTutorials;
         private ImmutableDictionary</*creatureId*/uint, /*targetGroupIds*/ImmutableList<uint>> creatureAssociatedTargetGroups;
@@ -55,8 +58,11 @@ namespace NexusForever.WorldServer.Game
 
             CacheCharacterCreate();
             CacheCharacterCustomisations();
+            CacheCharacterBaseProperties();
+            CacheCharacterClassBaseProperties();
             CacheInventoryBagCapacities();
             CacheItemDisplaySourceEntries();
+            CacheItemArmorModifiers();
             CacheTutorials();
             CacheCreatureTargetGroups();
             CacheRewardPropertiesByTier();
@@ -106,6 +112,102 @@ namespace NexusForever.WorldServer.Game
             }
 
             characterCustomisations = entries.ToImmutableDictionary(e => e.Key, e => e.Value.ToImmutableList());
+        }
+
+        private void CacheCharacterBaseProperties()
+        {
+            var entries = ImmutableList.CreateBuilder<PropertyValue>();
+            entries.Add(new PropertyValue(Property.Strength, 0, 0));
+            entries.Add(new PropertyValue(Property.Dexterity, 0, 0));
+            entries.Add(new PropertyValue(Property.Technology, 0, 0));
+            entries.Add(new PropertyValue(Property.Magic, 0, 0));
+            entries.Add(new PropertyValue(Property.Wisdom, 0, 0));
+            entries.Add(new PropertyValue(Property.BaseHealth, 200, 200));
+            entries.Add(new PropertyValue(Property.ResourceMax0, 500, 500));
+            entries.Add(new PropertyValue(Property.ResourceRegenMultiplier0, 0.0225f, 0.0225f));
+            entries.Add(new PropertyValue(Property.AssaultRating, 18, 18));
+            entries.Add(new PropertyValue(Property.SupportRating, 18, 18));
+            entries.Add(new PropertyValue(Property.ResourceMax7, 200, 200));
+            entries.Add(new PropertyValue(Property.ResourceRegenMultiplier7, 0.045f, 0.045f));
+            entries.Add(new PropertyValue(Property.MoveSpeedMultiplier, 1, 1));
+            entries.Add(new PropertyValue(Property.BaseAvoidChance, 0.05f, 0.05f));
+            entries.Add(new PropertyValue(Property.BaseCritChance, 0.05f, 0.05f));
+            entries.Add(new PropertyValue(Property.BaseFocusRecoveryInCombat, 0, 0));
+            entries.Add(new PropertyValue(Property.BaseFocusRecoveryOutofCombat, 0, 0));
+            entries.Add(new PropertyValue(Property.FrictionMax, 1f, 1f));
+            entries.Add(new PropertyValue(Property.BaseMultiHitAmount, 0.3f, 0.3f));
+            entries.Add(new PropertyValue(Property.JumpHeight, 5f, 5f));
+            entries.Add(new PropertyValue(Property.GravityMultiplier, 0.8f, 0.8f));
+            entries.Add(new PropertyValue(Property.DamageTakenOffsetPhysical, 1, 1));
+            entries.Add(new PropertyValue(Property.DamageTakenOffsetTech, 1, 1));
+            entries.Add(new PropertyValue(Property.DamageTakenOffsetMagic, 1, 1));
+            entries.Add(new PropertyValue(Property.BaseMultiHitChance, 0.05f, 0.05f));
+            entries.Add(new PropertyValue(Property.BaseDamageReflectAmount, 0.05f, 0.05f));
+            entries.Add(new PropertyValue(Property.SlowFallMultiplier, 1f, 1f));
+            entries.Add(new PropertyValue(Property.MountSpeedMultiplier, 2, 2));
+            entries.Add(new PropertyValue(Property.BaseGlanceAmount, 0.3f, 0.3f));
+
+            characterBaseProperties = entries.ToImmutable();
+        }
+
+        private void CacheCharacterClassBaseProperties()
+        {
+            ImmutableDictionary<Class, ImmutableList<PropertyValue>>.Builder entries = ImmutableDictionary.CreateBuilder<Class, ImmutableList<PropertyValue>>();
+
+            { // Warrior
+                ImmutableList<PropertyValue>.Builder propertyList = ImmutableList.CreateBuilder<PropertyValue>();
+                propertyList.Add(new PropertyValue(Property.ResourceMax1, 1000, 1000));
+                propertyList.Add(new PropertyValue(Property.ResourceRegenMultiplier1, 1, 1));
+                ImmutableList<PropertyValue> classProperties = propertyList.ToImmutable();
+                entries.Add(Class.Warrior, classProperties);
+            }
+
+            { // Engineer
+                ImmutableList<PropertyValue>.Builder propertyList = ImmutableList.CreateBuilder<PropertyValue>();
+                propertyList.Add(new PropertyValue(Property.ResourceMax1, 100, 100));
+                ImmutableList<PropertyValue> classProperties = propertyList.ToImmutable();
+                entries.Add(Class.Engineer, classProperties);
+            }
+
+            { // Best class
+                ImmutableList<PropertyValue>.Builder propertyList = ImmutableList.CreateBuilder<PropertyValue>();
+                propertyList.Add(new PropertyValue(Property.ResourceMax1, 5, 5));
+                propertyList.Add(new PropertyValue(Property.BaseFocusPool, 1000, 1000));
+                propertyList.Add(new PropertyValue(Property.BaseFocusRecoveryInCombat, 0.005f, 0.005f));
+                propertyList.Add(new PropertyValue(Property.BaseFocusRecoveryOutofCombat, 0.02f, 0.02f));
+                ImmutableList<PropertyValue> classProperties = propertyList.ToImmutable();
+                entries.Add(Class.Esper, classProperties);
+            }
+
+            { // Medic
+                ImmutableList<PropertyValue>.Builder propertyList = ImmutableList.CreateBuilder<PropertyValue>();
+                propertyList.Add(new PropertyValue(Property.ResourceMax1, 4, 4));
+                propertyList.Add(new PropertyValue(Property.BaseFocusPool, 1000, 1000));
+                propertyList.Add(new PropertyValue(Property.BaseFocusRecoveryInCombat, 0.005f, 0.005f));
+                propertyList.Add(new PropertyValue(Property.BaseFocusRecoveryOutofCombat, 0.02f, 0.02f));
+                ImmutableList<PropertyValue> classProperties = propertyList.ToImmutable();
+                entries.Add(Class.Medic, classProperties);
+            }
+
+            { // Stalker
+                ImmutableList<PropertyValue>.Builder propertyList = ImmutableList.CreateBuilder<PropertyValue>();
+                propertyList.Add(new PropertyValue(Property.ResourceMax3, 100, 100));
+                propertyList.Add(new PropertyValue(Property.ResourceRegenMultiplier3, 0.035f, 0.035f));
+                ImmutableList<PropertyValue> classProperties = propertyList.ToImmutable();
+                entries.Add(Class.Stalker, classProperties);
+            }
+
+            { // Spellslinger
+                ImmutableList<PropertyValue>.Builder propertyList = ImmutableList.CreateBuilder<PropertyValue>();
+                propertyList.Add(new PropertyValue(Property.ResourceMax4, 100, 100));
+                propertyList.Add(new PropertyValue(Property.BaseFocusPool, 1000, 1000));
+                propertyList.Add(new PropertyValue(Property.BaseFocusRecoveryInCombat, 0.005f, 0.005f));
+                propertyList.Add(new PropertyValue(Property.BaseFocusRecoveryOutofCombat, 0.02f, 0.02f));
+                ImmutableList<PropertyValue> classProperties = propertyList.ToImmutable();
+                entries.Add(Class.Spellslinger, classProperties);
+            }
+
+            characterClassBaseProperties = entries.ToImmutable();
         }
 
         public void CacheInventoryBagCapacities()
@@ -171,6 +273,15 @@ namespace NexusForever.WorldServer.Game
 
             creatureAssociatedTargetGroups = entries.ToImmutableDictionary(e => e.Key, e => e.Value.ToImmutableList());
         }
+        
+        private void CacheItemArmorModifiers()
+        {
+            var armorMods = ImmutableDictionary.CreateBuilder<uint, float>();
+            foreach (Item2CategoryEntry entry in GameTableManager.Instance.Item2Category.Entries.Where(i => i.Item2FamilyId == 1))
+                armorMods.Add(entry.Id, entry.ArmorModifier);
+
+            itemArmorModifiers = armorMods.ToImmutable();
+        }
 
         private void CacheRewardPropertiesByTier()
         {
@@ -201,6 +312,22 @@ namespace NexusForever.WorldServer.Game
             return characterCustomisations.TryGetValue(key, out ImmutableList<CharacterCustomizationEntry> entries) ? entries : null;
         }
 
+        /// <summary>
+        /// Returns an <see cref="ImmutableList[T]"/> containing all base <see cref="PropertyValue"/> for any character
+        /// </summary>
+        public ImmutableList<PropertyValue> GetCharacterBaseProperties()
+        {
+            return characterBaseProperties;
+        }
+
+        /// <summary>
+        /// Returns an <see cref="ImmutableList[T]"/> containing all base <see cref="PropertyValue"/> for a character class
+        /// </summary>
+        public ImmutableList<PropertyValue> GetCharacterClassBaseProperties(Class @class)
+        {
+            return characterClassBaseProperties.TryGetValue(@class, out ImmutableList<PropertyValue> propertyValues) ? propertyValues : null;
+        }
+        
         /// <summary>
         /// Returns matching <see cref="CharacterCustomizationEntry"/> given input parameters
         /// </summary>

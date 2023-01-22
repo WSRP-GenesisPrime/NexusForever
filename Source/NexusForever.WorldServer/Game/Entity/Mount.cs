@@ -16,13 +16,14 @@ namespace NexusForever.WorldServer.Game.Entity
     {
         public uint OwnerGuid { get; }
         public PetType MountType { get; }
+        public uint castingId = 0;
 
         /// <summary>
         /// Display info applied to the pilot in the <see cref="ItemSlot.Mount"/> slot.
         /// </summary>
         public ItemDisplayEntry PilotDisplayInfo { get; }
 
-        public Mount(Player owner, uint spell4Id, uint creatureId, uint vehicleId, uint itemDisplayId)
+        public Mount(Player owner, uint spell4Id, uint creatureId, uint vehicleId, uint itemDisplayId, uint castingId)
             : base(EntityType.Mount, creatureId, vehicleId, spell4Id)
         {
             OwnerGuid        = owner.Guid;
@@ -30,6 +31,8 @@ namespace NexusForever.WorldServer.Game.Entity
             PilotDisplayInfo = GameTableManager.Instance.ItemDisplay.GetEntry(itemDisplayId);
             Rotation         = owner.Rotation;
             Position         = owner.Position;
+
+            this.castingId = castingId;
 
             Creature2DisplayGroupEntryEntry displayGroupEntry = GameTableManager.Instance.Creature2DisplayGroupEntry.Entries
                 .SingleOrDefault(x => x.Creature2DisplayGroupId == CreatureEntry.Creature2DisplayGroupId);

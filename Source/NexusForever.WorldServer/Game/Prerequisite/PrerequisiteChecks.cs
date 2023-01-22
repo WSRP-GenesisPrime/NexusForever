@@ -287,6 +287,14 @@ namespace NexusForever.WorldServer.Game.Prerequisite
             return true;
         }
 
+        [PrerequisiteCheck(PrerequisiteType.Unhealthy)]
+        private static bool PrerequisiteCheckUnhealthy(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
+        {
+            // Check whether we are in "unhealthy time".
+
+            return true;
+        }
+
         [PrerequisiteCheck(PrerequisiteType.Loyalty)]
         private static bool PrerequisiteCheckLoyalty(Player player, PrerequisiteComparison comparison, uint value, uint objectId)
         {

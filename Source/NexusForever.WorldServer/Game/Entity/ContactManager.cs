@@ -31,11 +31,24 @@ namespace NexusForever.WorldServer.Game.Entity
             this.player = player;
 
             foreach (CharacterContactModel contactEntry in model.Contact)
+            {
+                if (CharacterManager.Instance.GetCharacterInfo(contactEntry.ContactId) == null)
+                {
+                    var contact = new Contact.Contact(contactEntry);
+                    contact.EnqueueDelete();
+                    deletedContacts.Add(contact);
+                    continue;
+                }
+
                 contacts.TryAdd(contactEntry.Id, new Contact.Contact(contactEntry));
+            }
 
             // This gets all Request responses from the Global Manager. This is necessary for the 60s period where the Requester logs in after a Recipient has responded to their invite, and the Contact hasn't been Saved to the DB.
             foreach (Contact.Contact contact in GlobalContactManager.Instance.GetQueuedRequests(player.CharacterId))
             {
+                if (CharacterManager.Instance.GetCharacterInfo(contact.ContactId) == null)
+                    contact.EnqueueDelete();
+
                 if (contact.IsPendingDelete)
                     deletedContacts.Add(contact);
                 else if (contacts.ContainsKey(contact.Id))
@@ -44,7 +57,7 @@ namespace NexusForever.WorldServer.Game.Entity
                     contacts.TryAdd(contact.Id, contact);
             }
 
-            GlobalContactManager.Instance.SubscribeTo(player.CharacterId, contacts.Where(i => !i.Value.IsPendingAcceptance && (i.Value.Type == ContactType.Friend || i.Value.Type == ContactType.FriendAndRival)).Select(s => s.Value.ContactId));
+            GlobalContactManager.Instance.SubscribeTo(player.CharacterId, contacts.Where(i => !i.Value.IsPendingAcceptance && !i.Value.IsPendingDelete && (i.Value.Type == ContactType.Friend || i.Value.Type == ContactType.FriendAndRival)).Select(s => s.Value.ContactId));
         }
 
         private async Task BuildAndSendPendingRequests()

@@ -22,6 +22,9 @@ namespace NexusForever.WorldServer.Game.Map.Search
             if (entity == caster)
                 return false;
 
+            if (!unit.IsAlive)
+                return false;
+
             return telegraph.InsideTelegraph(entity.Position, unit.HitRadius);
         }
     }

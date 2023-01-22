@@ -63,6 +63,11 @@ namespace NexusForever.WorldServer.Network
             });
         }
 
+        public override void ReportLoginFinish()
+        {
+            log.Info($"New session, login took {String.Format("{0, 6:N2}", DateTime.Now.Subtract(AcceptTime).TotalMilliseconds)} ms, account name {Account.Email}");
+        }
+
         protected override IWritable BuildEncryptedMessage(byte[] data)
         {
             return new ServerRealmEncrypted

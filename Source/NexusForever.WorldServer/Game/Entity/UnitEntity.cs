@@ -157,12 +157,16 @@ namespace NexusForever.WorldServer.Game.Entity
             pendingSpells.Remove(spell);
         }
 
-        public void CancelEffect(uint castingId)
+        public virtual void CancelEffect(uint castingId)
         {
             EnqueueToVisible(new ServerSpellFinish
             {
                 ServerUniqueId = castingId
             }, true);
+            foreach (var spell in pendingSpells.Where(s => s.CastingId == castingId))
+            {
+                RemoveSpellProperties(castingId);
+            }
             pendingSpells.RemoveAll(s => s.CastingId == castingId);
         }
 

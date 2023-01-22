@@ -171,6 +171,10 @@ namespace NexusForever.WorldServer.Game.Entity
         {
             if (!visibleEntities.TryGetValue(guid, out GridEntity entity))
                 return null;
+
+            if (entity is not T)
+                return null;
+
             return (T)entity;
         }
 

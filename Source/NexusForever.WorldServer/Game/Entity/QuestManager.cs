@@ -254,11 +254,17 @@ namespace NexusForever.WorldServer.Game.Entity
             else
             {
                 // make sure the player is in range of a quest giver or they are eligible for a communicator message that starts the quest
-                if (!GlobalQuestManager.Instance.GetQuestGivers((ushort)info.Entry.Id)
-                        .Any(c => player.GetVisibleCreature<WorldEntity>(c).Any())
-                    && !GlobalQuestManager.Instance.GetQuestCommunicatorMessages((ushort)info.Entry.Id)
+                if (!info.CanBeCalledBack() &&
+                    !GlobalQuestManager.Instance.GetQuestGivers((ushort)info.Entry.Id)
+                    .Any(c => player.GetVisibleCreature<WorldEntity>(c).Any()))
+                {
+                    if (!info.IsCommunicatorReceived())
+                        throw new QuestException($"Player {player.CharacterId} tried to start quest {info.Entry.Id} without quest giver!");
+
+                    if (!GlobalQuestManager.Instance.GetQuestCommunicatorMessages((ushort)info.Entry.Id)
                         .Any(m => m.Meets(player)))
-                    throw new QuestException($"Player {player.CharacterId} tried to start quest {info.Entry.Id} without quest giver!");
+                        throw new QuestException($"Player {player.CharacterId} tried to start quest {info.Entry.Id} without communicator message!");
+                }
             }
 
             // server doesn't send an error message for prerequisites since the client does the exact same checks
@@ -514,7 +520,7 @@ namespace NexusForever.WorldServer.Game.Entity
             {
                 // TODO: check if this is complete, client seems to also refer to contact info
                 // for more see QuestTracker:HelperShowQuestCallbackBtn in LUA which contains the logic to show the complete button in the quest tracker
-                if (!quest.Info.IsCommunicatorReceived())
+                if (!quest.Info.IsCommunicatorReceived() && !quest.Info.CanBeCalledBack())
                     throw new QuestException($"Player {player.CharacterId} tried to complete quest {questId} without communicator message!");
             }
             else
@@ -604,10 +610,19 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public void QuestIgnore(ushort questId, bool ignored)
         {
-            if (GlobalQuestManager.Instance.GetQuestInfo(questId) == null)
+            QuestInfo questInfo = GlobalQuestManager.Instance.GetQuestInfo(questId);
+            if (questInfo == null)
                 throw new ArgumentException($"Invalid quest {questId}!");
 
-            // TODO:
+            Quest.Quest quest = GetQuest((ushort)questInfo.Entry.Id);
+            if (quest == null)
+                quest = new Quest.Quest(player, questInfo);
+            else
+                QuestRemove(quest);
+
+            quest.State = ignored ? QuestState.Ignored : QuestState.Mentioned;
+
+            inactiveQuests.Add(questId, quest);
         }
 
         /// <summary>
@@ -689,7 +704,7 @@ namespace NexusForever.WorldServer.Game.Entity
         /// </summary>
         public IEnumerable<Quest.Quest> GetActiveQuests()
         {
-            return activeQuests.Values;
+            return activeQuests.Values.AsEnumerable();
         }
     }
 }

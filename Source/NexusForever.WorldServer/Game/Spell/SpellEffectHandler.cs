@@ -8,6 +8,7 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Housing;
 using NexusForever.WorldServer.Game.Map;
+using NexusForever.WorldServer.Game.Spell.Event;
 using NexusForever.WorldServer.Game.Spell.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 
@@ -22,6 +23,24 @@ namespace NexusForever.WorldServer.Game.Spell
         {
             // TODO: calculate damage
             info.AddDamage((DamageType)info.Entry.DamageType, 1337);
+        }
+
+        [SpellEffectHandler(SpellEffectType.UnitPropertyModifier)]
+        private void HandleEffectPropertyModifier(UnitEntity target, SpellTargetInfo.SpellTargetEffectInfo info)
+        {
+            // TODO: Handle NPCs and other Entities.
+
+            if (!(target is Player player))
+                return;
+
+            PropertyModifier modifier = new PropertyModifier(info.Entry.DataBits01, BitConverter.Int32BitsToSingle((int)info.Entry.DataBits02), BitConverter.Int32BitsToSingle((int)info.Entry.DataBits03));
+            player.AddSpellModifierProperty((Property)info.Entry.DataBits00, this.CastingId, modifier);
+
+            if (info.Entry.DurationTime > 0d)
+                events.EnqueueEvent(new SpellEvent(info.Entry.DurationTime / 1000d, () =>
+                {
+                    player.RemoveSpellProperty((Property)info.Entry.DataBits00, this.CastingId);
+                }));
         }
 
         [SpellEffectHandler(SpellEffectType.Proxy)]
@@ -62,7 +81,7 @@ namespace NexusForever.WorldServer.Game.Spell
             if (!player.CanMount())
                 return;
 
-            var mount = new Mount(player, parameters.SpellInfo.Entry.Id, info.Entry.DataBits00, info.Entry.DataBits01, info.Entry.DataBits04);
+            var mount = new Mount(player, parameters.SpellInfo.Entry.Id, info.Entry.DataBits00, info.Entry.DataBits01, info.Entry.DataBits04, this.CastingId);
             mount.EnqueuePassengerAdd(player, VehicleSeatType.Pilot, 0);
 
             // usually for hover boards
