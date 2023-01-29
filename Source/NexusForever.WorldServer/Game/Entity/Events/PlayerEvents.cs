@@ -91,6 +91,8 @@ namespace NexusForever.WorldServer.Game.Entity
 
             if (PreviousMap == null)
                 OnLogin();
+
+            log.Info($"Adding player {this.Name} to map: {map.Entry.Id} with guid: {this.Guid}");
         }
 
         /// <summary>
@@ -126,6 +128,8 @@ namespace NexusForever.WorldServer.Game.Entity
             DestroyDependents();
 
             base.OnRemoveFromMap();
+
+            log.Info($"Removing player {this.Name} from map");
         }
 
         public override void OnRelocate(Vector3 vector)

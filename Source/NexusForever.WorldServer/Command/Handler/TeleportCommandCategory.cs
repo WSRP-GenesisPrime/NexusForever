@@ -69,6 +69,8 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 var rotation = new Quaternion(entry.Facing0, entry.Facing1, entry.Facing2, entry.Facing3);
                 target.Rotation = rotation.ToEulerDegrees() * (float)Math.PI * 2 / 360;
+
+                log.Info($"{target.Name} requesting teleport to location: {worldLocation2Id}");
                 target.TeleportTo((ushort)entry.WorldId, entry.Position0, entry.Position1, entry.Position2);
             }
             catch (Exception e)
@@ -97,6 +99,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendMessage($"Unknown zone: {name}");
             else
             {
+                log.Info($"{target.Name} requesting teleport to location name: {name}");
                 target.TeleportTo((ushort)zone.WorldId, zone.Position0, zone.Position1, zone.Position2);
                 context.SendMessage($"{name}: {zone.WorldId} {zone.Position0} {zone.Position1} {zone.Position2}");
             }

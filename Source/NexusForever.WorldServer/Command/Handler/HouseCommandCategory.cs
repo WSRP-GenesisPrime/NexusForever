@@ -21,40 +21,8 @@ namespace NexusForever.WorldServer.Command.Handler
     public class HouseCommandCategory : CommandCategory
     {
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
-        /*[Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
-        public void HandleHouseDecorAdd(ICommandContext context,
-            [Parameter("Decor info id entry to add to the crate.")]
-            uint decorInfoId,
-            [Parameter("Quantity of decor to add to the crate.")]
-            uint? quantity)
-        {
-            [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "add")]
-            public void HandleHouseDecorAdd(ICommandContext context,
-                [Parameter("Decor info id entry to add to the crate.")]
-                uint decorInfoId,
-                [Parameter("Quantity of decor to add to the crate.")]
-                uint? quantity,
-                [Parameter("Color of the decor to add to the crate.")]
-                ushort? color)
-            {
-                DecorAdd_impl(context, decorInfoId, quantity, color);
-            }
 
-            public static void DecorAdd_impl(ICommandContext context, uint decorInfoId, uint? quantity, ushort? color = null)
-            {
-                quantity ??= 1u;
-
-                HousingDecorInfoEntry entry = GameTableManager.Instance.HousingDecorInfo.GetEntry(decorInfoId);
-                if (entry == null)
-                {
-                    context.SendMessage($"Invalid decor info id {decorInfoId}!");
-                    return;
-                }
-
-                context.GetTargetOrInvoker<Player>().ResidenceManager.DecorCreate(entry, quantity.Value, color);
-            }
-        }*/
-        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "add")]
+        [Command(Permission.HouseDecorAdd, "Add decor to housing residence crate optionally specifying quantity.", "decoradd")]
         public void HandleHouseDecorAdd(ICommandContext context,
                 [Parameter("Decor info id entry to add to the crate.")]
                 uint decorInfoId,

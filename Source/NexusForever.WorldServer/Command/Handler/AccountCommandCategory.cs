@@ -209,7 +209,7 @@ namespace NexusForever.WorldServer.Command.Handler
                 context.SendError("Oops! An error occurred. Please check your command input and try again.");
             }
         }
-        [Command(Permission.Account, "Change the password of an account.", "changepass")]
+        [Command(Permission.GMFlag, "Change the password of an account.", "changepass")]
         public void HandleAccountChangePass(ICommandContext context,
             [Parameter("Email address of the account to change")]
             string email,
