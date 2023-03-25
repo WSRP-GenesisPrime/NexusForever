@@ -26,7 +26,9 @@ namespace NexusForever.WorldServer.Command.Handler
             [Parameter("Decor info id entry to add to the crate.")]
             uint decorInfoId,
             [Parameter("Quantity of decor to add to the crate.")]
-            uint? quantity)
+            uint? quantity,
+            [Parameter("Color of the decor to add to the crate.")]
+            ushort? color)
         {
             try
             {
@@ -48,13 +50,19 @@ namespace NexusForever.WorldServer.Command.Handler
                 {
                     if (res.Map != null)
                     {
-                        res.Map.DecorCreate(res, entry, (uint)quantity);
+                        if (color != null)
+                            res.Map.DecorCreate(res, entry, (uint)quantity, (ushort)color);
+                        else
+                            res.Map.DecorCreate(res, entry, (uint)quantity);
                     }
                     else
                     {
                         for (int i = 0; i < quantity.Value; ++i)
                         {
-                            res.DecorCreate(entry);
+                            if (color != null)
+                                res.DecorCreate(entry, (ushort)color);
+                            else
+                                res.DecorCreate(entry);
                         }
                     }
                 }
