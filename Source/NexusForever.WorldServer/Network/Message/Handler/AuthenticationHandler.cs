@@ -26,6 +26,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 session.Initialise(account);
                 session.SetEncryptionKey(helloRealm.SessionKey);
                 session.CanProcessPackets = true;
+                session.ReportLoginFinish();
             }));
         }
     }

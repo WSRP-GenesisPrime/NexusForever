@@ -560,12 +560,15 @@ namespace NexusForever.WorldServer.Network.Message.Handler
         [MessageHandler(GameMessageOpcode.ClientHousingEnterInside)]
         public static void HandleHousingEnterinside(WorldSession session, ClientHousingEnterInside enterInside)
         {
+            if (session.Player == null || session.Player.Map == null)
+                return;
+
             if (!(session.Player.Map is ResidenceMapInstance residenceMap))
-                throw new InvalidPacketValueException();
+                return;
 
             Residence residence = GlobalResidenceManager.Instance.GetResidence(enterInside.ResidenceId);
 
-            if (!session.Player.CanUseHousingDoors())
+            if (!session.Player.CanUseHousingDoors() || residence.ResidenceInfoEntry == null)
             {
                 session.EnqueueMessageEncrypted(new ServerHousingResult
                 {
@@ -577,7 +580,6 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 return;
             }
 
-            session.Player.MovementManager.teleportMode = true;
             session.Player.Dismount(); // All observing clients crash if going in while mounted?
 
             if (session.Player.HouseOutsideLocation != Vector3.Zero || session.Player.Position.Y < -720f)
@@ -592,7 +594,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
                 else
                 {
                     session.Player.MovementManager.SetRotation(new Vector3(-90f, 0f, 0f));
-                    session.Player.MovementManager.SetPosition(location);
+                    session.Player.MovementManager.SetPosition(location, true, true);
                 }
                 return;
             }
@@ -602,7 +604,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler
             {
                 session.Player.HouseOutsideLocation = session.Player.Position;
                 session.Player.MovementManager.SetRotation(new Vector3(90f, 0f, 0f));
-                session.Player.MovementManager.SetPosition(teleportPosition);
+                session.Player.MovementManager.SetPosition(teleportPosition, true, true);
             }
             else
                 session.Player.SendSystemMessage("Unknown teleport location.");

@@ -1,6 +1,7 @@
 ﻿using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
+using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NLog;
@@ -91,7 +92,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.MoveSpeedMultiplier, val, val);
+                            target.SetBaseProperty(Property.MoveSpeedMultiplier, val);
                             context.SendMessage("Gotta go fast!");
                         }
                         break;
@@ -108,7 +109,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.MountSpeedMultiplier, val, val);
+                            target.SetBaseProperty(Property.MountSpeedMultiplier, val);
                             context.SendMessage("Nyooom!");
                         }
                         break;
@@ -125,7 +126,7 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.GravityMultiplier, val, val);
+                            target.SetBaseProperty(Property.GravityMultiplier, val);
                             context.SendMessage("Like a feather!");
                         }
                         break;
@@ -142,8 +143,32 @@ namespace NexusForever.WorldServer.Command.Handler
                         }
                         else
                         {
-                            target.SetProperty(Property.JumpHeight, val, val);
+                            target.SetBaseProperty(Property.JumpHeight, val);
                             context.SendMessage("A giant leap for whatever-you-are!");
+                        }
+                        break;
+                    case "slowfall":
+                        if (val < 0f)
+                        {
+                            context.SendError("Slowfall multiplier can not be below 0.");
+                            return;
+                        }
+                        else
+                        {
+                            target.SetBaseProperty(Property.SlowFallMultiplier, val);
+                            context.SendMessage("I believe I can flyyyyy...");
+                        }
+                        break;
+                    case "friction":
+                        if (val < 0f)
+                        {
+                            context.SendError("Friction can not be below 0.");
+                            return;
+                        }
+                        else
+                        {
+                            target.SetBaseProperty(Property.FrictionMax, val);
+                            context.SendMessage("Grippy!");
                         }
                         break;
                     default:
@@ -159,13 +184,15 @@ namespace NexusForever.WorldServer.Command.Handler
         }
 
         [Command(Permission.CharacterProps, "Reset character properties.", "resetprops")]
-        public void HandleCharacterLevel(ICommandContext context)
+        public void HandleCharacterResetProps(ICommandContext context)
         {
             Player target = context.InvokingPlayer;
-            target.SetProperty(Property.MoveSpeedMultiplier, 1f, 1f);
-            target.SetProperty(Property.MountSpeedMultiplier, 2f, 2f);
-            target.SetProperty(Property.GravityMultiplier, 1f, 1f);
-            target.SetProperty(Property.JumpHeight, 5f, 5f);
+            target.SetBaseProperty(Property.MoveSpeedMultiplier, 1f);
+            target.SetBaseProperty(Property.MountSpeedMultiplier, 2f);
+            target.SetBaseProperty(Property.GravityMultiplier, 1f);
+            target.SetBaseProperty(Property.JumpHeight, 5f);
+            target.SetBaseProperty(Property.SlowFallMultiplier, 1f);
+            target.SetBaseProperty(Property.FrictionMax, 1f);
         }
 
         [Command(Permission.GMFlag, "grow your character", "grow")]
@@ -358,6 +385,48 @@ namespace NexusForever.WorldServer.Command.Handler
                     UserInitiatedSpellCast = false
                 });
             }
+        }
+
+        [Command(Permission.Morph, "Mount a creature by name.", "mount")]
+        public void HandleMount(ICommandContext context,
+           [Parameter("Creature ID.")]
+            uint creature2ID,
+           [Parameter("Vehicle ID.", Static.ParameterFlags.Optional)]
+            uint? vehicleID)
+        {
+            Player player = context.InvokingPlayer;
+
+            if (player.VehicleGuid != 0)
+            {
+                player.Dismount();
+            }
+
+            if (!player.CanMount())
+                return;
+
+            var mount = new Mount(player, 82107, creature2ID, vehicleID ?? 1, 0, 0);
+            mount.EnqueuePassengerAdd(player, VehicleSeatType.Pilot, 0);
+
+            // usually for hover boards
+            /*if (info.Entry.DataBits04 > 0u)
+            {
+                mount.SetAppearance(new ItemVisual
+                {
+                    Slot      = ItemSlot.Mount,
+                    DisplayId = (ushort)info.Entry.DataBits04
+                });
+            }*/
+
+            var position = new MapPosition
+            {
+                Position = player.Position
+            };
+
+            if (player.Map.CanEnter(mount, position))
+                player.Map.EnqueueAdd(mount, position);
+
+            // FIXME: also cast 52539,Riding License - Riding Skill 1 - SWC - Tier 1,34464
+            // FIXME: also cast 80530,Mount Sprint  - Tier 2,36122
         }
     }
 }

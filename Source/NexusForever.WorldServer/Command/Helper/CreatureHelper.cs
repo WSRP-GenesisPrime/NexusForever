@@ -144,18 +144,35 @@ namespace NexusForever.WorldServer.Command.Helper
 
             // Type: Falkrin
             { "falkrin", new Dictionary<string, uint>(){
-                { "basemale", 20648 },
-                { "basefemale", 36357 },
                 { "bluewarrior", 5205 },
-                { "goldwarrior", 61720 },
                 { "goldwitch", 8861 },
                 { "matriarch", 24007 },
                 { "purplematriarch", 73307 },
-                { "purplewarrior", 8858 },
                 { "warrior", 8396 },
                 { "warrior2", 17359 },
                 { "warrior3", 19603 },
-                { "witch", 20656 }
+                { "witch", 20656 },
+                //ARCHIVE UPDATE creatures- used for the mounts
+                { "redM", 77078 },
+                { "redwarrior", 77079 },
+                { "purpleM", 77080 },
+                { "purplewarrior", 77081 },
+                { "goldM", 77082 },
+                { "goldwarrior", 77083 },
+                { "greyM", 77084 },
+                { "greywarrior", 77085 },
+                { "brownM", 77086 },
+                { "brownwarrior", 77087 },
+                { "goldenF", 77088 },
+                { "goldenwitch", 77089 },
+                { "whiteF", 77090 },
+                { "whitewitch", 77091 },
+                { "purpleF", 77092 },
+                { "purplewitch", 77093 },
+                { "greyF", 77094 },
+                { "greywitch", 77095 },
+                { "brownF", 77096 },
+                { "brownwitch", 77097 }
             }},
 
             // Type: Freebot
@@ -385,7 +402,62 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "greyarmored", 30450 },
                 { "greyarmored2", 30462 },
                 { "greyarmored3", 49352 },
-                { "greyarmored4", 49346 }
+                { "greyarmored4", 49346 },
+                //Added by Archive Update ********************
+                { "white", 37326 },
+                { "white2", 37351 },
+                { "white3", 35914 },
+                { "white4", 35916 },
+                { "whitearmored", 35912 },
+                { "whitearmored2", 37369 },
+                { "whitearmored3", 38676 },
+                { "whitearmored4", 42911 },
+                { "white1a", 77023 },
+                { "white2a", 77024 },
+                { "white3a", 77025 },
+                { "whitearmored1a", 77026 },
+                { "whitearmored2a", 77027 },
+                { "whitearmored3a", 77028 },
+                { "whitearmored4a", 77029 },
+                { "white1b", 77030 },
+                { "white2b", 77031 },
+                { "white3b", 77032 },
+                { "whitearmored1b", 77033 },
+                { "whitearmored2b", 77034 },
+                { "whitearmored3b", 77035 },
+                { "whitearmored4b", 77036 },
+                { "brown1a", 77037 },
+                { "brown2a", 77038 },
+                { "brown3a", 77039 },
+                { "brown4a", 77040 },
+                { "brownarmored1a", 77041 },
+                { "brownarmored2a", 77042 },
+                { "brownarmored3a", 77043 },
+                { "brownarmored4a", 77044 },
+                { "brown1b", 77045 },
+                { "brown2b", 77046 },
+                { "brown3b", 77047 },
+                { "brown4b", 77048 },
+                { "brownarmored1b", 77049 },
+                { "brownarmored2b", 77050 },
+                { "brownarmored3b", 77051 },
+                { "brownarmored4b", 77052 },
+                { "grey1a", 77053 },
+                { "grey2a", 77054 },
+                { "grey3a", 77055 },
+                { "grey4a", 77056 },
+                { "greyarmored1a", 77057 },
+                { "greyarmored2a", 77058 },
+                { "greyarmored3a", 77059 },
+                { "greyarmored4a", 77060 },
+                { "grey1b", 77061 },
+                { "grey2b", 77062 },
+                { "grey3b", 77063 },
+                { "grey4b", 77064 },
+                { "greyarmored1b", 77065 },
+                { "greyarmored2b", 77066 },
+                { "greyarmored3b", 77067 },
+                { "greyarmored4b", 77068 },
             }},
 
             // Type: Protostar
@@ -393,7 +465,8 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "employee", 7301 },
                 { "phineas", 26454 },
                 { "phineas2", 65788 },
-                { "papaphineas", 72565 }
+                { "papaphineas", 72565 },
+                { "modificator", 51913 }
             }},
 
             // Type: Pumera
@@ -580,7 +653,11 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "reptile", 71483 },
                 { "skeletal", 72355 },
                 { "armoredred", 73076 },
-                { "greybase", 44457 },
+                //Added by Archive Update ********************
+                { "direred", 77113 },
+                { "diregrey", 77114 },
+                { "direbrown", 77115 },
+                { "direpurple", 77116 },
                 { "ice", 73305 }
             }},
 
@@ -737,6 +814,88 @@ namespace NexusForever.WorldServer.Command.Helper
             { "npchuman", new Dictionary<string, uint>(){
                 { "burly", 13386 },
                 { "old", 16636 }
+            }},
+
+            // Type: Gribbon
+            { "gribbon", new Dictionary<string, uint>(){
+                { "grey", 69553 },
+                { "rainbow", 69554 }
+            }},
+
+            // Type: Vulcarrion
+            { "vulcarrion", new Dictionary<string, uint>(){
+                { "falkrin", 68801 },
+                { "grey", 69543 },
+                { "brown", 69544 },
+                { "augmented", 69546 },
+                { "armoredfalkrin", 69548 },
+                { "phoenix", 69549 }
+            }},
+
+            // Type: Hookfoot
+            { "hookfoot", new Dictionary<string, uint>(){
+                { "moonwalker", 69601 },
+                { "darkfeeder", 69602 },
+                { "augmented", 69603 }
+            }},
+
+            // Type: Splorg
+            { "splorg", new Dictionary<string, uint>(){
+                { "blue", 69577 },
+                { "violet", 69578 },
+                { "teal", 69579 },
+                { "dynamite", 69580 }
+            }},
+
+            // Type: Skug
+            { "skug", new Dictionary<string, uint>(){
+                { "larva", 69581 },
+                { "violet", 69516 },
+                { "pink", 69517 }
+            }},
+
+            // Type: Squirg
+            { "squirg", new Dictionary<string, uint>(){
+                { "pink", 69582 },
+                { "blue", 69583 },
+                { "peach", 69584 },
+                { "strain", 69585 }
+            }},
+
+            // Type: Jellibolli
+            { "jellibolli", new Dictionary<string, uint>(){
+                { "lavender", 69555 },
+                { "polyp", 69556 },
+                { "sunfire", 69557 }
+            }},
+
+            // Type: Steamglider
+            { "steamglider", new Dictionary<string, uint>(){
+                { "pinkfin", 69558 },
+                { "greenfin", 69559 },
+                { "strain", 69560 },
+                { "yellowfin", 69561 },
+                { "tealfin", 69562 },
+                { "sunset", 69563 },
+                { "sunrise", 69564 },
+                { "moonglow", 69565 }
+            }},
+
+            // Type: rootbrute
+            { "rootbrute", new Dictionary<string, uint>(){
+                { "browncap", 69604 },
+                { "snowcap", 69605 },
+                { "firecap", 69606 },
+                { "augmented", 69607 },
+                { "strain", 69608 }
+            }},
+
+            // Type: Terminite
+            { "terminite", new Dictionary<string, uint>(){
+                { "white", 69616 },
+                { "brown", 69617 },
+                { "grey", 69618 },
+                { "alien", 69619 }
             }}
         };
         
@@ -928,7 +1087,37 @@ namespace NexusForever.WorldServer.Command.Helper
             { "stemdragon", 2016 },
 
             // Type: NPC Human
-            { "npchuman", 13386 }
+            { "npchuman", 13386 },
+
+            // Type: Gribbon
+            { "gribbon", 69553 },
+
+            // Type: Vulcarrion
+            { "vulcarrion", 69543 },
+
+            // Type: Hookfoot
+            { "hookfoot", 69601 },
+
+            // Type: Splorg
+            { "splorg", 69577 },
+
+            // Type: Skug
+            { "skug", 69516 },
+
+            // Type: Squirg
+            { "squirg", 69582 },
+
+            // Type: Jellibolli
+            { "jellibolli", 69555 },
+
+            // Type: Steamglider
+            { "steamglider", 69558 },
+
+            // Type: rootbrute
+            { "rootbrute", 69604 },
+
+            // Type: Terminite
+            { "terminite", 69616} 
         };
 
         /// <summary>
