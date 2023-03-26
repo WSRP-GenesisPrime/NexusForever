@@ -852,6 +852,15 @@ namespace NexusForever.WorldServer.Game.Housing
             decors.Add(decor.DecorId, decor);
             return decor;
         }
+        public Decor DecorCreate(HousingDecorInfoEntry entry, ushort color)
+        {
+            long decorId = GlobalResidenceManager.Instance.NextDecorId;
+            if (decorId == (long)Id)
+                decorId = GlobalResidenceManager.Instance.NextDecorId;
+            var decor = new Decor(this, decorId, entry, color);
+            decors.Add(decor.DecorId, decor);
+            return decor;
+        }
 
         /// <summary>
         /// Create a new <see cref="Decor"/> from an existing <see cref="Decor"/>.

@@ -10,6 +10,7 @@ using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Housing.Static;
 using NexusForever.WorldServer.Network.Message.Model;
 using NexusForever.Shared.GameTable;
+using static NexusForever.WorldServer.Network.Message.Model.ServerHousingResidenceDecor;
 
 namespace NexusForever.WorldServer.Game.Housing
 {
@@ -197,6 +198,18 @@ namespace NexusForever.WorldServer.Game.Housing
             position  = Vector3.Zero;
             rotation  = Quaternion.Identity;
             Residence = residence;
+
+            saveMask = DecorSaveMask.Create;
+        }
+        public Decor(Residence residence, long decorId, HousingDecorInfoEntry entry, ushort color)
+        {
+            DecorId = decorId;
+            Entry = entry;
+            type = DecorType.Crate;
+            position = Vector3.Zero;
+            rotation = Quaternion.Identity;
+            Residence = residence;
+            colourShiftId = color;
 
             saveMask = DecorSaveMask.Create;
         }

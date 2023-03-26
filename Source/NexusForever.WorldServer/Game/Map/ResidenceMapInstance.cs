@@ -442,6 +442,17 @@ namespace NexusForever.WorldServer.Game.Map
 
             EnqueueToAll(residenceDecor);
         }
+        public void DecorCreate(Residence residence, HousingDecorInfoEntry entry, uint quantity, ushort color)
+        {
+            var residenceDecor = new ServerHousingResidenceDecor();
+            for (uint i = 0u; i < quantity; i++)
+            {
+                Decor decor = residence.DecorCreate(entry, color);
+                residenceDecor.DecorData.Add(decor.Build());
+            }
+
+            EnqueueToAll(residenceDecor);
+        }
 
         private void DecorCreate(Residence residence, Player player, DecorInfo update)
         {
