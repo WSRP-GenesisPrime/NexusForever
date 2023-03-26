@@ -216,32 +216,32 @@ namespace NexusForever.WorldServer.Game.Entity
             UnlockItemByItem2Id(item.Id);
         }
 
-        public void UnlockItemByItem2Id(uint id)
+        public string UnlockItemByItem2Id(uint id)
         {
             Item2Entry item = GameTableManager.Instance.Item.GetEntry(id);
             if (item == null)
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.InvalidItem);
-                return;
+                return "Wardrobe unlock failed: Invalid item";
             }
 
             ItemDisplayEntry display = GameTableManager.Instance.ItemDisplay.GetEntry(item.ItemDisplayId);
             if (display == null)
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.InvalidItem);
-                return;
+                return "Wardrobe unlock failed: Invalid item display";
             }
 
             if (costumeUnlocks.TryGetValue(id, out CostumeUnlock costumeUnlock) && !costumeUnlock.PendingDelete)
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.AlreadyKnown);
-                return;
+                return "Wardrobe unlock failed: Item already known";
             }
 
             if (costumeUnlocks.Count >= GetMaxUnlockItemCount())
             {
                 SendCostumeItemUnlock(CostumeUnlockResult.OutOfSpace);
-                return;
+                return "Wardrobe unlock failed: Out of wardrobe space";
             }
 
             // TODO: make item soulbound
@@ -252,6 +252,7 @@ namespace NexusForever.WorldServer.Game.Entity
                 costumeUnlocks.Add(id, new CostumeUnlock(player.Session.Account, id));
 
             SendCostumeItemUnlock(CostumeUnlockResult.UnlockSuccess, id);
+            return "Wardrobe unlock successful for item ID: " + id.ToString();
         }
 
         private uint GetMaxUnlockItemCount()
