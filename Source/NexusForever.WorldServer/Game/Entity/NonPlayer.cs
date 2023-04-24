@@ -15,6 +15,7 @@ using NexusForever.WorldServer.Game.Spell;
 using NexusForever.WorldServer.Game.Reputation.Static;
 using EntityModel = NexusForever.Database.World.Model.EntityModel;
 using NexusForever.Shared.Configuration;
+using NexusForever.WorldServer.Network.Message.Model;
 
 namespace NexusForever.WorldServer.Game.Entity
 {
@@ -101,6 +102,22 @@ namespace NexusForever.WorldServer.Game.Entity
                 CreatureId = CreatureId,
                 QuestChecklistIdx = QuestChecklistIdx
             };
+        }
+
+        public override ServerEntityCreate BuildCreatePacket()
+        {
+            ServerEntityCreate serverEntityCreate = base.BuildCreatePacket();
+
+            if (ActivePropId > 0)
+            {
+                serverEntityCreate.WorldPlacementData = new ServerEntityCreate.WorldPlacement
+                {
+                    Type = 1,
+                    SocketId = WorldSocketId
+                };
+            }
+
+            return serverEntityCreate;
         }
 
         public override void OnActivateSuccess(Player activator)

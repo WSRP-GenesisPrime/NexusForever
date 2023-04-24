@@ -294,8 +294,16 @@ namespace NexusForever.WorldServer.Game.Map
             var housingResidenceDecor = new ServerHousingResidenceDecor();
             foreach (Decor decor in residence.GetPlacedDecor())
             {
+                foreach (WorldEntity entity in entities.Values.Where(i => i is Player))
+                    entity.RemoveVisible(decor.Entity);
+
                 decor.Crate();
                 housingResidenceDecor.DecorData.Add(decor.Build());
+
+                decorEntities.Remove(decor.DecorId);
+
+                if (decor.Entity != null)
+                    decor.RemoveEntity();
             }
 
             EnqueueToAll(housingResidenceDecor);
@@ -487,12 +495,19 @@ namespace NexusForever.WorldServer.Game.Map
                 else
                 {
                     if (update.DecorType == DecorType.Crate)
+                    {
+                        foreach (WorldEntity entity in entities.Values.Where(i => i is Player))
+                            entity.RemoveVisible(decor.Entity);
+
                         decor.Crate();
+                        decorEntities.Remove(decor.DecorId);
+                    }
                     else
                     {
                         // world->world
                         decor.Move(update.DecorType, update.Position, update.Rotation, update.Scale);
                         decor.DecorParentId = update.ParentDecorId;
+                        decor.RemoveEntity();
                     }
                 }
             }
@@ -657,6 +672,9 @@ namespace NexusForever.WorldServer.Game.Map
             residence.GardenSharing = flagsUpdate.GardenSharing;
 
             SendResidences();
+
+            foreach (GridEntity entity in entities.Values.Where(i => i is Player))
+                entity.OnRelocate(entity.Position); // Instructs entity to update their vision.
         }
 
         /// <summary>
@@ -710,6 +728,7 @@ namespace NexusForever.WorldServer.Game.Map
                     entity.RemoveVisible(decor.Entity);
 
                 decor.Crate();
+                decorEntities.Remove(decor.DecorId);
             }
 
             //foreach (Decor decor in decorEntities.Values.Where(d => d.Entity != null))
@@ -859,29 +878,31 @@ namespace NexusForever.WorldServer.Game.Map
             entity.InitialiseTemporaryEntity();
         }
 
-        private Creature2Entry GetCreatureEntryForDecor(Decor decor, bool skipDecorCheck = false)
+        private Creature2Entry GetCreatureEntryForDecor(Decor decor)
         {
-            if (!skipDecorCheck)
-            {
-                Creature2Entry creatureEntry = null;
-                if (decor.Entry?.Creature2IdActiveProp > 0 && decor.Entry?.Creature2IdActiveProp < uint.MaxValue)
-                    creatureEntry = GameTableManager.Instance.Creature2.GetEntry(decor.Entry?.Creature2IdActiveProp ?? 0ul);
+            Creature2Entry creatureEntry = null;
+            if (decor.Entry?.Creature2IdActiveProp > 0 && decor.Entry?.Creature2IdActiveProp < uint.MaxValue)
+                creatureEntry = GameTableManager.Instance.Creature2.GetEntry(decor.Entry?.Creature2IdActiveProp ?? 0ul);
 
-                if (creatureEntry != null)
-                    return creatureEntry;
+            if (creatureEntry != null)
+                return creatureEntry;
+
+            if (decor.Entry.Id >= 3699)
+            {
+                // Added by spreadsheet, creature2Id should be assumed correct.
+                return null;
             }
 
             switch (decor.Entry.HousingDecorTypeId)
             {
+                case 1:
+                case 59:
+                    return GameTableManager.Instance.Creature2.GetEntry(70052);
                 case 4:
                 case 21:
                     return GameTableManager.Instance.Creature2.GetEntry(57195); // Generic Chair - Sitting Active Prop - Sniffs showed this was used in every seat entity.
                 case 28:
                     return GameTableManager.Instance.Creature2.GetEntry(25282); // Target Dummy
-                default:
-                    TextTable tt = GameTableManager.Instance.GetTextTable(Language.English);
-                    log.Warn($"Unsupported Decor CreatureEntry: {tt.GetEntry(GameTableManager.Instance.HousingDecorType.GetEntry(decor.Entry.HousingDecorTypeId).LocalizedTextId)}");
-                    break;
             }
 
             return null;
