@@ -144,18 +144,35 @@ namespace NexusForever.WorldServer.Command.Helper
 
             // Type: Falkrin
             { "falkrin", new Dictionary<string, uint>(){
-                { "basemale", 20648 },
-                { "basefemale", 36357 },
                 { "bluewarrior", 5205 },
-                { "goldwarrior", 61720 },
                 { "goldwitch", 8861 },
                 { "matriarch", 24007 },
                 { "purplematriarch", 73307 },
-                { "purplewarrior", 8858 },
                 { "warrior", 8396 },
                 { "warrior2", 17359 },
                 { "warrior3", 19603 },
-                { "witch", 20656 }
+                { "witch", 20656 },
+                //ARCHIVE UPDATE creatures- used for the mounts
+                { "redm", 77078 },
+                { "redwarrior", 77079 },
+                { "purplem", 77080 },
+                { "purplewarrior", 77081 },
+                { "goldm", 77082 },
+                { "goldwarrior", 77083 },
+                { "greym", 77084 },
+                { "greywarrior", 77085 },
+                { "brownm", 77086 },
+                { "brownwarrior", 77087 },
+                { "goldenf", 77088 },
+                { "goldenwitch", 77089 },
+                { "whitef", 77090 },
+                { "whitewitch", 77091 },
+                { "purplef", 77092 },
+                { "purplewitch", 77093 },
+                { "greyf", 77094 },
+                { "greywitch", 77095 },
+                { "brownf", 77096 },
+                { "brownwitch", 77097 }
             }},
 
             // Type: Freebot
