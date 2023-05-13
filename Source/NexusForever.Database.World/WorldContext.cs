@@ -444,7 +444,7 @@ namespace NexusForever.Database.World
             {
                 entity.ToTable("item_loot");
 
-                entity.HasKey(e=> new { e.Id, e.LootGroupId })
+                entity.HasKey(e => new { e.Id, e.LootGroupId })
                     .HasName("PRIMARY");
 
                 entity.Property(e => e.Id)
@@ -754,6 +754,86 @@ namespace NexusForever.Database.World
                     .HasColumnName("note")
                     .HasColumnType("varchar(50)")
                     .HasDefaultValue("");
+            });
+
+            modelBuilder.Entity<RealmTaskModel>(entity =>
+            {
+                entity.ToTable("realm_task");
+
+                entity.HasKey(e => new { e.Id })
+                    .HasName("PRIMARY");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0)
+                    .HasComment("Realm Task ID");
+
+                entity.Property(e => e.Type)
+                    .HasColumnName("type")
+                    .HasColumnType("int(4) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.Value)
+                    .IsRequired()
+                    .HasColumnName("note")
+                    .HasColumnType("varchar(50)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.CharacterId)
+                    .HasColumnName("characterId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0)
+                    .HasComment("Character ID");
+
+                entity.Property(e => e.AccountId)
+                    .HasColumnName("accountId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0)
+                    .HasComment("Account ID");
+
+                entity.Property(e => e.GuildId)
+                    .HasColumnName("guildId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0)
+                    .HasComment("Guild ID");
+
+                entity.Property(e => e.ReferenceId)
+                    .HasColumnName("referenceId")
+                    .HasColumnType("int(10) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.ReferenceValue)
+                    .IsRequired()
+                    .HasColumnName("referenceValue")
+                    .HasColumnType("varchar(50)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.Status)
+                    .HasColumnName("status")
+                    .HasColumnType("int(4) unsigned")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.StatusDescription)
+                    .IsRequired()
+                    .HasColumnName("statusDescription")
+                    .HasColumnType("varchar(4000)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.CreateTime)
+                    .HasColumnName("createTime")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.Property(e => e.CreatedBy)
+                    .HasColumnName("createdBy")
+                    .HasColumnType("varchar(128)")
+                    .HasDefaultValue("");
+
+                entity.Property(e => e.LastRunTime)
+                    .HasColumnName("lastRunTime")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("current_timestamp()");
             });
         }
     }
