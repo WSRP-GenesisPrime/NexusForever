@@ -896,6 +896,18 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "brown", 69617 },
                 { "grey", 69618 },
                 { "alien", 69619 }
+            }},
+
+            // Type: Engineer Bot
+            { "engibot", new Dictionary<string, uint>(){
+                { "repairblue", 42682 },
+                { "artyblue", 42683 },
+                { "dimblue", 42684 },
+                { "bruiserblue", 42685 },
+                { "repairred", 59845 },
+                { "artyred", 59846 },
+                { "dimred", 59847 },
+                { "bruiserred", 59848 }
             }}
         };
         
@@ -1117,7 +1129,10 @@ namespace NexusForever.WorldServer.Command.Helper
             { "rootbrute", 69604 },
 
             // Type: Terminite
-            { "terminite", 69616} 
+            { "terminite", 69616},
+
+            // Type: Engineer Bot
+            { "engibot", 42683 }
         };
 
         /// <summary>
