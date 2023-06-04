@@ -306,6 +306,7 @@ namespace NexusForever.WorldServer.Command.Helper
             // Type: Lopp
             { "lopp", new Dictionary<string, uint>(){
                 { "femaleblue", 24142 },
+                { "femalebluespace", 46316 },
                 { "flower", 20810 },
                 { "femalegreen", 25285 },
                 { "femalegreenspace", 29906 },
@@ -908,6 +909,35 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "artyred", 59846 },
                 { "dimred", 59847 },
                 { "bruiserred", 59848 }
+            }},
+
+            // Type: Keeper
+            { "keeper", new Dictionary<string, uint>(){
+                { "mender", 28286 }
+            }},
+
+            // Type: Skeech
+            { "skeech", new Dictionary<string, uint>(){
+                { "blue1", 69596 },
+                { "blue2", 5511 },
+                { "blue3", 1966 },
+                { "blue4", 40797 },
+                { "blueguard", 24183 },
+                { "blueadept", 38843 },
+                { "blueshaman", 69597 },
+                { "bluebeastlord", 69598 }
+            }},
+
+            // Type: Skeech Queen
+            { "queen", new Dictionary<string, uint>(){
+                { "blue", 26620 }
+            }},
+
+            // Type: Veggie
+            { "veggie", new Dictionary<string, uint>(){
+                { "celery", 72954 },
+                { "radish", 72955 },
+                { "carrot", 72956 }
             }}
         };
         
@@ -1132,7 +1162,19 @@ namespace NexusForever.WorldServer.Command.Helper
             { "terminite", 69616},
 
             // Type: Engineer Bot
-            { "engibot", 42683 }
+            { "engibot", 42683 },
+
+            // Type: Keeper
+            { "keeper", 28286 },
+
+            // Type: Skeech
+            { "skeech", 69596 },
+
+            // Type: Skeech Queen
+            { "blue", 26620 },
+
+            // Type: Veggie
+            { "veggie", 72956 }
         };
 
         /// <summary>
