@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using NexusForever.Database.Character.Model;
 using NexusForever.Database.Configuration;
@@ -79,6 +80,36 @@ namespace NexusForever.Database.Character
         {
             await using var context = new CharacterContext(config);
             return await context.Character.FirstOrDefaultAsync(e => e.Id == characterId);
+        }
+
+        public CharacterModel GetCharacterByIdSynchronous(ulong characterId)
+        {
+            using var context = new CharacterContext(config);
+            return context.Character.FirstOrDefault(e => e.Id == characterId);
+        }
+
+        public void UpdateCharacterName(string characterName, ulong characterId)
+        {
+            using var context = new CharacterContext(config);
+            var model = context.Character.SingleOrDefault(c => c.Id == characterId);
+            if (model == null)
+                throw new InvalidOperationException($"That character does not exist.");
+
+
+            if (characterName != null && characterName.Length > 0)
+            {
+                if (CharacterNameExists(characterName))
+                    throw new InvalidOperationException($"Character name already exists.");
+
+                model.Name = characterName;
+            } 
+            else
+            {
+                throw new InvalidOperationException($"Invalid character name.");
+            }
+            
+            context.Character.Update(model);
+            context.SaveChanges();
         }
 
         public async Task<CharacterModel> GetCharacterByName(string name)

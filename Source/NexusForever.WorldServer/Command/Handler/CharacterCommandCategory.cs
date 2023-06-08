@@ -1,8 +1,10 @@
-﻿using NexusForever.WorldServer.Command.Context;
+﻿using NexusForever.Shared.Database;
+using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Game.Entity;
 using NexusForever.WorldServer.Game.Entity.Static;
 using NexusForever.WorldServer.Game.Map;
 using NexusForever.WorldServer.Game.RBAC.Static;
+using NexusForever.WorldServer.Game.RealmTask.Static;
 using NexusForever.WorldServer.Game.Spell;
 using NLog;
 using System;
@@ -50,7 +52,21 @@ namespace NexusForever.WorldServer.Command.Handler
             context.InvokingPlayer.Save();
         }
 
-        [Command(Permission.CharacterProps, "[propertyname] [amount] - change character properties", "props")]
+        [Command(Permission.Character, "[newName] - Rename your character. This change will take effect after the next server restart.", "rename")]
+        public void HandleCharacterRename(ICommandContext context,
+           [Parameter("The new name you want for your character")]
+            string newName)
+        {
+            
+            Player target = context.InvokingPlayer;
+            string accountName = target.Session.Account.Email;
+            uint characterId = (uint) target.CharacterId;
+            log.Info($"HandleCharacterRename(newName={newName},characterId={characterId})");
+            DatabaseManager.Instance.WorldDatabase.CreateRealmTask((uint)RealmTaskType.CharacterRename, newName, characterId, 0, 0, 0, null, accountName);
+            context.SendMessage("Your character rename has been staged. The change will take effect after the next server restart.");
+        }
+
+            [Command(Permission.CharacterProps, "[propertyname] [amount] - change character properties", "props")]
         public void HandleProps(ICommandContext context,
            [Parameter("Property name.")]
             string prop,

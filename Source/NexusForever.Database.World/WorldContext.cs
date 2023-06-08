@@ -24,6 +24,7 @@ namespace NexusForever.Database.World
         public DbSet<StoreOfferItemDataModel> StoreOfferItemData { get; set; }
         public DbSet<StoreOfferItemPriceModel> StoreOfferItemPrice { get; set; }
         public DbSet<TutorialModel> Tutorial { get; set; }
+        public DbSet<RealmTaskModel> RealmTask { get; set; }
 
         private readonly IDatabaseConfig config;
 
@@ -776,7 +777,7 @@ namespace NexusForever.Database.World
 
                 entity.Property(e => e.Value)
                     .IsRequired()
-                    .HasColumnName("note")
+                    .HasColumnName("value")
                     .HasColumnType("varchar(50)")
                     .HasDefaultValue("");
 

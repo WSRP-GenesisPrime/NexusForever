@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NexusForever.Database.World.Model
 {
-    internal class RealmTaskModel
+    public class RealmTaskModel
     {
         public uint Id { get; set; }
         public uint Type { get; set; }

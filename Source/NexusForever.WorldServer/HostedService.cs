@@ -8,6 +8,7 @@ using NexusForever.Shared.Game;
 using NexusForever.Shared.GameTable;
 using NexusForever.Shared.Network;
 using NexusForever.Shared.Network.Message;
+using NexusForever.Database.World.Model;
 using NexusForever.WorldServer.Command;
 using NexusForever.WorldServer.Command.Context;
 using NexusForever.WorldServer.Game.RBAC;
@@ -37,6 +38,9 @@ using NLog;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Hosting.Systemd;
 using System;
+using System.Collections.Immutable;
+using NexusForever.WorldServer.Game.RealmTask.Static;
+using NexusForever.WorldServer.Helper;
 
 namespace NexusForever.WorldServer
 {
@@ -81,6 +85,8 @@ namespace NexusForever.WorldServer
             EntityCacheManager.Instance.Initialise();
             FactionManager.Instance.Initialise();
             GlobalMovementManager.Instance.Initialise();
+
+            RunRealmTaskProcess();
 
             CharacterManager.Instance.Initialise(); // must be initialised before residences
             GlobalChatManager.Instance.Initialise(); // must be initialised before guilds
@@ -180,6 +186,20 @@ namespace NexusForever.WorldServer
 
             log.Info("Stopped!");
             return Task.CompletedTask;
+        }
+
+        private void RunRealmTaskProcess()
+        {
+            ImmutableList<RealmTaskModel> realmTaskList = DatabaseManager.Instance.WorldDatabase.GetAllRealmTasks();
+
+            foreach (RealmTaskModel realmTask in realmTaskList)
+            {
+                if (realmTask.Status == (uint) RealmTaskStatus.Staged || realmTask.Status == (uint) RealmTaskStatus.Retry)
+                {
+                    uint status = RealmTaskHelper.HandleTask(realmTask);
+                    log.Info($"Realm Task type: {realmTask.Type} ran with exit status: {realmTask.Status}");
+                }
+            }
         }
     }
 }

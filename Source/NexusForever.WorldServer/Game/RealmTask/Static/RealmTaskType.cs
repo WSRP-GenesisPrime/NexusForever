@@ -13,6 +13,7 @@ namespace NexusForever.WorldServer.Game.RealmTask.Static
         GuildRename                     = 2,
         CharacterInventoryClear         = 3,
         CharacterClassChange            = 4,
-        CharacterNeighborRequest        = 5
+        CharacterNeighborRequest        = 5,
+        CharacterGuildInvite            = 6
     }
 }

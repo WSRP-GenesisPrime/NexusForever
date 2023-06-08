@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -136,6 +137,44 @@ namespace NexusForever.Database.World
                 .Include(e => e.Item)
                 .AsNoTracking()
                 .ToImmutableList();
+        }
+
+        public ImmutableList<RealmTaskModel> GetAllRealmTasks()
+        {
+            using var context = new WorldContext(config);
+            return context.RealmTask.ToImmutableList();
+        }
+
+        public void UpdateRealmTask(RealmTaskModel realmTask)
+        {
+            using var context = new WorldContext(config);
+            context.RealmTask.Update(realmTask);
+            context.SaveChanges();
+        }
+
+        public void CreateRealmTask(uint type, string value, uint characterId, uint accountId, uint guildId, uint referenceId, string referenceValue, string createdBy)
+        {
+            log.Info($"CreateRealmTask(type={type},value={value},characterId={characterId},accountId={accountId},guildId={guildId},referenceId={referenceId},referenceValue={referenceValue},createdBy={createdBy})");
+            using var context = new WorldContext(config);
+
+            var model = new RealmTaskModel
+            {
+                Type = type,
+                Value = value,
+                CharacterId = characterId,
+                AccountId = accountId,
+                GuildId = guildId,
+                ReferenceId = referenceId,
+                ReferenceValue = referenceValue,
+                Status = 0u, // Staged
+                StatusDescription = "N/A",
+                CreateTime = DateTime.Now,
+                CreatedBy = createdBy,
+                LastRunTime = DateTime.MinValue
+            };
+
+            context.RealmTask.Add(model);
+            context.SaveChanges();
         }
     }
 }
