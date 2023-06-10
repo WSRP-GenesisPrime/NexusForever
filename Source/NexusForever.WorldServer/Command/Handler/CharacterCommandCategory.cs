@@ -62,7 +62,7 @@ namespace NexusForever.WorldServer.Command.Handler
             string accountName = target.Session.Account.Email;
             uint characterId = (uint) target.CharacterId;
             log.Info($"HandleCharacterRename(newName={newName},characterId={characterId})");
-            DatabaseManager.Instance.WorldDatabase.CreateRealmTask((uint)RealmTaskType.CharacterRename, newName, characterId, 0, 0, 0, null, accountName);
+            DatabaseManager.Instance.WorldDatabase.CreateRealmTask((byte)RealmTaskType.CharacterRename, newName, characterId, 0, 0, 0, null, accountName);
             context.SendMessage("Your character rename has been staged. The change will take effect after the next server restart.");
         }
 

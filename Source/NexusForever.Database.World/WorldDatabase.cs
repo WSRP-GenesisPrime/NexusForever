@@ -152,7 +152,7 @@ namespace NexusForever.Database.World
             context.SaveChanges();
         }
 
-        public void CreateRealmTask(uint type, string value, uint characterId, uint accountId, uint guildId, uint referenceId, string referenceValue, string createdBy)
+        public void CreateRealmTask(byte type, string value, uint characterId, uint accountId, uint guildId, uint referenceId, string referenceValue, string createdBy)
         {
             log.Info($"CreateRealmTask(type={type},value={value},characterId={characterId},accountId={accountId},guildId={guildId},referenceId={referenceId},referenceValue={referenceValue},createdBy={createdBy})");
             using var context = new WorldContext(config);
@@ -166,7 +166,7 @@ namespace NexusForever.Database.World
                 GuildId = guildId,
                 ReferenceId = referenceId,
                 ReferenceValue = referenceValue,
-                Status = 0u, // Staged
+                Status = 0, // Staged
                 StatusDescription = "N/A",
                 CreateTime = DateTime.Now,
                 CreatedBy = createdBy,

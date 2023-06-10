@@ -772,7 +772,7 @@ namespace NexusForever.Database.World
 
                 entity.Property(e => e.Type)
                     .HasColumnName("type")
-                    .HasColumnType("int(4) unsigned")
+                    .HasColumnType("tinyint(3) unsigned")
                     .HasDefaultValue(0);
 
                 entity.Property(e => e.Value)
@@ -812,7 +812,7 @@ namespace NexusForever.Database.World
 
                 entity.Property(e => e.Status)
                     .HasColumnName("status")
-                    .HasColumnType("int(4) unsigned")
+                    .HasColumnType("tinyint(3) unsigned")
                     .HasDefaultValue(0);
 
                 entity.Property(e => e.StatusDescription)

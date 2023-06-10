@@ -537,10 +537,10 @@ namespace NexusForever.Database.World.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("referenceValue");
 
-                    b.Property<uint>("Status")
+                    b.Property<byte>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int(4) unsigned")
-                        .HasDefaultValue(0u)
+                        .HasColumnType("tinyint(3) unsigned")
+                        .HasDefaultValue((byte)0)
                         .HasColumnName("status");
 
                     b.Property<string>("StatusDescription")
@@ -550,10 +550,10 @@ namespace NexusForever.Database.World.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("statusDescription");
 
-                    b.Property<uint>("Type")
+                    b.Property<byte>("Type")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int(4) unsigned")
-                        .HasDefaultValue(0u)
+                        .HasColumnType("tinyint(3) unsigned")
+                        .HasDefaultValue((byte)0)
                         .HasColumnName("type");
 
                     b.Property<string>("Value")

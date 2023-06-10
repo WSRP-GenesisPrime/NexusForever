@@ -11,8 +11,8 @@ using NexusForever.Database.World;
 namespace NexusForever.Database.World.Migrations
 {
     [DbContext(typeof(WorldContext))]
-    [Migration("20230608025947_RealmTaskValue")]
-    partial class RealmTaskValue
+    [Migration("20230610032426_RealmTask")]
+    partial class RealmTask
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -540,10 +540,10 @@ namespace NexusForever.Database.World.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("referenceValue");
 
-                    b.Property<uint>("Status")
+                    b.Property<byte>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int(4) unsigned")
-                        .HasDefaultValue(0u)
+                        .HasColumnType("tinyint(3) unsigned")
+                        .HasDefaultValue((byte)0)
                         .HasColumnName("status");
 
                     b.Property<string>("StatusDescription")
@@ -553,10 +553,10 @@ namespace NexusForever.Database.World.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("statusDescription");
 
-                    b.Property<uint>("Type")
+                    b.Property<byte>("Type")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int(4) unsigned")
-                        .HasDefaultValue(0u)
+                        .HasColumnType("tinyint(3) unsigned")
+                        .HasDefaultValue((byte)0)
                         .HasColumnName("type");
 
                     b.Property<string>("Value")

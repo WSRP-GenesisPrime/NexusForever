@@ -87,12 +87,12 @@ namespace NexusForever.WorldServer.Helper
             try
             {
                 DatabaseManager.Instance.CharacterDatabase.UpdateCharacterName(newName, characterId);
-                realmTask.Status = (uint) RealmTaskStatus.Completed;
+                realmTask.Status = (byte) RealmTaskStatus.Completed;
                 log.Info($"Completed Realm Task: Character Rename (id: {characterId}, newName: {newName}");
             }
             catch (Exception e)
             {
-                realmTask.Status = (uint) RealmTaskStatus.Failed;
+                realmTask.Status = (byte) RealmTaskStatus.Failed;
                 realmTask.StatusDescription = e.Message + "/" + e.InnerException;
             }
             SetAuditInfo(ref realmTask);
