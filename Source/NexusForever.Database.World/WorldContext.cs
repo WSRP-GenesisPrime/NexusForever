@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NexusForever.Database.Configuration;
 using NexusForever.Database.World.Model;
+using System.Diagnostics;
 
 namespace NexusForever.Database.World
 {
@@ -33,10 +35,19 @@ namespace NexusForever.Database.World
             this.config = config;
         }
 
+        public static readonly Microsoft.Extensions.Logging.LoggerFactory loggerFactory =
+            new LoggerFactory(new[] {
+                new Microsoft.Extensions.Logging.Debug.DebugLoggerProvider()
+            });
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
+            {
                 optionsBuilder.UseConfiguration(config, DatabaseType.World);
+                optionsBuilder.UseLoggerFactory(loggerFactory);
+                optionsBuilder.LogTo(message => Debug.WriteLine(message));
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
