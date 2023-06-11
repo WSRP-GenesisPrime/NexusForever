@@ -938,7 +938,49 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "celery", 72954 },
                 { "radish", 72955 },
                 { "carrot", 72956 }
-            }}
+            }},
+
+            // Type: Razortail
+            { "razortail", new Dictionary<string, uint>(){
+                { "snowy", 69434 },
+                { "impaler", 69435 },
+                { "emerald", 69436 },
+                { "tawny", 69437 },
+                { "rusty", 69438 },
+                { "nightstalker", 69439 },
+                { "redmoon", 69440 },
+                { "cinnamon", 69441 },
+                { "brown", 69442 },
+                { "augmented", 69443 },
+                { "chua", 69444 },
+                { "tropical", 69445 },
+                { "spacefaring", 69446 },
+                { "eliteredmoon", 69447 },
+                { "skeleredmoon", 69448 }
+            }},
+
+            // Type: Mammodin
+            { "mammodin", new Dictionary<string, uint>(){
+                { "grey", 9610 },
+                { "ice", 19890 },
+                { "chua", 24246 },
+                { "greybull", 26099 },
+                { "augmented", 42838 },
+                { "strain", 55065 },
+                { "primeval", 75888 }
+            }},
+
+            // Type: Boulderback
+            { "boulderback", new Dictionary<string, uint>(){
+                { "earthy", 2409 },
+                { "ice", 19874 },
+                { "loftite", 22226 }
+            }},
+
+            // Type: Turtog
+            { "turtog", new Dictionary<string, uint>(){
+                { "golden", 51516 }
+            }},
         };
         
         private static readonly Dictionary<string, uint> CreatureLibrary = new Dictionary<string, uint>() {
@@ -1174,7 +1216,19 @@ namespace NexusForever.WorldServer.Command.Helper
             { "blue", 26620 },
 
             // Type: Veggie
-            { "veggie", 72956 }
+            { "veggie", 72956 },
+
+            // Type: Razortail
+            { "razortail", 69437 },
+
+            // Type: Mammodin
+            { "mammodin", 9610 },
+
+            // Type: Boulderback
+            { "boulderback", 2409 },
+
+            // Type: Turtog
+            { "turtog", 51516 }
         };
 
         /// <summary>
