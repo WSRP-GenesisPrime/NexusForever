@@ -981,6 +981,23 @@ namespace NexusForever.WorldServer.Command.Helper
             { "turtog", new Dictionary<string, uint>(){
                 { "golden", 51516 }
             }},
+
+            // Type: Walatusk
+            { "walatusk", new Dictionary<string, uint>(){
+                { "brown", 9606 },
+                { "ice", 19889 },
+                { "augmentedice", 21304 },
+            }},
+
+            // Type: Snoglug
+            { "snoglug", new Dictionary<string, uint>(){
+                { "snowy", 69525 },
+                { "fungal", 69526 },
+                { "mossy", 69527 },
+                { "strain", 69528 },
+                { "sand", 69529 },
+                { "disco", 71824 }
+            }}
         };
         
         private static readonly Dictionary<string, uint> CreatureLibrary = new Dictionary<string, uint>() {
@@ -1228,7 +1245,13 @@ namespace NexusForever.WorldServer.Command.Helper
             { "boulderback", 2409 },
 
             // Type: Turtog
-            { "turtog", 51516 }
+            { "turtog", 51516 },
+
+            // Type: Walatusk
+            { "walatusk", 9606 },
+
+            // Type: Snoglug
+            { "snoglug", 69527 }
         };
 
         /// <summary>
