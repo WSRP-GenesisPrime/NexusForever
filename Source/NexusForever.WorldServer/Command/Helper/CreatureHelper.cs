@@ -997,6 +997,48 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "strain", 69528 },
                 { "sand", 69529 },
                 { "disco", 71824 }
+            }},
+
+            // Type: Oxian
+            { "oxian", new Dictionary<string, uint>(){
+                { "grey", 75982 },
+                { "blue", 7382 },
+                { "bluepack", 14839 },
+                { "brown", 38130 },
+                { "black", 61952 }
+            }},
+
+            // Type: Yeti
+            { "yeti", new Dictionary<string, uint>(){
+                { "grey", 69614 },
+                { "augmented", 69615 },
+                { "blue", 73293 },
+                { "strain", 73066 },
+                { "brown", 1544 }
+            }},
+
+            // Type: Relic Node
+            { "relicnode", new Dictionary<string, uint>(){
+                { "standard", 26567 },
+                { "standard2", 26568 },
+                { "standard3", 26569 },
+                { "standard4", 26570 },
+                { "accelerated", 31936 },
+                { "accelerated2", 31937 },
+                { "accelerated3", 31938 },
+                { "accelerated4", 31939 },
+                { "advanced", 31940 },
+                { "advanced2", 31941 },
+                { "advanced3", 31942 },
+                { "advanced4", 31944 },
+                { "dynamic", 31945 },
+                { "dynamic2", 31946 },
+                { "dynamic3", 31947 },
+                { "dynamic4", 31948 },
+                { "kinetic", 31949 },
+                { "kinetic2", 31950 },
+                { "kinetic3", 31951 },
+                { "kinetic4", 31952 }
             }}
         };
         
@@ -1251,7 +1293,16 @@ namespace NexusForever.WorldServer.Command.Helper
             { "walatusk", 9606 },
 
             // Type: Snoglug
-            { "snoglug", 69527 }
+            { "snoglug", 69527 },
+
+            // Type: Oxian
+            { "oxian", 75982 },
+
+            // Type: Yeti
+            { "yeti", 69614 },
+
+            // Type: Relic Node
+            { "relicnode", 26567 }
         };
 
         /// <summary>
