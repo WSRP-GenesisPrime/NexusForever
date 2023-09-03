@@ -1039,6 +1039,17 @@ namespace NexusForever.WorldServer.Command.Helper
                 { "kinetic2", 31950 },
                 { "kinetic3", 31951 },
                 { "kinetic4", 31952 }
+            }},
+
+            // Type: Dracus
+            { "dracus", new Dictionary<string, uint>(){
+                { "cosmic", 73420 },
+                { "sludgeon", 12347 },
+                { "green", 61542 },
+                { "lava", 28500 },
+                { "ice", 48364 },
+                { "strain", 52986 },
+                { "flesh", 61919 }
             }}
         };
         
