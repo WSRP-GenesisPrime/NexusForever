@@ -292,7 +292,11 @@ namespace NexusForever.WorldServer.Command.Helper
             // Type: Krogg
             { "krogg", new Dictionary<string, uint>(){
                 { "base", 19729 },
-                { "highwayman", 23804 }
+                { "highwayman", 23804 },
+                { "highwaymanwhite", 48588 },
+                { "kingpin", 38156 },
+                { "kingpinwhite", 51510 },
+                { "kingpingold", 69688 }
             }},
 
             // Type: Kurg
