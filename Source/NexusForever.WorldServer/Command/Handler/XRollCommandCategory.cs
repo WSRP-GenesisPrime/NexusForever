@@ -6,6 +6,7 @@ using NexusForever.WorldServer.Game.RBAC.Static;
 using NexusForever.WorldServer.Game.Social;
 using NexusForever.WorldServer.Network.Message.Model;
 using NLog;
+using RogueSharp.DiceNotation;
 using System;
 using System.Collections.Generic;
 
@@ -29,13 +30,14 @@ namespace NexusForever.WorldServer.Command.Handler
 
                 if (queue.Count <= 0)
                 {
-                    context.SendError("Invalid parameters - must be formatted as ( XdY Z ), where X=quantity; Y=sides; Z=modifier (optional, can be blank)");
+                    context.SendError("Invalid dice expression - check syntax!");
                     return CommandResult.InvalidParameters;
                 }
 
                 string dice = queue.Dequeue();
+                int expressionResult = Dice.Roll(dice);
 
-                if (!dice.Contains("d"))
+                /*if (!dice.Contains("d"))
                 {
                     context.SendError("Invalid parameters - must be formatted as ( XdY Z ), where X=quantity; Y=sides; Z=modifier (optional, can be blank)");
                     return CommandResult.InvalidParameters;
@@ -85,12 +87,11 @@ namespace NexusForever.WorldServer.Command.Handler
                     int r = rnd.Next(1, dieType+1);
                     num += r;
                     numString += $"{((i > 0) ? "+" : "")}{r}";
-                }
+                }*/
 
                 Player player = context.InvokingPlayer;
 
-                string feedback = $"{numDice}d{dieType}{modifierText}: ({numString}){modifierText} = {num}";
-                context.SendMessage($"{player.Name} rolls {feedback}");
+                context.SendMessage($"{player.Name} rolls {dice} = {expressionResult}");
 
                 // get players in local chat range
                 player.Map.Search(
@@ -100,7 +101,7 @@ namespace NexusForever.WorldServer.Command.Handler
                     out List<GridEntity> intersectedEntities
                 );
 
-                string systemMessage = $"{player.Name} rolls {feedback}";
+                string systemMessage = $"{player.Name} rolls {dice} = {expressionResult}";
                 intersectedEntities.ForEach(e => ((Player)e).SendSystemMessage(systemMessage));
 
             }
